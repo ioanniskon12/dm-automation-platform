@@ -1,0 +1,298 @@
+// Prisma Schema for DM Automation Platform
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// WORKSPACES & AUTH
+// ============================================
+model Workspace {
+  id        String   @id @default(uuid())
+  name      String
+  plan      String   @default("free") // free, pro, enterprise
+  settings  Json     @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  channels    Channel[]
+  flows       Flow[]
+  fields      Field[]
+  users       UserContact[]
+  triggers    Trigger[]
+  events      Event[]
+  knowledge   KnowledgeDoc[]
+  whatsappTemplates WhatsAppTemplate[]
+  inboxThreads InboxThread[]
+  members     WorkspaceMember[]
+
+  @@map("workspaces")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspaces WorkspaceMember[]
+
+  @@map("users")
+}
+
+model WorkspaceMember {
+  id          String   @id @default(uuid())
+  workspaceId String
+  userId      String
+  role        String   @default("member") // admin, member, viewer
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@map("workspace_members")
+}
+
+// ============================================
+// CHANNELS
+// ============================================
+model Channel {
+  id          String   @id @default(uuid())
+  workspaceId String
+  type        String   // instagram, messenger, whatsapp, telegram, tiktok
+  externalId  String   // Platform-specific ID (Page ID, Instagram ID, phone number, etc.)
+  status      String   @default("pending") // connected, disconnected, error, pending
+  tokens      Json     @default("{}")
+  meta        Json     @default("{}")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  users     UserContact[]
+  triggers  Trigger[]
+  events    Event[]
+  threads   InboxThread[]
+
+  @@unique([workspaceId, type, externalId])
+  @@map("channels")
+}
+
+// ============================================
+// USERS & CONTACTS
+// ============================================
+model UserContact {
+  id          String   @id @default(uuid())
+  workspaceId String
+  channelId   String
+  externalId  String   // IG user ID, phone, etc.
+  name        String?
+  handle      String?
+  phone       String?
+  email       String?
+  locale      String?
+  fields      Json     @default("{}")
+  tags        String[] @default([])
+  isFollower  Boolean  @default(false)
+  lastInAt    DateTime?
+  lastOutAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  channel   Channel       @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  events    Event[]
+  threads   InboxThread[]
+
+  @@unique([channelId, externalId])
+  @@index([workspaceId, channelId])
+  @@map("user_contacts")
+}
+
+model Field {
+  id          String   @id @default(uuid())
+  workspaceId String
+  key         String
+  label       String
+  type        String   // string, number, boolean, date, phone, email, json
+  validation  Json?
+  default     Json?
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, key])
+  @@map("fields")
+}
+
+// ============================================
+// FLOWS & TRIGGERS
+// ============================================
+model Flow {
+  id          String   @id @default(uuid())
+  workspaceId String
+  name        String
+  version     Int      @default(1)
+  nodes       Json     @default("[]")
+  edges       Json     @default("[]")
+  isPublished Boolean  @default(false)
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  triggers  Trigger[]
+  executions FlowExecution[]
+
+  @@map("flows")
+}
+
+model Trigger {
+  id          String   @id @default(uuid())
+  workspaceId String
+  channelId   String?
+  flowId      String
+  type        String   // comment_dm, dm, story_mention, new_follower, keyword
+  config      Json     @default("{}")
+  enabled     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  channel   Channel?  @relation(fields: [channelId], references: [id], onDelete: SetNull)
+  flow      Flow      @relation(fields: [flowId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, enabled])
+  @@map("triggers")
+}
+
+model FlowExecution {
+  id          String   @id @default(uuid())
+  flowId      String
+  userId      String   // UserContact ID
+  status      String   @default("running") // running, completed, failed, skipped
+  steps       Json     @default("[]")
+  error       String?
+  startedAt   DateTime @default(now())
+  completedAt DateTime?
+
+  flow Flow @relation(fields: [flowId], references: [id], onDelete: Cascade)
+
+  @@index([flowId, status])
+  @@map("flow_executions")
+}
+
+// ============================================
+// EVENTS
+// ============================================
+model Event {
+  id          String   @id @default(uuid())
+  workspaceId String
+  channelId   String
+  userId      String
+  type        String   // message_in, message_out, trigger, flow_start, flow_end, error
+  payload     Json     @default("{}")
+  timestamp   DateTime @default(now())
+
+  workspace Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  channel   Channel     @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  user      UserContact @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, timestamp])
+  @@index([channelId, type])
+  @@map("events")
+}
+
+// ============================================
+// INBOX
+// ============================================
+model InboxThread {
+  id            String    @id @default(uuid())
+  workspaceId   String
+  channelId     String
+  userId        String
+  status        String    @default("open") // open, assigned, resolved, snoozed
+  assignedTo    String?
+  lastMessage   String
+  lastMessageAt DateTime
+  unreadCount   Int       @default(0)
+  tags          String[]  @default([])
+  sla           Json?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  workspace Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  channel   Channel     @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  user      UserContact @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, status])
+  @@index([assignedTo])
+  @@map("inbox_threads")
+}
+
+// ============================================
+// KNOWLEDGE BASE
+// ============================================
+model KnowledgeDoc {
+  id           String   @id @default(uuid())
+  workspaceId  String
+  title        String
+  source       String   // upload, url, product
+  contentRef   String
+  embeddingRef String?
+  status       String   @default("processing") // processing, ready, error
+  metadata     Json     @default("{}")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId, status])
+  @@map("knowledge_docs")
+}
+
+// ============================================
+// WHATSAPP TEMPLATES
+// ============================================
+model WhatsAppTemplate {
+  id          String   @id @default(uuid())
+  workspaceId String
+  namespace   String
+  name        String
+  language    String
+  status      String   @default("pending") // pending, approved, rejected
+  category    String   // marketing, utility, authentication
+  components  Json     @default("[]")
+  variables   String[] @default([])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, name, language])
+  @@map("whatsapp_templates")
+}
+
+// ============================================
+// TEMPLATES
+// ============================================
+model Template {
+  id                  String   @id @default(uuid())
+  name                String
+  description         String
+  channels            String[] // instagram, messenger, whatsapp, telegram
+  flowJson            Json
+  categories          String[] @default([])
+  imageUrl            String?
+  estimatedSetupTime  Int      @default(10) // minutes
+  checklist           String[] @default([])
+  createdAt           DateTime @default(now())
+
+  @@map("templates")
+}

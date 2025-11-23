@@ -1,0 +1,132 @@
+{
+  "id": "template_lead_magnet",
+  "name": "Comment→DM Lead Magnet",
+  "description": "Automatically DM users who comment a keyword on your Instagram post. Perfect for giveaways and lead generation.",
+  "channels": ["instagram", "messenger"],
+  "categories": ["lead-generation", "giveaway", "marketing"],
+  "estimatedSetupTime": 5,
+  "imageUrl": "/templates/lead-magnet.png",
+  "checklist": [
+    "Connect your Instagram account",
+    "Choose which post to monitor",
+    "Set your trigger keyword",
+    "Customize the DM message",
+    "Configure email collection",
+    "Test the flow"
+  ],
+  "flowJson": {
+    "id": "flow_lead_magnet",
+    "name": "Lead Magnet - Giveaway",
+    "version": 1,
+    "nodes": [
+      {
+        "id": "trigger_1",
+        "type": "trigger",
+        "position": { "x": 100, "y": 100 },
+        "config": {
+          "channel": "instagram",
+          "kind": "comment_dm",
+          "keyword": "WIN",
+          "postIds": [],
+          "enabled": true
+        }
+      },
+      {
+        "id": "message_1",
+        "type": "message",
+        "position": { "x": 100, "y": 250 },
+        "config": {
+          "text": "🎉 Thanks for entering! Want the free guide?",
+          "buttons": [
+            { "text": "Yes, send it!", "goTo": "condition_1" },
+            { "text": "Not right now", "goTo": "message_end" }
+          ]
+        }
+      },
+      {
+        "id": "condition_1",
+        "type": "condition",
+        "position": { "x": 100, "y": 400 },
+        "config": {
+          "conditions": [
+            { "type": "follower" }
+          ],
+          "operator": "AND",
+          "branches": {
+            "true": "questionnaire_1",
+            "false": "message_follow"
+          }
+        }
+      },
+      {
+        "id": "message_follow",
+        "type": "message",
+        "position": { "x": 300, "y": 550 },
+        "config": {
+          "text": "Please follow us first to receive your free guide! 🙏\n\nOnce you follow, send me 'READY' and I'll send it right away!"
+        }
+      },
+      {
+        "id": "questionnaire_1",
+        "type": "questionnaire",
+        "position": { "x": 100, "y": 550 },
+        "config": {
+          "questions": [
+            {
+              "id": "email",
+              "prompt": "What's your email address? I'll send the guide there! 📧",
+              "answerType": "email",
+              "saveTo": "email",
+              "validation": {
+                "required": true,
+                "regex": "^[^@]+@[^@]+\\.[^@]+$"
+              },
+              "retry": 2,
+              "onFail": "skip",
+              "aiExtract": true
+            }
+          ],
+          "onComplete": [
+            {
+              "action": "http",
+              "url": "https://api.example.com/leads",
+              "method": "POST",
+              "body": {
+                "email": "{{email}}",
+                "source": "instagram_giveaway",
+                "campaign": "free_guide"
+              }
+            },
+            {
+              "action": "tag",
+              "tagValue": "Lead - Giveaway 2024"
+            }
+          ]
+        }
+      },
+      {
+        "id": "message_success",
+        "type": "message",
+        "position": { "x": 100, "y": 750 },
+        "config": {
+          "text": "Perfect! ✅\n\nYour free guide is on its way to {{email}}\n\nCheck your inbox in the next few minutes (and your spam folder just in case!).\n\nEnjoy! 🎉"
+        }
+      },
+      {
+        "id": "message_end",
+        "type": "message",
+        "position": { "x": 300, "y": 250 },
+        "config": {
+          "text": "No problem! Feel free to DM me anytime if you change your mind. 😊"
+        }
+      }
+    ],
+    "edges": [
+      { "from": "trigger_1", "to": "message_1" },
+      { "from": "message_1", "to": "condition_1" },
+      { "from": "condition_1", "to": "questionnaire_1", "label": "is_follower" },
+      { "from": "condition_1", "to": "message_follow", "label": "not_follower" },
+      { "from": "questionnaire_1", "to": "message_success" }
+    ]
+  }
+}

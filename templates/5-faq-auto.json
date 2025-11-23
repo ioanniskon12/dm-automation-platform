@@ -1,0 +1,19 @@
+{
+  "id": "template_faq",
+  "name": "FAQ Autoresponder",
+  "description": "Automatically answer frequently asked questions using AI trained on your documentation.",
+  "channels": ["instagram", "messenger", "whatsapp", "telegram"],
+  "categories": ["support", "ai", "faq"],
+  "estimatedSetupTime": 5,
+  "flowJson": {
+    "nodes": [
+      {"id": "t1", "type": "trigger", "config": {"channel": "instagram", "kind": "dm"}},
+      {"id": "m1", "type": "message", "config": {"aiConfig": {"enabled": true, "type": "answer", "scopeDocs": ["all"], "prompt": "Answer based on our FAQ. Be concise and helpful."}}},
+      {"id": "m2", "type": "message", "config": {"text": "Was this helpful?\n\n[👍 Yes] [👎 No]"}}
+    ],
+    "edges": [
+      {"from": "t1", "to": "m1"},
+      {"from": "m1", "to": "m2"}
+    ]
+  }
+}

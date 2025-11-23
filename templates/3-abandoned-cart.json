@@ -1,0 +1,26 @@
+{
+  "id": "template_abandoned_cart",
+  "name": "Abandoned Cart Recovery",
+  "description": "Recover lost sales by following up with customers who abandon their carts. Auto-switches between Instagram and WhatsApp based on 24h policy.",
+  "channels": ["instagram", "messenger", "whatsapp"],
+  "categories": ["ecommerce", "sales", "automation"],
+  "estimatedSetupTime": 8,
+  "flowJson": {
+    "nodes": [
+      {"id": "t1", "type": "trigger", "config": {"channel": "instagram", "kind": "webhook", "source": "shopify"}},
+      {"id": "c1", "type": "condition", "config": {"conditions": [{"type": "time", "hoursSince": 24, "operator": "lt"}], "branches": {"true": "m1_ig", "false": "m1_wa"}}},
+      {"id": "m1_ig", "type": "message", "config": {"text": "Hey {{name}}! 👋\n\nI noticed you left something in your cart. Still interested?\n\n[View Cart]"}},
+      {"id": "m1_wa", "type": "message", "config": {"text": "Complete your order and get 10% off!", "useTemplate": true, "templateName": "abandoned_cart"}},
+      {"id": "h1", "type": "http", "config": {"url": "https://api.shopify.com/discount", "method": "POST"}},
+      {"id": "m2", "type": "message", "config": {"text": "Here's your 10% discount code: {{discount_code}}\n\nValid for 24 hours! 🎁"}}
+    ],
+    "edges": [
+      {"from": "t1", "to": "c1"},
+      {"from": "c1", "to": "m1_ig"},
+      {"from": "c1", "to": "m1_wa"},
+      {"from": "m1_ig", "to": "h1"},
+      {"from": "m1_wa", "to": "h1"},
+      {"from": "h1", "to": "m2"}
+    ]
+  }
+}

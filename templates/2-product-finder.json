@@ -1,0 +1,27 @@
+{
+  "id": "template_product_finder",
+  "name": "Product Finder Quiz",
+  "description": "Interactive quiz to recommend products based on user preferences. Perfect for e-commerce stores.",
+  "channels": ["instagram", "messenger", "whatsapp", "telegram"],
+  "categories": ["ecommerce", "quiz", "sales"],
+  "estimatedSetupTime": 10,
+  "flowJson": {
+    "nodes": [
+      {"id": "t1", "type": "trigger", "config": {"channel": "instagram", "kind": "keyword", "keyword": "SHOP"}},
+      {"id": "m1", "type": "message", "config": {"text": "Let's find your perfect product! 🛍️"}},
+      {"id": "q1", "type": "questionnaire", "config": {
+        "questions": [
+          {"id": "budget", "prompt": "What's your budget?", "answerType": "choice", "choices": ["Under $50", "$50-$100", "Over $100"], "saveTo": "budget"},
+          {"id": "style", "prompt": "What's your style?", "answerType": "choice", "choices": ["Casual", "Professional", "Athletic"], "saveTo": "style"}
+        ]}},
+      {"id": "h1", "type": "http", "config": {"url": "https://api.example.com/recommend", "method": "POST"}},
+      {"id": "m2", "type": "message", "config": {"text": "Perfect match: {{product_name}}! 🎯\n\n{{product_description}}\n\nPrice: {{product_price}}"}}
+    ],
+    "edges": [
+      {"from": "t1", "to": "m1"},
+      {"from": "m1", "to": "q1"},
+      {"from": "q1", "to": "h1"},
+      {"from": "h1", "to": "m2"}
+    ]
+  }
+}

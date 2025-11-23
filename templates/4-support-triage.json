@@ -1,0 +1,23 @@
+{
+  "id": "template_support_triage",
+  "name": "AI Support Triage",
+  "description": "AI-first customer support that answers common questions automatically and escalates complex issues to humans.",
+  "channels": ["instagram", "messenger", "whatsapp", "telegram"],
+  "categories": ["support", "ai", "automation"],
+  "estimatedSetupTime": 7,
+  "flowJson": {
+    "nodes": [
+      {"id": "t1", "type": "trigger", "config": {"channel": "instagram", "kind": "dm"}},
+      {"id": "m1", "type": "message", "config": {"text": "{{user_message}}", "aiConfig": {"enabled": true, "type": "answer", "scopeDocs": ["faq.pdf", "support-guide.pdf"], "confidence": 0.8}}},
+      {"id": "c1", "type": "condition", "config": {"conditions": [{"type": "field", "field": "ai_confidence", "operator": "gt", "value": 0.8}], "branches": {"true": "m2", "false": "m3"}}},
+      {"id": "m2", "type": "message", "config": {"text": "Was this helpful?\n\n[Yes] [Need more help]"}},
+      {"id": "m3", "type": "message", "config": {"text": "Let me connect you with our support team. They'll help you shortly! ⏱️"}}
+    ],
+    "edges": [
+      {"from": "t1", "to": "m1"},
+      {"from": "m1", "to": "c1"},
+      {"from": "c1", "to": "m2"},
+      {"from": "c1", "to": "m3"}
+    ]
+  }
+}

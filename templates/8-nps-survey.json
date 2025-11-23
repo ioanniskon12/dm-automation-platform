@@ -1,0 +1,29 @@
+{
+  "id": "template_nps",
+  "name": "NPS/CSAT Survey",
+  "description": "Collect customer feedback and identify promoters vs detractors. Improves customer satisfaction.",
+  "channels": ["telegram", "whatsapp", "messenger"],
+  "categories": ["feedback", "survey", "customer-success"],
+  "estimatedSetupTime": 5,
+  "flowJson": {
+    "nodes": [
+      {"id": "t1", "type": "trigger", "config": {"channel": "whatsapp", "kind": "webhook", "source": "post_purchase"}},
+      {"id": "m1", "type": "message", "config": {"text": "Quick question: How likely are you to recommend us to a friend?\n\n0 (Not likely) to 10 (Very likely)"}},
+      {"id": "q1", "type": "questionnaire", "config": {
+        "questions": [
+          {"id": "rating", "prompt": "", "answerType": "number", "validation": {"min": 0, "max": 10}, "saveTo": "nps_score"},
+          {"id": "reason", "prompt": "What's the main reason for your score?", "answerType": "text", "saveTo": "nps_reason"}
+        ]}},
+      {"id": "c1", "type": "condition", "config": {"conditions": [{"type": "field", "field": "nps_score", "operator": "gte", "value": 9}], "branches": {"true": "m_promoter", "false": "m_detractor"}}},
+      {"id": "m_promoter", "type": "message", "config": {"text": "Thank you! 🎉\n\nWould you mind leaving us a review? It helps so much!"}},
+      {"id": "m_detractor", "type": "message", "config": {"text": "Thanks for your feedback. Our team will reach out to make things right."}}
+    ],
+    "edges": [
+      {"from": "t1", "to": "m1"},
+      {"from": "m1", "to": "q1"},
+      {"from": "q1", "to": "c1"},
+      {"from": "c1", "to": "m_promoter"},
+      {"from": "c1", "to": "m_detractor"}
+    ]
+  }
+}

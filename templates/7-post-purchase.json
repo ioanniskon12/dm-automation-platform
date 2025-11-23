@@ -1,0 +1,25 @@
+{
+  "id": "template_post_purchase",
+  "name": "Post-Purchase Care",
+  "description": "Nurture customers after purchase with helpful tips and check-ins. Builds loyalty and reduces returns.",
+  "channels": ["whatsapp", "telegram", "messenger"],
+  "categories": ["ecommerce", "customer-success", "retention"],
+  "estimatedSetupTime": 8,
+  "flowJson": {
+    "nodes": [
+      {"id": "t1", "type": "trigger", "config": {"channel": "whatsapp", "kind": "webhook", "source": "shopify"}},
+      {"id": "m1", "type": "message", "config": {"text": "Thanks for your order, {{name}}! 🎉\n\nOrder #{{order_id}} is confirmed."}},
+      {"id": "d1", "type": "message", "config": {"delay": 86400000, "text": ""}},
+      {"id": "m2", "type": "message", "config": {"text": "Quick tips to get started:\n\n1. Unbox carefully\n2. Read the quick start guide\n3. Register for warranty"}},
+      {"id": "d2", "type": "message", "config": {"delay": 259200000, "text": ""}},
+      {"id": "m3", "type": "message", "config": {"text": "How's it going with your {{product_name}}?\n\n[😍 Love it] [😐 It's ok] [😔 Having issues]"}}
+    ],
+    "edges": [
+      {"from": "t1", "to": "m1"},
+      {"from": "m1", "to": "d1"},
+      {"from": "d1", "to": "m2"},
+      {"from": "m2", "to": "d2"},
+      {"from": "d2", "to": "m3"}
+    ]
+  }
+}

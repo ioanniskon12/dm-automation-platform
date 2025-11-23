@@ -1,0 +1,23 @@
+{
+  "id": "template_giveaway",
+  "name": "Giveaway with Unique Codes",
+  "description": "Run giveaways with unique promo codes. Prevents duplicate entries and tracks participants.",
+  "channels": ["instagram", "messenger"],
+  "categories": ["marketing", "giveaway", "promotion"],
+  "estimatedSetupTime": 6,
+  "flowJson": {
+    "nodes": [
+      {"id": "t1", "type": "trigger", "config": {"channel": "instagram", "kind": "comment_dm", "keyword": "WIN"}},
+      {"id": "c1", "type": "condition", "config": {"conditions": [{"type": "tag", "tag": "giveaway_2024_entered"}], "branches": {"true": "m_duplicate", "false": "h1"}}},
+      {"id": "m_duplicate", "type": "message", "config": {"text": "You've already entered this giveaway! 🎉\n\nWinner will be announced on Friday!"}},
+      {"id": "h1", "type": "http", "config": {"url": "https://api.example.com/generate-code", "method": "POST"}},
+      {"id": "m1", "type": "message", "config": {"text": "🎉 You're in!\n\nYour unique entry code: {{unique_code}}\n\nShare this post for an extra entry!"}}
+    ],
+    "edges": [
+      {"from": "t1", "to": "c1"},
+      {"from": "c1", "to": "m_duplicate"},
+      {"from": "c1", "to": "h1"},
+      {"from": "h1", "to": "m1"}
+    ]
+  }
+}
