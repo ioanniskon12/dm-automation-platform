@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import NavigationSidebar from '../../components/NavigationSidebar';
+import RandomMessagePopup from '../../components/RandomMessagePopup';
 import { useSidebar } from '../../contexts/SidebarContext';
 import { useBrandChannel } from '../../contexts/BrandChannelContext';
 
@@ -80,6 +81,9 @@ function DashboardContent() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
+      {/* Random Message Popup */}
+      <RandomMessagePopup />
+
       <NavigationSidebar />
 
       {/* Main Content - with left padding for sidebar */}
