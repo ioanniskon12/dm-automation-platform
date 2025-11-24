@@ -86,6 +86,115 @@ function GlobalAutomationsContent() {
     }
   ];
 
+  // Facebook/Messenger global automations (same as Instagram but without story mention)
+  const facebookAutomations = [
+    {
+      id: 'default-reply',
+      name: 'Default Reply',
+      description: 'Sends a reply when the bot doesn\'t understand a message.',
+      status: 'inactive',
+      actions: [
+        { type: 'create', label: 'Create manually' },
+        { type: 'ai', label: 'Train with AI' }
+      ]
+    },
+    {
+      id: 'main-menu',
+      name: 'Main Menu',
+      description: 'Quick menu users can open from Messenger.',
+      status: 'active',
+      actions: [
+        { type: 'edit', label: 'Edit' }
+      ]
+    },
+    {
+      id: 'welcome-followers',
+      name: 'Say hi to new followers',
+      description: 'Send a welcome message to people the moment they follow your page (1st time only).',
+      status: 'inactive',
+      actions: [
+        { type: 'setup', label: 'Set up' },
+        { type: 'existing', label: 'Select existing' }
+      ]
+    },
+    {
+      id: 'conversation-starters',
+      name: 'Conversation Starters',
+      description: 'Preset buttons that appear when someone opens your chat.',
+      status: 'active',
+      actions: [
+        { type: 'edit', label: 'Edit' }
+      ]
+    },
+    {
+      id: 'opt-in',
+      name: 'Opt-in Automation',
+      description: 'Triggers when user types START or SUBSCRIBE (system keywords, not editable).',
+      status: 'inactive',
+      actions: [
+        { type: 'edit', label: 'Edit' }
+      ]
+    },
+    {
+      id: 'opt-out',
+      name: 'Opt-out Automation',
+      description: 'Triggers when user types STOP or UNSUBSCRIBE.',
+      status: 'inactive',
+      actions: [
+        { type: 'edit', label: 'Edit' }
+      ]
+    }
+  ];
+
+  // Telegram global automations (default reply, welcome message, opt-in, opt-out)
+  const telegramAutomations = [
+    {
+      id: 'default-reply',
+      name: 'Default Reply',
+      description: 'Sends a reply when the bot doesn\'t understand a message.',
+      status: 'inactive',
+      actions: [
+        { type: 'create', label: 'Create manually' },
+        { type: 'ai', label: 'Train with AI' }
+      ]
+    },
+    {
+      id: 'welcome-message',
+      name: 'Welcome Message',
+      description: 'Send a welcome message when someone starts a conversation with your bot.',
+      status: 'inactive',
+      actions: [
+        { type: 'setup', label: 'Set up' },
+        { type: 'existing', label: 'Select existing' }
+      ]
+    },
+    {
+      id: 'opt-in',
+      name: 'Opt-in Automation',
+      description: 'Triggers when user types START or SUBSCRIBE (system keywords, not editable).',
+      status: 'inactive',
+      actions: [
+        { type: 'edit', label: 'Edit' }
+      ]
+    },
+    {
+      id: 'opt-out',
+      name: 'Opt-out Automation',
+      description: 'Triggers when user types STOP or UNSUBSCRIBE.',
+      status: 'inactive',
+      actions: [
+        { type: 'edit', label: 'Edit' }
+      ]
+    }
+  ];
+
+  // Get the appropriate automations based on channel type
+  const currentAutomations = currentChannel?.type === 'telegram'
+    ? telegramAutomations
+    : currentChannel?.type === 'facebook' || currentChannel?.type === 'messenger'
+    ? facebookAutomations
+    : instagramAutomations;
+
   const handleAction = (automation, actionType) => {
     if (actionType === 'existing') {
       setSelectedAutomation(automation);
@@ -305,7 +414,7 @@ function GlobalAutomationsContent() {
 
         {/* Automations List */}
         <div className="space-y-3">
-          {instagramAutomations.map((automation) => (
+          {currentAutomations.map((automation) => (
             <div
               key={automation.id}
               className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 hover:border-gray-300 dark:hover:border-gray-600 transition-all"

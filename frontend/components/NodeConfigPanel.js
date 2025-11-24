@@ -776,6 +776,145 @@ export default function NodeConfigPanel({ node, onUpdate, onDelete, onClose, onA
               </div>
             </div>
           )}
+
+          {node.data.triggerType === 'telegram_message' && (
+            <div className="py-8">
+              <div className="mb-6 text-center">
+                <div className="text-6xl mb-4">✈️</div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                  Telegram Message
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 text-sm max-w-md mx-auto mb-4">
+                  Trigger when user sends a message on Telegram.
+                </p>
+              </div>
+
+              {/* Trigger Type */}
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
+                  Trigger On:
+                </label>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-300 dark:border-gray-600">
+                    <input
+                      type="radio"
+                      checked={node.data.triggerType === 'any'}
+                      onChange={() => handleUpdate('triggerType', 'any')}
+                      className="w-4 h-4 text-blue-500"
+                    />
+                    <span className="text-sm text-gray-900 dark:text-white">Any Message</span>
+                  </label>
+                  <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-300 dark:border-gray-600">
+                    <input
+                      type="radio"
+                      checked={node.data.triggerType === 'keywords'}
+                      onChange={() => handleUpdate('triggerType', 'keywords')}
+                      className="w-4 h-4 text-blue-500"
+                    />
+                    <span className="text-sm text-gray-900 dark:text-white">Specific Keywords</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Keywords Input (conditional) */}
+              {node.data.triggerType === 'keywords' && (
+                <div className="mb-6">
+                  <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                    Keywords:
+                  </label>
+                  <input
+                    type="text"
+                    value={node.data.keywords || ''}
+                    onChange={(e) => handleUpdate('keywords', e.target.value)}
+                    placeholder="e.g., help, support, info"
+                    className="w-full p-3 border rounded-lg bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    Enter keywords separated by commas. Case-insensitive.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {node.data.triggerType === 'telegram_ref_url' && (
+            <div className="py-8">
+              <div className="mb-6 text-center">
+                <div className="text-6xl mb-4">🔗</div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                  Telegram Ref URL
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 text-sm max-w-md mx-auto mb-4">
+                  Create a trackable deep link to trigger automation when users click it.
+                </p>
+              </div>
+
+              {/* Ref Parameter Input */}
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
+                  Ref Parameter:
+                </label>
+                <input
+                  type="text"
+                  value={node.data.refParameter || ''}
+                  onChange={(e) => handleUpdate('refParameter', e.target.value)}
+                  placeholder="e.g., promo_code or campaign_id"
+                  className="w-full p-3 border rounded-lg bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                  The ref parameter in your Telegram deep link
+                </p>
+              </div>
+
+              {/* Generated URL Display */}
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
+                  Your Telegram Deep Link:
+                </label>
+                <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-300 dark:border-gray-600">
+                  <div className="text-sm font-mono text-gray-900 dark:text-white break-all mb-3">
+                    https://t.me/yourbot?start={node.data.refParameter || 'your_ref_parameter'}
+                  </div>
+                  <button
+                    onClick={() => {
+                      const url = `https://t.me/yourbot?start=${node.data.refParameter || 'your_ref_parameter'}`
+                      navigator.clipboard.writeText(url)
+                      // Show a brief success indicator
+                      const btn = event.target
+                      const originalText = btn.textContent
+                      btn.textContent = '✓ Copied!'
+                      setTimeout(() => {
+                        btn.textContent = originalText
+                      }, 2000)
+                    }}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                  >
+                    Copy URL
+                  </button>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    Replace "yourbot" with your actual Telegram bot username
+                  </p>
+                </div>
+              </div>
+
+              {/* Link URL (optional, for reference) */}
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                  Full Link (for reference):
+                </label>
+                <input
+                  type="text"
+                  value={node.data.linkUrl || ''}
+                  onChange={(e) => handleUpdate('linkUrl', e.target.value)}
+                  placeholder="https://t.me/yourbot?start=promo_code"
+                  className="w-full p-3 border rounded-lg bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                  Optional: Store the full link for your reference
+                </p>
+              </div>
+            </div>
+          )}
         </>
       )
     }

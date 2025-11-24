@@ -71,7 +71,8 @@ export default function Sidebar({ addNode, isMinimized, onToggleMinimize, channe
     { type: 'ai_decision', label: 'AI Decision Router', icon: '🧠' },
   ]
 
-  const mediaTypes = [
+  // All media types for Instagram and Facebook
+  const allMediaTypes = [
     { type: 'send_message', label: 'Send Message', icon: '💌' },
     { type: 'send_image', label: 'Send Image', icon: '🖼️' },
     { type: 'send_video', label: 'Send Video', icon: '🎥' },
@@ -80,6 +81,18 @@ export default function Sidebar({ addNode, isMinimized, onToggleMinimize, channe
     { type: 'send_carousel', label: 'Send Carousel', icon: '🎠' },
     { type: 'send_card', label: 'Send Card', icon: '🃏' },
   ]
+
+  // Telegram media types (only 5 basic types)
+  const telegramMediaTypes = [
+    { type: 'send_message', label: 'Send Message', icon: '💌' },
+    { type: 'send_image', label: 'Send Image', icon: '🖼️' },
+    { type: 'send_video', label: 'Send Video', icon: '🎥' },
+    { type: 'send_voice', label: 'Send Voice', icon: '🎤' },
+    { type: 'send_file', label: 'Send File', icon: '📎' },
+  ]
+
+  // Select media types based on channel
+  const mediaTypes = channelType === 'telegram' ? telegramMediaTypes : allMediaTypes
 
   const handleAddNode = (nodeType, specificType, label) => {
     const data = { label }
@@ -136,6 +149,18 @@ export default function Sidebar({ addNode, isMinimized, onToggleMinimize, channe
         data.keywords = ''
         data.aiIntents = []
         data.replyDelay = 0
+      }
+
+      // Telegram Message trigger
+      if (specificType === 'telegram_message') {
+        data.triggerType = 'any'
+        data.keywords = ''
+      }
+
+      // Telegram Ref URL trigger
+      if (specificType === 'telegram_ref_url') {
+        data.refParameter = ''
+        data.linkUrl = ''
       }
     } else if (nodeType === 'condition') {
       data.conditionType = specificType

@@ -791,12 +791,130 @@ export const INSTAGRAM_TRIGGERS: TriggerTypeConfig[] = [
 ];
 
 // ============================================
+// TELEGRAM TRIGGERS
+// ============================================
+
+export const TELEGRAM_TRIGGERS: TriggerTypeConfig[] = [
+  {
+    id: 'telegram_message',
+    name: 'Telegram Message',
+    description: 'User sends a message',
+    channel: 'telegram',
+    icon: '✈️',
+    category: 'messaging',
+
+    configSchema: [
+      {
+        field: 'triggerType',
+        label: 'Trigger On',
+        type: 'select',
+        options: [
+          { value: 'any', label: 'Any Message' },
+          { value: 'keywords', label: 'Specific Keywords' }
+        ],
+        defaultValue: 'any',
+        required: true
+      },
+      {
+        field: 'keywords',
+        label: 'Keywords',
+        type: 'keywords',
+        placeholder: 'Enter keywords (e.g., "help", "support", "info")',
+        required: false,
+        helpText: 'Only trigger when message contains these keywords (case-insensitive)'
+      }
+    ],
+
+    webhookEvents: ['message'],
+
+    examples: [
+      'Auto-respond to Telegram messages',
+      'Trigger flows based on keywords',
+      'Provide customer support via Telegram'
+    ],
+
+    matches: (event, config) => {
+      const messageText = event.message?.text?.toLowerCase() || '';
+
+      switch (config.triggerType) {
+        case 'any':
+          return true;
+
+        case 'keywords':
+          if (config.keywords && config.keywords.length > 0) {
+            return config.keywords.some((keyword: string) =>
+              messageText.includes(keyword.toLowerCase())
+            );
+          }
+          return false;
+
+        default:
+          return true;
+      }
+    }
+  },
+
+  {
+    id: 'telegram_ref_url',
+    name: 'Telegram Ref URL',
+    description: 'User clicks a referral link',
+    channel: 'telegram',
+    icon: '🔗',
+    category: 'messaging',
+
+    configSchema: [
+      {
+        field: 'refParameter',
+        label: 'Ref Parameter',
+        type: 'text',
+        placeholder: 'e.g., "promo_code" or "campaign_id"',
+        required: true,
+        helpText: 'The ref parameter in your Telegram deep link'
+      },
+      {
+        field: 'linkUrl',
+        label: 'Full Link (for reference)',
+        type: 'text',
+        placeholder: 'https://t.me/yourbot?start=promo_code',
+        required: false,
+        helpText: 'Generated link for your reference'
+      }
+    ],
+
+    webhookEvents: ['message'],
+    requiresSetup: [
+      'Create Telegram deep link with start parameter',
+      'Share link in campaigns, ads, or website'
+    ],
+
+    examples: [
+      'Track different traffic sources',
+      'Segment users by campaign origin',
+      'Trigger different flows for different campaigns'
+    ],
+
+    matches: (event, config) => {
+      // Check if this is a /start command with matching parameter
+      const messageText = event.message?.text || '';
+      const startCommand = `/start ${config.refParameter}`;
+
+      if (messageText === startCommand || messageText.startsWith(startCommand + ' ')) {
+        return true;
+      }
+
+      return false;
+    }
+  }
+];
+
+// ============================================
 // HELPER FUNCTIONS
 // ============================================
 
 export const ALL_TRIGGERS = [
   ...MESSENGER_TRIGGERS,
-  ...INSTAGRAM_TRIGGERS
+  ...INSTAGRAM_TRIGGERS,
+  ...TELEGRAM_TRIGGERS
 ];
 
 export function getTriggerType(id: string): TriggerTypeConfig | undefined {
