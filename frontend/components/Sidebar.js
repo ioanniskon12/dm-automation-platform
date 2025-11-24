@@ -76,6 +76,7 @@ export default function Sidebar({ addNode, isMinimized, onToggleMinimize, channe
     { type: 'send_image', label: 'Send Image', icon: '🖼️' },
     { type: 'send_video', label: 'Send Video', icon: '🎥' },
     { type: 'send_voice', label: 'Send Voice', icon: '🎤' },
+    { type: 'send_file', label: 'Send File', icon: '📎' },
     { type: 'send_carousel', label: 'Send Carousel', icon: '🎠' },
     { type: 'send_card', label: 'Send Card', icon: '🃏' },
   ]
@@ -177,6 +178,10 @@ export default function Sidebar({ addNode, isMinimized, onToggleMinimize, channe
       } else if (specificType === 'send_voice') {
         data.voiceUrl = ''
         data.duration = ''
+      } else if (specificType === 'send_file') {
+        data.fileUrl = ''
+        data.fileName = ''
+        data.caption = ''
       } else if (specificType === 'send_carousel') {
         data.cards = []
       } else if (specificType === 'send_card') {

@@ -74,6 +74,9 @@ export default function NodeConfigPanel({ node, onUpdate, onDelete, onClose, onA
       if (node.data.mediaType === 'send_voice' && (!node.data.voiceUrl || node.data.voiceUrl.trim() === '')) {
         errors.push('Voice URL is required')
       }
+      if (node.data.mediaType === 'send_file' && (!node.data.fileUrl || node.data.fileUrl.trim() === '')) {
+        errors.push('File URL is required')
+      }
     }
 
     return errors
@@ -117,6 +120,7 @@ export default function NodeConfigPanel({ node, onUpdate, onDelete, onClose, onA
     { id: 'send_image', label: 'Send Image', icon: '🖼️', type: 'media', mediaType: 'send_image' },
     { id: 'send_video', label: 'Send Video', icon: '🎥', type: 'media', mediaType: 'send_video' },
     { id: 'send_voice', label: 'Send Voice', icon: '🎤', type: 'media', mediaType: 'send_voice' },
+    { id: 'send_file', label: 'Send File', icon: '📎', type: 'media', mediaType: 'send_file' },
     { id: 'send_carousel', label: 'Send Carousel', icon: '🎠', type: 'media', mediaType: 'send_carousel' },
     { id: 'send_card', label: 'Send Card', icon: '🃏', type: 'media', mediaType: 'send_card' },
     { id: 'data_collection', label: 'Data Collection', icon: '📝', type: 'action', actionType: 'data_collection' },
@@ -1335,6 +1339,41 @@ export default function NodeConfigPanel({ node, onUpdate, onDelete, onClose, onA
                   value={node.data.duration || ''}
                   onChange={(e) => handleUpdate('duration', e.target.value)}
                   placeholder="e.g., 0:15"
+                  className="w-full p-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent"
+                />
+              </div>
+            </>
+          )}
+
+          {node.data.mediaType === 'send_file' && (
+            <>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">File URL</label>
+                <input
+                  type="text"
+                  value={node.data.fileUrl || ''}
+                  onChange={(e) => handleUpdate('fileUrl', e.target.value)}
+                  placeholder="https://example.com/document.pdf or /path/to/file.pdf"
+                  className="w-full p-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">File Name</label>
+                <input
+                  type="text"
+                  value={node.data.fileName || ''}
+                  onChange={(e) => handleUpdate('fileName', e.target.value)}
+                  placeholder="e.g., product-catalog.pdf"
+                  className="w-full p-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">Caption (Optional)</label>
+                <textarea
+                  value={node.data.caption || ''}
+                  onChange={(e) => handleUpdate('caption', e.target.value)}
+                  placeholder="Add a caption for the file..."
+                  rows={2}
                   className="w-full p-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent"
                 />
               </div>
