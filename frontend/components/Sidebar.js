@@ -82,8 +82,8 @@ export default function Sidebar({ addNode, isMinimized, onToggleMinimize, channe
     { type: 'send_card', label: 'Send Card', icon: '🃏' },
   ]
 
-  // Telegram media types (only 5 basic types)
-  const telegramMediaTypes = [
+  // Telegram and WhatsApp media types (only 5 basic types)
+  const basicMediaTypes = [
     { type: 'send_message', label: 'Send Message', icon: '💌' },
     { type: 'send_image', label: 'Send Image', icon: '🖼️' },
     { type: 'send_video', label: 'Send Video', icon: '🎥' },
@@ -92,7 +92,9 @@ export default function Sidebar({ addNode, isMinimized, onToggleMinimize, channe
   ]
 
   // Select media types based on channel
-  const mediaTypes = channelType === 'telegram' ? telegramMediaTypes : allMediaTypes
+  const mediaTypes = (channelType === 'telegram' || channelType === 'whatsapp')
+    ? basicMediaTypes
+    : allMediaTypes
 
   const handleAddNode = (nodeType, specificType, label) => {
     const data = { label }
