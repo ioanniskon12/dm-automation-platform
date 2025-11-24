@@ -162,6 +162,18 @@ export default function Sidebar({ addNode, isMinimized, onToggleMinimize, channe
         data.refParameter = ''
         data.linkUrl = ''
       }
+
+      // WhatsApp Message trigger
+      if (specificType === 'whatsapp_message') {
+        data.triggerType = 'any'
+        data.keywords = ''
+      }
+
+      // WhatsApp Ref URL trigger
+      if (specificType === 'whatsapp_ref_url') {
+        data.refParameter = ''
+        data.linkUrl = ''
+      }
     } else if (nodeType === 'condition') {
       data.conditionType = specificType
     } else if (nodeType === 'action') {
