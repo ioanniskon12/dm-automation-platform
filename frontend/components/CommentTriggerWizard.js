@@ -7,9 +7,8 @@ export default function CommentTriggerWizard({ node, onUpdate, onClose, isPro = 
   const [selectedPost, setSelectedPost] = useState(node.data.selectedPost || null)
   const [triggerMode, setTriggerMode] = useState(node.data.triggerMode || 'keywords')
   const [keywords, setKeywords] = useState(node.data.keyword || '')
-  const [replyType, setReplyType] = useState(node.data.replyType || 'ai')
+  const [enablePublicReply, setEnablePublicReply] = useState(node.data.enablePublicReply !== false)
   const [replyMessages, setReplyMessages] = useState(node.data.commentReply || '')
-  const [enablePrivateDM, setEnablePrivateDM] = useState(node.data.enablePrivateDM || false)
 
   // Mock Instagram posts/reels data
   const mockPosts = [
@@ -47,11 +46,8 @@ export default function CommentTriggerWizard({ node, onUpdate, onClose, isPro = 
       selectedPost,
       triggerMode,
       keyword: keywords,
-      replyType,
-      commentReply: replyMessages,
-      aiInstructions: replyType === 'ai' ? replyMessages : '',
-      rotatingAnswers: replyType === 'rotating' ? replyMessages : '',
-      enablePrivateDM,
+      enablePublicReply,
+      commentReply: enablePublicReply ? replyMessages : '',
     })
     onClose()
   }
@@ -172,12 +168,12 @@ export default function CommentTriggerWizard({ node, onUpdate, onClose, isPro = 
           </div>
         )}
 
-        {/* STEP 2: Choose Comment Type */}
+        {/* STEP 2: Choose what kind of comment starts the DM */}
         {step === 2 && (
           <div className="space-y-6 animate-fadeIn">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Choose Comment Type</h2>
-              <p className="text-gray-600 dark:text-gray-400">Decide what kind of comments should trigger the automation</p>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">When should the DM start?</h2>
+              <p className="text-gray-600 dark:text-gray-400">Choose what kind of comments should trigger the automation</p>
             </div>
 
             <div className="space-y-3">
@@ -192,9 +188,9 @@ export default function CommentTriggerWizard({ node, onUpdate, onClose, isPro = 
                 <div className="flex items-start gap-4">
                   <div className="text-3xl">🔑</div>
                   <div className="flex-1">
-                    <div className="font-bold text-gray-900 dark:text-white mb-1">Keywords in comment</div>
+                    <div className="font-bold text-gray-900 dark:text-white mb-1">Specific Keywords</div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">
-                      Only trigger when comment contains specific words
+                      Trigger when comment contains specific words like "info", "price", etc.
                     </div>
                   </div>
                   {triggerMode === 'keywords' && (
@@ -216,9 +212,9 @@ export default function CommentTriggerWizard({ node, onUpdate, onClose, isPro = 
                 <div className="flex items-start gap-4">
                   <div className="text-3xl">💬</div>
                   <div className="flex-1">
-                    <div className="font-bold text-gray-900 dark:text-white mb-1">Every comment</div>
+                    <div className="font-bold text-gray-900 dark:text-white mb-1">Any comment</div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">
-                      Trigger for every single comment on the selected post
+                      Trigger for every comment on the selected post
                     </div>
                   </div>
                   {triggerMode === 'any' && (
@@ -255,29 +251,29 @@ export default function CommentTriggerWizard({ node, onUpdate, onClose, isPro = 
         {step === 3 && (
           <div className="space-y-6 animate-fadeIn">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Set Up Your Public Reply</h2>
-              <p className="text-gray-600 dark:text-gray-400">Choose how to reply publicly to comments</p>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Set Up Public Reply</h2>
+              <p className="text-gray-600 dark:text-gray-400">Do you want to automatically reply under the comment?</p>
             </div>
 
-            {/* Reply Type Selection */}
+            {/* Yes/No Selection */}
             <div className="space-y-3">
               <button
-                onClick={() => setReplyType('ai')}
+                onClick={() => setEnablePublicReply(true)}
                 className={`w-full p-5 rounded-xl border-2 transition-all text-left ${
-                  replyType === 'ai'
+                  enablePublicReply
                     ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
                     : 'border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-700'
                 }`}
               >
                 <div className="flex items-start gap-4">
-                  <div className="text-3xl">🤖</div>
+                  <div className="text-3xl">✅</div>
                   <div className="flex-1">
-                    <div className="font-bold text-gray-900 dark:text-white mb-1">AI Reply</div>
+                    <div className="font-bold text-gray-900 dark:text-white mb-1">Yes, reply publicly</div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">
-                      Let AI generate contextual responses
+                      Automatically reply under comments that match
                     </div>
                   </div>
-                  {replyType === 'ai' && (
+                  {enablePublicReply && (
                     <div className="w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center flex-shrink-0">
                       <span className="text-white text-sm">✓</span>
                     </div>
@@ -286,46 +282,22 @@ export default function CommentTriggerWizard({ node, onUpdate, onClose, isPro = 
               </button>
 
               <button
-                onClick={() => setReplyType('predefined')}
+                onClick={() => setEnablePublicReply(false)}
                 className={`w-full p-5 rounded-xl border-2 transition-all text-left ${
-                  replyType === 'predefined'
+                  !enablePublicReply
                     ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
                     : 'border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-700'
                 }`}
               >
                 <div className="flex items-start gap-4">
-                  <div className="text-3xl">💬</div>
+                  <div className="text-3xl">⏭️</div>
                   <div className="flex-1">
-                    <div className="font-bold text-gray-900 dark:text-white mb-1">Predefined message</div>
+                    <div className="font-bold text-gray-900 dark:text-white mb-1">No, skip public reply</div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">
-                      Use the same message every time
+                      Only send a DM, don't reply publicly
                     </div>
                   </div>
-                  {replyType === 'predefined' && (
-                    <div className="w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center flex-shrink-0">
-                      <span className="text-white text-sm">✓</span>
-                    </div>
-                  )}
-                </div>
-              </button>
-
-              <button
-                onClick={() => setReplyType('rotating')}
-                className={`w-full p-5 rounded-xl border-2 transition-all text-left ${
-                  replyType === 'rotating'
-                    ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-700'
-                }`}
-              >
-                <div className="flex items-start gap-4">
-                  <div className="text-3xl">🔄</div>
-                  <div className="flex-1">
-                    <div className="font-bold text-gray-900 dark:text-white mb-1">Rotating replies</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      Cycle through different messages for variety
-                    </div>
-                  </div>
-                  {replyType === 'rotating' && (
+                  {!enablePublicReply && (
                     <div className="w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center flex-shrink-0">
                       <span className="text-white text-sm">✓</span>
                     </div>
@@ -334,50 +306,24 @@ export default function CommentTriggerWizard({ node, onUpdate, onClose, isPro = 
               </button>
             </div>
 
-            {/* Reply Message Configuration */}
-            <div className="p-5 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl border border-purple-200 dark:border-purple-800">
-              <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                {replyType === 'predefined' && 'Reply Message'}
-                {replyType === 'ai' && 'AI Instructions'}
-                {replyType === 'rotating' && 'Reply Messages (one per line)'}
-              </label>
-              <textarea
-                value={replyMessages}
-                onChange={(e) => setReplyMessages(e.target.value)}
-                placeholder={
-                  replyType === 'predefined'
-                    ? "Thanks for your interest! Check your DMs 💌"
-                    : replyType === 'ai'
-                    ? "Tell the AI how to respond. E.g., 'Thank them and direct them to check their DMs'"
-                    : "Thanks! Check your DMs 💌\nSent you a message! 📨\nDM on the way! ✉️"
-                }
-                rows={replyType === 'rotating' ? 5 : 3}
-                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent"
-              />
-              {replyType === 'rotating' && (
-                <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
-                  💡 Each line will be used in rotation to avoid repetitive replies
-                </p>
-              )}
-            </div>
-
-            {/* Private Reply via DM */}
-            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-700">
-              <label className="flex items-center gap-3 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={enablePrivateDM}
-                  onChange={(e) => setEnablePrivateDM(e.target.checked)}
-                  className="w-4 h-4 text-blue-500 border-gray-300 rounded focus:ring-blue-500"
+            {/* Reply Messages (shown only if Yes is selected) */}
+            {enablePublicReply && (
+              <div className="p-5 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl border border-purple-200 dark:border-purple-800">
+                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
+                  Reply Messages (one per line)
+                </label>
+                <textarea
+                  value={replyMessages}
+                  onChange={(e) => setReplyMessages(e.target.value)}
+                  placeholder="Thanks! Check your inbox 👋&#10;Sent you a message! 📨&#10;DM on the way! ✉️&#10;Check your DMs 💌"
+                  rows={5}
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent"
                 />
-                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                  Private Reply via DM (optional)
-                </span>
-              </label>
-              <p className="text-xs text-blue-600 dark:text-blue-400 mt-2 ml-7">
-                Also send a direct message along with the public reply
-              </p>
-            </div>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                  💡 Add multiple messages (one per line) for variety — we'll rotate through them automatically
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>
