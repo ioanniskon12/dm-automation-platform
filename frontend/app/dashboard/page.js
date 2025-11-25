@@ -11,6 +11,7 @@ function DashboardContent() {
   const { isCollapsed } = useSidebar();
   const { getCurrentBrand } = useBrandChannel();
   const currentBrand = getCurrentBrand();
+  const [showPopup, setShowPopup] = useState(true);
 
   // Mock analytics data - in production, fetch from API
   const [analytics, setAnalytics] = useState({
@@ -81,6 +82,30 @@ function DashboardContent() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
       <NavigationSidebar />
+
+      {/* Sotiri Popup */}
+      {showPopup && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md mx-4 shadow-2xl transform animate-bounce">
+            <div className="text-center">
+              <h2 className="text-3xl font-bold text-black dark:text-white mb-4">
+                Sotiri ise gay ?
+              </h2>
+              <img
+                src="https://i.imgflip.com/1ur9b0.jpg"
+                alt="Meme"
+                className="w-full rounded-xl mb-6 shadow-lg"
+              />
+              <button
+                onClick={() => setShowPopup(false)}
+                className="px-8 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold rounded-full hover:scale-105 transition-transform shadow-lg"
+              >
+                NAI RE MALAKA
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content - with left padding for sidebar */}
       <main className={`px-6 py-8 min-h-screen max-w-7xl mx-auto transition-all duration-300 ${isCollapsed ? 'ml-20' : 'ml-64'}`}>
