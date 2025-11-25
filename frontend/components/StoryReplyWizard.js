@@ -106,7 +106,7 @@ export default function StoryReplyWizard({ initialData, onComplete, onClose }) {
           <div className="space-y-6 animate-fadeIn">
             <div>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Choose the Story</h2>
-              <p className="text-gray-600 dark:text-gray-400">Select which stories will trigger this automation</p>
+              <p className="text-gray-600 dark:text-gray-400">Send a message when someone replies to:</p>
             </div>
 
             <div className="space-y-3">
@@ -196,8 +196,8 @@ export default function StoryReplyWizard({ initialData, onComplete, onClose }) {
         {step === 2 && (
           <div className="space-y-6 animate-fadeIn">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Choose Trigger Type</h2>
-              <p className="text-gray-600 dark:text-gray-400">Decide when to send the automated reply</p>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Choose the Trigger Type</h2>
+              <p className="text-gray-600 dark:text-gray-400">Trigger when their reply:</p>
             </div>
 
             <div className="space-y-3">
@@ -320,7 +320,7 @@ export default function StoryReplyWizard({ initialData, onComplete, onClose }) {
           <div className="space-y-6 animate-fadeIn">
             <div>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Auto-React (Optional)</h2>
-              <p className="text-gray-600 dark:text-gray-400">Automatically like story replies</p>
+              <p className="text-gray-600 dark:text-gray-400">❤️ Automatically like their reply</p>
             </div>
 
             <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
