@@ -155,7 +155,7 @@ export default function NodeConfigPanel({ node, onUpdate, onDelete, onClose, onA
     if (node.type === 'trigger') {
       return (
         <>
-          {node.data.triggerType === 'story_reply' && (
+          {(node.data.triggerType === 'story_reply' || node.data.triggerType === 'instagram_story_reply') && (
             <>
               {showStoryWizard ? (
                 <StoryReplyWizard

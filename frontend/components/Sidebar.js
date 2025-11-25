@@ -118,8 +118,8 @@ export default function Sidebar({ addNode, isMinimized, onToggleMinimize, channe
         data.campaignId = ''
       }
 
-      // Story Reply trigger
-      if (specificType === 'story_reply') {
+      // Story Reply trigger (Instagram)
+      if (specificType === 'story_reply' || specificType === 'instagram_story_reply') {
         data.storySelection = 'all'
         data.selectedStoryId = null
         data.triggerType = 'any'
