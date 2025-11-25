@@ -237,8 +237,8 @@ export default function Sidebar({ addNode, isMinimized, onToggleMinimize, channe
   return (
     <div
       className={`bg-gray-900 text-white shadow-2xl flex-shrink-0 transition-all duration-300 ${
-        isMinimized ? 'w-16' : 'w-80'
-      } p-4 pb-24 relative h-full overflow-y-auto`}
+        isMinimized ? 'w-16' : 'w-64'
+      } p-3 pb-24 relative h-full overflow-y-auto`}
     >
       {/* Toggle Button */}
       <button
@@ -265,7 +265,7 @@ export default function Sidebar({ addNode, isMinimized, onToggleMinimize, channe
           <div className="mb-6">
             <button
               onClick={() => setShowTriggersModal(true)}
-              className="w-full bg-yellow-800/30 hover:bg-yellow-700/50 text-left p-4 rounded-lg transition-colors border border-yellow-600/30 hover:border-yellow-500"
+              className="w-full bg-yellow-800/30 hover:bg-yellow-700/50 text-left p-3 rounded-lg transition-colors border border-yellow-600/30 hover:border-yellow-500"
             >
               <div className="flex items-center justify-between">
                 <div>
