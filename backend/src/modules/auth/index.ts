@@ -113,9 +113,10 @@ const authModule: FastifyPluginAsync = async (fastify) => {
   // LOGIN
   // ============================================
   fastify.post('/login', async (request, reply) => {
-    const { email, password } = request.body as {
+    const { email, password, rememberMe } = request.body as {
       email: string;
       password: string;
+      rememberMe?: boolean;
     };
 
     // Validation
@@ -173,19 +174,22 @@ const authModule: FastifyPluginAsync = async (fastify) => {
         });
       }
 
-      // Generate JWT token
+      // Generate JWT token - 7 days if remember me, 24 hours otherwise
+      const tokenExpiry = rememberMe ? '7d' : '24h';
       const token = fastify.jwt.sign(
         {
           userId: user.id,
           email: user.email,
           workspaceId: workspace.id,
         },
-        { expiresIn: '7d' }
+        { expiresIn: tokenExpiry }
       );
 
       return reply.send({
         success: true,
         token,
+        rememberMe: !!rememberMe,
+        expiresIn: rememberMe ? 7 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000, // milliseconds
         user: {
           id: user.id,
           name: user.name,
