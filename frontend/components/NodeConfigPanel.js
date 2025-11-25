@@ -9,11 +9,12 @@ import CommentTriggerWizard from './CommentTriggerWizard'
 
 export default function NodeConfigPanel({ node, onUpdate, onDelete, onClose, onAddConnectedNode }) {
   const [showPostSelector, setShowPostSelector] = useState(false)
+  const [postSelectorTab, setPostSelectorTab] = useState('posts')
   const [showDmActionSelector, setShowDmActionSelector] = useState(false)
-  const [showStoryWizard, setShowStoryWizard] = useState(true)
-  const [showInstagramAdsWizard, setShowInstagramAdsWizard] = useState(true)
-  const [showInstagramMessageWizard, setShowInstagramMessageWizard] = useState(true)
-  const [showCommentWizard, setShowCommentWizard] = useState(true)
+  const [showStoryWizard, setShowStoryWizard] = useState(!node.data.storySelection)
+  const [showInstagramAdsWizard, setShowInstagramAdsWizard] = useState(false)
+  const [showInstagramMessageWizard, setShowInstagramMessageWizard] = useState(false)
+  const [showCommentWizard, setShowCommentWizard] = useState(!node.data.selectedPost)
   const [notification, setNotification] = useState(null)
 
   const handleUpdate = (field, value) => {
@@ -143,11 +144,12 @@ export default function NodeConfigPanel({ node, onUpdate, onDelete, onClose, onA
 
   // Mock posts data - in real app, this would come from API
   const mockPosts = [
-    { id: '1', platform: 'instagram', image: 'https://picsum.photos/200/200?random=1', caption: 'Check out our new product launch! 🚀', date: '2 hours ago' },
-    { id: '2', platform: 'instagram', image: 'https://picsum.photos/200/200?random=2', caption: 'Behind the scenes of our latest shoot 📸', date: '1 day ago' },
-    { id: '3', platform: 'facebook', image: 'https://picsum.photos/200/200?random=3', caption: 'Summer sale is now live! Get 30% off 🌞', date: '2 days ago' },
-    { id: '4', platform: 'instagram', image: 'https://picsum.photos/200/200?random=4', caption: 'Customer testimonial: "Best service ever!" ⭐⭐⭐⭐⭐', date: '3 days ago' },
-    { id: '5', platform: 'facebook', image: 'https://picsum.photos/200/200?random=5', caption: 'Join us for our webinar next week!', date: '5 days ago' },
+    { id: '1', platform: 'instagram', type: 'post', image: 'https://picsum.photos/200/200?random=1', caption: 'Check out our new product launch! 🚀', date: '2 hours ago' },
+    { id: '2', platform: 'instagram', type: 'reel', image: 'https://picsum.photos/200/200?random=2', caption: 'Behind the scenes of our latest shoot 📸', date: '1 day ago' },
+    { id: '3', platform: 'instagram', type: 'post', image: 'https://picsum.photos/200/200?random=3', caption: 'Summer sale is now live! Get 30% off 🌞', date: '2 days ago' },
+    { id: '4', platform: 'instagram', type: 'reel', image: 'https://picsum.photos/200/200?random=4', caption: 'Customer testimonial: "Best service ever!" ⭐⭐⭐⭐⭐', date: '3 days ago' },
+    { id: '5', platform: 'instagram', type: 'post', image: 'https://picsum.photos/200/200?random=5', caption: 'Join us for our webinar next week!', date: '5 days ago' },
+    { id: '6', platform: 'instagram', type: 'reel', image: 'https://picsum.photos/200/200?random=6', caption: 'Quick tutorial on how to use our product 🎯', date: '1 week ago' },
   ]
 
   const renderConfig = () => {
@@ -265,51 +267,74 @@ export default function NodeConfigPanel({ node, onUpdate, onDelete, onClose, onA
           )}
 
           {node.data.triggerType === 'instagram_message' && (
-            <>
-              {showInstagramMessageWizard ? (
-                <InstagramMessageWizard
-                  initialData={node.data}
-                  onComplete={(config) => {
-                    onUpdate(node.id, config)
-                    setShowInstagramMessageWizard(false)
-                  }}
-                  onClose={() => setShowInstagramMessageWizard(false)}
-                />
-              ) : (
-                <div className="text-center py-8">
-                  <div className="mb-6">
-                    <div className="text-6xl mb-4">📨</div>
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                      Instagram Message Trigger
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-400 text-sm max-w-md mx-auto">
-                      {node.data.triggerType ? (
-                        'Your Instagram message trigger is configured. Click below to edit.'
-                      ) : (
-                        'Trigger automation when someone sends you a message on Instagram.'
-                      )}
-                    </p>
+            <div className="py-8">
+              <div className="mb-6 text-center">
+                <div className="text-6xl mb-4">📨</div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                  Instagram Message
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 text-sm max-w-md mx-auto mb-4">
+                  Trigger when someone sends you a message on Instagram.
+                </p>
+              </div>
+
+              {/* Message Type Selection */}
+              <div className="mb-6">
+                <div className="space-y-3">
+                  {/* Any message */}
+                  <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-300 dark:border-gray-600">
+                    <input
+                      type="radio"
+                      checked={!node.data.messageType || node.data.messageType === 'any'}
+                      onChange={() => handleUpdate('messageType', 'any')}
+                      className="w-4 h-4 text-blue-500"
+                    />
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">Any message</span>
+                  </label>
+
+                  {/* Specific keyword */}
+                  <div className="p-3 border rounded-lg border-gray-300 dark:border-gray-600">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        checked={node.data.messageType === 'keyword'}
+                        onChange={() => handleUpdate('messageType', 'keyword')}
+                        className="w-4 h-4 text-blue-500"
+                      />
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">Specific keyword →</span>
+                      <input
+                        type="text"
+                        value={node.data.keywords || ''}
+                        onChange={(e) => handleUpdate('keywords', e.target.value)}
+                        onClick={() => handleUpdate('messageType', 'keyword')}
+                        placeholder="enter keywords"
+                        className="flex-1 px-3 py-1.5 border rounded-lg bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 placeholder-gray-400 dark:placeholder-gray-500"
+                      />
+                    </label>
                   </div>
 
-                  {node.data.triggerType && (
-                    <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700 max-w-md mx-auto">
-                      <div className="text-sm text-blue-900 dark:text-blue-300 space-y-1">
-                        <div><span className="font-semibold">Mode:</span> {node.data.triggerType === 'any' ? 'Any message' : node.data.triggerType === 'keyword' ? 'Specific keywords' : 'AI intent'}</div>
-                        {node.data.keywords && <div><span className="font-semibold">Keywords:</span> {node.data.keywords}</div>}
-                        {node.data.replyDelay > 0 && <div><span className="font-semibold">Delay:</span> {node.data.replyDelay}s</div>}
+                  {/* AI: recognize intent */}
+                  <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-300 dark:border-gray-600">
+                    <input
+                      type="radio"
+                      checked={node.data.messageType === 'ai'}
+                      onChange={() => handleUpdate('messageType', 'ai')}
+                      className="w-4 h-4 text-blue-500 mt-0.5"
+                    />
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-gray-900 dark:text-white mb-1">AI: recognize intent</div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">
+                        Let AI understand what the user meant (e.g., "price", "support", "booking") and trigger the right reply.
                       </div>
                     </div>
-                  )}
-
-                  <button
-                    onClick={() => setShowInstagramMessageWizard(true)}
-                    className="px-8 py-4 rounded-xl font-bold bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:from-blue-600 hover:to-cyan-600 transition-all shadow-lg hover:shadow-xl text-lg"
-                  >
-                    {node.data.triggerType ? '✏️ Edit Setup' : '🚀 Start Setup Wizard'}
-                  </button>
+                  </label>
                 </div>
-              )}
-            </>
+
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-4">
+                  (Default: Any message)
+                </p>
+              </div>
+            </div>
           )}
 
           {(node.data.triggerType === 'keyword_comment' || node.data.triggerType === 'instagram_comment') && (
@@ -357,7 +382,7 @@ export default function NodeConfigPanel({ node, onUpdate, onDelete, onClose, onA
             </>
           )}
 
-          {node.data.triggerType === 'instagram_shares' && (
+          {(node.data.triggerType === 'instagram_shares' || node.data.triggerType === 'instagram_post_share') && (
             <div className="py-8">
               <div className="mb-6 text-center">
                 <div className="text-6xl mb-4">🔄</div>
@@ -370,48 +395,60 @@ export default function NodeConfigPanel({ node, onUpdate, onDelete, onClose, onA
               </div>
 
               {/* Share Type Selection */}
-              <div className="mb-6">
+              <div className="mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
                 <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
                   When someone shares:
                 </label>
-                <div className="space-y-2">
-                  <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-300 dark:border-gray-600">
-                    <input
-                      type="radio"
-                      checked={node.data.shareType === 'specific'}
-                      onChange={() => handleUpdate('shareType', 'specific')}
-                      className="w-4 h-4 text-purple-500"
-                    />
-                    <div className="flex-1">
+                <div className="space-y-3">
+                  {/* A specific post or reel */}
+                  <div className="p-3 border rounded-lg border-gray-300 dark:border-gray-600">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        checked={!node.data.shareType || node.data.shareType === 'specific'}
+                        onChange={() => handleUpdate('shareType', 'specific')}
+                        className="w-4 h-4 text-purple-500"
+                      />
                       <span className="text-sm font-medium text-gray-900 dark:text-white">A specific post or reel</span>
-                      {node.data.shareType === 'specific' && (
-                        <button
-                          onClick={() => setShowPostSelector(true)}
-                          className="mt-2 text-xs text-purple-600 dark:text-purple-400 underline"
-                        >
-                          Click to choose → {node.data.selectedPost ? '✓ Selected' : 'Not selected'}
-                        </button>
-                      )}
-                    </div>
-                  </label>
-                  <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-300 dark:border-gray-600">
-                    <input
-                      type="radio"
-                      checked={node.data.shareType === 'any'}
-                      onChange={() => handleUpdate('shareType', 'any')}
-                      className="w-4 h-4 text-purple-500"
-                    />
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">Any post</span>
-                  </label>
-                  <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-300 dark:border-gray-600">
-                    <input
-                      type="radio"
-                      checked={node.data.shareType === 'next'}
-                      onChange={() => handleUpdate('shareType', 'next')}
-                      className="w-4 h-4 text-purple-500"
-                    />
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">Next post</span>
-                  </label>
+                    </label>
+                    {(!node.data.shareType || node.data.shareType === 'specific') && (
+                      <button
+                        onClick={() => setShowPostSelector(true)}
+                        className="mt-3 ml-7 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded-lg transition-colors flex items-center gap-2"
+                      >
+                        Click to choose →
+                        {node.data.selectedPost && (
+                          <span className="bg-white/20 px-2 py-0.5 rounded text-xs">✓ Selected</span>
+                        )}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Any post */}
+                  <div className="p-3 border rounded-lg border-gray-300 dark:border-gray-600">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        checked={node.data.shareType === 'any'}
+                        onChange={() => handleUpdate('shareType', 'any')}
+                        className="w-4 h-4 text-purple-500"
+                      />
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">Any post</span>
+                    </label>
+                  </div>
+
+                  {/* Next post */}
+                  <div className="p-3 border rounded-lg border-gray-300 dark:border-gray-600">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        checked={node.data.shareType === 'next'}
+                        onChange={() => handleUpdate('shareType', 'next')}
+                        className="w-4 h-4 text-purple-500"
+                      />
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">Next post</span>
+                    </label>
+                  </div>
                 </div>
               </div>
 
@@ -420,37 +457,35 @@ export default function NodeConfigPanel({ node, onUpdate, onDelete, onClose, onA
                 <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
                   Delay before replying:
                 </label>
-                <div className="flex gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-700 dark:text-gray-300">Wait</span>
-                    <input
-                      type="number"
-                      min="0"
-                      value={node.data.replyDelay || 0}
-                      onChange={(e) => handleUpdate('replyDelay', parseInt(e.target.value) || 0)}
-                      className="w-20 p-2 border rounded-lg bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 text-center"
-                    />
-                  </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Wait</span>
+                  <input
+                    type="number"
+                    min="0"
+                    value={node.data.replyDelay || 0}
+                    onChange={(e) => handleUpdate('replyDelay', parseInt(e.target.value) || 0)}
+                    className="w-20 px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 text-center"
+                  />
                   <select
                     value={node.data.delayUnit || 'seconds'}
                     onChange={(e) => handleUpdate('delayUnit', e.target.value)}
-                    className="flex-1 p-2 border rounded-lg bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
+                    className="px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
                   >
                     <option value="seconds">seconds</option>
                     <option value="minutes">minutes</option>
                     <option value="hours">hours</option>
                     <option value="days">days</option>
                   </select>
-                  <span className="flex items-center text-sm text-gray-700 dark:text-gray-300">before sending the message.</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">before sending the message.</span>
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 italic">
                   💡 Tip: Add a short delay to make your reply feel more natural — not instant or robotic.
                 </p>
               </div>
             </div>
           )}
 
-          {node.data.triggerType === 'live_comments' && (
+          {(node.data.triggerType === 'live_comments' || node.data.triggerType === 'instagram_live_comment') && (
             <div className="py-8">
               <div className="mb-6 text-center">
                 <div className="text-6xl mb-4">🎥</div>
@@ -552,93 +587,6 @@ export default function NodeConfigPanel({ node, onUpdate, onDelete, onClose, onA
                   </p>
                 </div>
               )}
-            </div>
-          )}
-
-          {node.data.triggerType === 'story_mention' && (
-            <div className="py-8">
-              <div className="mb-6 text-center">
-                <div className="text-6xl mb-4">📣</div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                  Story Mention Reply
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 text-sm max-w-md mx-auto mb-4">
-                  Send a message when someone mentions you in their story.
-                </p>
-              </div>
-
-              {/* Trigger Frequency */}
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                  When to trigger:
-                </label>
-                <div className="space-y-2">
-                  <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-300 dark:border-gray-600">
-                    <input
-                      type="radio"
-                      checked={node.data.triggerFrequency === 'every_time'}
-                      onChange={() => handleUpdate('triggerFrequency', 'every_time')}
-                      className="w-4 h-4 text-purple-500"
-                    />
-                    <span className="text-sm text-gray-900 dark:text-white">Every time someone mentions you in their Story</span>
-                  </label>
-                  <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-300 dark:border-gray-600">
-                    <input
-                      type="radio"
-                      checked={node.data.triggerFrequency === 'once_per_24h'}
-                      onChange={() => handleUpdate('triggerFrequency', 'once_per_24h')}
-                      className="w-4 h-4 text-purple-500"
-                    />
-                    <span className="text-sm text-gray-900 dark:text-white">Only once per 24 hours per user</span>
-                  </label>
-                </div>
-              </div>
-
-              {/* Delay */}
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                  Delay (optional):
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="number"
-                    min="0"
-                    value={node.data.replyDelay || 0}
-                    onChange={(e) => handleUpdate('replyDelay', parseInt(e.target.value) || 0)}
-                    className="w-24 p-3 border rounded-lg bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
-                  />
-                  <select
-                    value={node.data.delayUnit || 'sec'}
-                    onChange={(e) => handleUpdate('delayUnit', e.target.value)}
-                    className="flex-1 p-3 border rounded-lg bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500"
-                  >
-                    <option value="sec">seconds</option>
-                    <option value="min">minutes</option>
-                    <option value="hrs">hours</option>
-                  </select>
-                </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                  Tip: add a small delay so it doesn't look instant/robotic.
-                </p>
-              </div>
-
-              {/* Auto-like */}
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                  Auto-like (optional):
-                </label>
-                <label className="flex items-center gap-3 p-4 bg-pink-50 dark:bg-pink-900/20 rounded-lg border border-pink-200 dark:border-pink-700 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={node.data.autoLike || false}
-                    onChange={(e) => handleUpdate('autoLike', e.target.checked)}
-                    className="w-5 h-5 text-pink-500 border-gray-300 rounded focus:ring-pink-500"
-                  />
-                  <span className="text-sm font-medium text-pink-900 dark:text-pink-300">
-                    ❤️ React with ❤️ to their Story mention
-                  </span>
-                </label>
-              </div>
             </div>
           )}
 
@@ -1791,8 +1739,8 @@ export default function NodeConfigPanel({ node, onUpdate, onDelete, onClose, onA
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowPostSelector(false)}>
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-3xl max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
             <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-              <div className="flex justify-between items-center">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Select Post</h3>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Select Post or Reel</h3>
                 <button
                   onClick={() => setShowPostSelector(false)}
                   className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-2xl"
@@ -1800,11 +1748,34 @@ export default function NodeConfigPanel({ node, onUpdate, onDelete, onClose, onA
                   ×
                 </button>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Choose which post to monitor for keyword comments</p>
+
+              {/* Tabs */}
+              <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700">
+                <button
+                  onClick={() => setPostSelectorTab('posts')}
+                  className={`px-4 py-2 font-medium text-sm transition-colors ${
+                    postSelectorTab === 'posts'
+                      ? 'text-purple-600 dark:text-purple-400 border-b-2 border-purple-600 dark:border-purple-400'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                  }`}
+                >
+                  Posts
+                </button>
+                <button
+                  onClick={() => setPostSelectorTab('reels')}
+                  className={`px-4 py-2 font-medium text-sm transition-colors ${
+                    postSelectorTab === 'reels'
+                      ? 'text-purple-600 dark:text-purple-400 border-b-2 border-purple-600 dark:border-purple-400'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                  }`}
+                >
+                  Reels
+                </button>
+              </div>
             </div>
             <div className="p-6 overflow-y-auto max-h-[60vh]">
               <div className="grid gap-4">
-                {mockPosts.map((post) => (
+                {mockPosts.filter(post => post.type === postSelectorTab.slice(0, -1)).map((post) => (
                   <button
                     key={post.id}
                     onClick={() => {

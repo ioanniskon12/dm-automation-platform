@@ -118,39 +118,33 @@ export default function Sidebar({ addNode, isMinimized, onToggleMinimize, channe
         data.campaignId = ''
       }
 
-      // Story Reply trigger (Instagram)
+      // Story Reply trigger (Instagram) - leave empty so wizard opens
       if (specificType === 'story_reply' || specificType === 'instagram_story_reply') {
-        data.storySelection = 'all'
-        data.selectedStoryId = null
-        data.triggerType = 'any'
-        data.triggerKeywords = ''
-        data.replyDelay = 0
-        data.autoReact = false
+        // Don't initialize values - let the wizard handle it
       }
 
-      // Comment trigger (Instagram and Facebook)
+      // Comment trigger (Instagram and Facebook) - leave empty so wizard opens
       if (specificType === 'keyword_comment' || specificType === 'instagram_comment') {
-        data.selectedPost = null
-        data.triggerMode = 'keywords'
-        data.keyword = ''
-        data.replyType = null
-        data.commentReply = ''
+        // Don't initialize values - let the wizard handle it
       }
 
-      // Story Mention trigger
-      if (specificType === 'story_mention') {
-        data.triggerFrequency = 'every_time'
+      // Instagram Live Comment trigger
+      if (specificType === 'instagram_live_comment' || specificType === 'live_comments') {
+        data.liveKeywords = ''
+      }
+
+      // Instagram Post Share trigger
+      if (specificType === 'instagram_post_share' || specificType === 'instagram_shares') {
+        data.shareType = 'specific'
+        data.selectedPost = null
         data.replyDelay = 0
-        data.delayUnit = 'sec'
-        data.autoLike = false
+        data.delayUnit = 'seconds'
       }
 
       // Instagram Message trigger
       if (specificType === 'instagram_message') {
         data.messageType = 'any'
         data.keywords = ''
-        data.aiIntents = []
-        data.replyDelay = 0
       }
 
       // Telegram Message trigger
