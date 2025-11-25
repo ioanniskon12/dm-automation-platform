@@ -244,7 +244,7 @@ export default function Sidebar({ addNode, isMinimized, onToggleMinimize, channe
       <button
         onClick={onToggleMinimize}
         className={`absolute top-4 bg-gray-800 hover:bg-gray-700 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg z-50 border border-gray-600 transition-all ${
-          isMinimized ? '-right-3' : '-right-3'
+          isMinimized ? 'right-2' : 'right-2'
         }`}
       >
         <span className="text-lg">{isMinimized ? '→' : '←'}</span>
