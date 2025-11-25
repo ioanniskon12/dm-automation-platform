@@ -128,8 +128,8 @@ export default function Sidebar({ addNode, isMinimized, onToggleMinimize, channe
         data.autoReact = false
       }
 
-      // Comment trigger
-      if (specificType === 'keyword_comment') {
+      // Comment trigger (Instagram and Facebook)
+      if (specificType === 'keyword_comment' || specificType === 'instagram_comment') {
         data.selectedPost = null
         data.triggerMode = 'keywords'
         data.keyword = ''

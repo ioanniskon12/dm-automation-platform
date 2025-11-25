@@ -25,13 +25,20 @@ export default function NodeConfigPanel({ node, onUpdate, onDelete, onClose, onA
 
     // Validate trigger nodes
     if (node.type === 'trigger') {
-      if (node.data.triggerType === 'keyword_comment' || node.data.triggerType === 'keyword_dm') {
+      // Keyword DM trigger validation
+      if (node.data.triggerType === 'keyword_dm') {
         if (!node.data.keyword || node.data.keyword.trim() === '') {
           errors.push('Keyword is required')
         }
       }
-      if (node.data.triggerType === 'keyword_comment' && !node.data.selectedPost) {
-        errors.push('Post selection is required')
+      // Comment trigger validation (handled by wizard)
+      if ((node.data.triggerType === 'keyword_comment' || node.data.triggerType === 'instagram_comment')) {
+        if (!node.data.selectedPost) {
+          errors.push('Post selection is required')
+        }
+        if (node.data.triggerMode === 'keywords' && (!node.data.keyword || node.data.keyword.trim() === '')) {
+          errors.push('Keywords are required when using keyword mode')
+        }
       }
     }
 
@@ -305,7 +312,7 @@ export default function NodeConfigPanel({ node, onUpdate, onDelete, onClose, onA
             </>
           )}
 
-          {node.data.triggerType === 'keyword_comment' && (
+          {(node.data.triggerType === 'keyword_comment' || node.data.triggerType === 'instagram_comment') && (
             <>
               {showCommentWizard ? (
                 <CommentTriggerWizard
