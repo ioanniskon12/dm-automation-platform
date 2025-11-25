@@ -201,22 +201,82 @@ export default function FlowBuilder({ automationType = null, selectedTemplate = 
       return
     }
 
-    // Create initial configuration from trigger's config schema
-    const initialConfig = {}
-    if (selectedTrigger.configSchema) {
-      selectedTrigger.configSchema.forEach(field => {
-        initialConfig[field.field] = field.defaultValue !== undefined ? field.defaultValue : ''
-      })
+    // Initialize data with trigger-specific defaults (matching Sidebar.js logic)
+    const data = { label: selectedTrigger.name, triggerType: selectedTrigger.id }
+
+    // Keyword DM trigger
+    if (triggerTypeId === 'keyword_dm') {
+      data.keyword = ''
+    }
+
+    // Instagram Ref URL trigger
+    if (triggerTypeId === 'instagram_ref_url') {
+      data.refUrl = ''
+    }
+
+    // Instagram Ads trigger
+    if (triggerTypeId === 'instagram_ads') {
+      data.adId = ''
+      data.campaignId = ''
+    }
+
+    // Story Reply trigger (Instagram) - leave empty so wizard opens
+    if (triggerTypeId === 'story_reply' || triggerTypeId === 'instagram_story_reply') {
+      // Don't initialize values - let the wizard handle it
+    }
+
+    // Comment trigger (Instagram and Facebook) - leave empty so wizard opens
+    if (triggerTypeId === 'keyword_comment' || triggerTypeId === 'instagram_comment') {
+      // Don't initialize values - let the wizard handle it
+    }
+
+    // Instagram Live Comment trigger
+    if (triggerTypeId === 'instagram_live_comment' || triggerTypeId === 'live_comments') {
+      data.liveKeywords = ''
+    }
+
+    // Instagram Post Share trigger
+    if (triggerTypeId === 'instagram_post_share' || triggerTypeId === 'instagram_shares') {
+      data.shareType = 'specific'
+      data.selectedPost = null
+      data.replyDelay = 0
+      data.delayUnit = 'seconds'
+    }
+
+    // Instagram Message trigger
+    if (triggerTypeId === 'instagram_message') {
+      data.messageType = 'any'
+      data.keywords = ''
+    }
+
+    // Telegram Message trigger
+    if (triggerTypeId === 'telegram_message') {
+      data.triggerType = 'any'
+      data.keywords = ''
+    }
+
+    // Telegram Ref URL trigger
+    if (triggerTypeId === 'telegram_ref_url') {
+      data.refParameter = ''
+      data.linkUrl = ''
+    }
+
+    // WhatsApp Message trigger
+    if (triggerTypeId === 'whatsapp_message') {
+      data.triggerType = 'any'
+      data.keywords = ''
+    }
+
+    // WhatsApp Ref URL trigger
+    if (triggerTypeId === 'whatsapp_ref_url') {
+      data.refParameter = ''
+      data.linkUrl = ''
     }
 
     const newNode = {
       id: '1',
       type: 'trigger',
-      data: {
-        label: selectedTrigger.name,
-        triggerType: selectedTrigger.id,
-        ...initialConfig
-      },
+      data,
       position: { x: 250, y: 50 },
     }
 
@@ -646,46 +706,41 @@ export default function FlowBuilder({ automationType = null, selectedTemplate = 
 
       {/* Trigger Selection Modal */}
       {showTriggerModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-black dark:text-white">Choose Your Trigger</h2>
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[200]">
+          <div className="bg-gray-900 rounded-xl border border-gray-700 p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto m-4">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-white">Select a Trigger</h2>
               <button
                 onClick={() => setShowTriggerModal(false)}
-                className="text-gray-400 hover:text-black dark:hover:text-white text-xl"
+                className="text-gray-400 hover:text-white text-2xl"
               >
                 ✕
               </button>
             </div>
-            <p className="text-gray-600 dark:text-gray-400 text-sm mb-6">
-              Select how you want your automation to start
-            </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {availableTriggers.length > 0 ? (
                 availableTriggers.map((trigger) => (
                   <button
                     key={trigger.id}
                     onClick={() => handleTriggerSelect(trigger.id)}
-                    className="p-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:border-black dark:hover:border-white transition-all text-left"
+                    className="bg-yellow-800/30 hover:bg-yellow-700/50 text-left p-4 rounded-lg transition-colors border border-yellow-600/30 hover:border-yellow-500"
                   >
-                    <div className="text-xl mb-2">{trigger.icon}</div>
-                    <h3 className="text-sm font-bold text-black dark:text-white mb-1">{trigger.name}</h3>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">{trigger.description}</p>
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="text-3xl">{trigger.icon}</span>
+                      <span className="text-sm font-medium text-white">{trigger.name}</span>
+                    </div>
+                    {trigger.description && (
+                      <p className="text-xs text-gray-400 ml-12">{trigger.description}</p>
+                    )}
                   </button>
                 ))
               ) : (
-                <div className="col-span-3 text-center py-8">
+                <div className="col-span-2 text-center py-8">
                   <div className="text-4xl mb-4">⚠️</div>
-                  <p className="text-black dark:text-white font-bold mb-2">No triggers available</p>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm">channelType: {channelType || 'undefined'}</p>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm">availableTriggers length: {availableTriggers.length}</p>
-                  <p className="text-gray-600 dark:text-gray-400 text-sm">
-                    Expected API: http://localhost:3001/api/triggers/types?channel={channelType === 'facebook' ? 'messenger' : channelType}
-                  </p>
-                  <p className="text-red-600 dark:text-red-400 text-xs mt-4 font-mono">
-                    Check browser console (F12) for API errors
-                  </p>
+                  <p className="text-white font-bold mb-2">No triggers available</p>
+                  <p className="text-gray-400 text-sm">channelType: {channelType || 'undefined'}</p>
+                  <p className="text-gray-400 text-sm">availableTriggers length: {availableTriggers.length}</p>
                 </div>
               )}
             </div>

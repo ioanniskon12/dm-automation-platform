@@ -30,7 +30,8 @@ export default function Sidebar({ addNode, isMinimized, onToggleMinimize, channe
           const mappedTriggers = response.data.triggerTypes.map(trigger => ({
             type: trigger.id,
             label: trigger.name,
-            icon: trigger.icon
+            icon: trigger.icon,
+            description: trigger.description
           }))
 
           console.log('🔍 Sidebar - Mapped triggers count:', mappedTriggers.length)
@@ -385,10 +386,13 @@ export default function Sidebar({ addNode, isMinimized, onToggleMinimize, channe
                     }}
                     className="bg-yellow-800/30 hover:bg-yellow-700/50 text-left p-4 rounded-lg transition-colors border border-yellow-600/30 hover:border-yellow-500"
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 mb-2">
                       <span className="text-3xl">{trigger.icon}</span>
                       <span className="text-sm font-medium text-white">{trigger.label}</span>
                     </div>
+                    {trigger.description && (
+                      <p className="text-xs text-gray-400 ml-12">{trigger.description}</p>
+                    )}
                   </button>
                 ))
               ) : (
