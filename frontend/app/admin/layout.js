@@ -11,6 +11,7 @@ const envAdminEmails = process.env.NEXT_PUBLIC_ADMIN_EMAILS?.split(',').map(e =>
 const ALLOWED_ADMIN_EMAILS = [
   ...envAdminEmails,
   'gianniskon12@gmail.com',
+  'sotiris040197@gmail.com',
 ];
 
 // Check if user is an admin

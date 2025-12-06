@@ -219,7 +219,7 @@ export default function NavigationSidebar() {
       {/* Sidebar Footer */}
       <div className="p-3 border-t border-gray-200 dark:border-gray-700">
         {/* Admin Panel - Only visible to admin emails */}
-        {user?.email === 'gianniskon12@gmail.com' && (
+        {(user?.email === 'gianniskon12@gmail.com' || user?.email === 'sotiris040197@gmail.com') && (
           <Link
             href="/admin"
             className={`flex items-center gap-3 w-full px-3 py-2.5 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors text-sm font-medium text-purple-600 dark:text-purple-400 mb-2 ${isCollapsed ? 'justify-center' : ''}`}
