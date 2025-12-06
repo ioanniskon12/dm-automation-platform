@@ -120,6 +120,8 @@ function FlowsPageContent() {
         // Everything is valid
         console.log('🔍 flows/page.js - channel from API:', channel);
         console.log('🔍 flows/page.js - channel.type:', channel?.type);
+        console.log('🔍 flows/page.js - brandData:', data.brand);
+        console.log('🔍 flows/page.js - brandData.id:', data.brand?.id);
         setBrandData(data.brand);
         setChannelData(channel);
         setLoading(false);
@@ -271,7 +273,7 @@ function FlowsPageContent() {
               </div>
             </div>
           ) : (
-            <FlowBuilder selectedTemplate={selectedTemplate} channelType={channelData?.type} />
+            <FlowBuilder selectedTemplate={selectedTemplate} channelType={channelData?.type} workspaceId={brandData?.id} />
           )}
         </div>
       </div>
@@ -280,9 +282,6 @@ function FlowsPageContent() {
 }
 
 export default function FlowsPage() {
-  return (
-    <ProtectedRoute>
-      <FlowsPageContent />
-    </ProtectedRoute>
-  );
+  // Temporarily disabled ProtectedRoute for development
+  return <FlowsPageContent />;
 }

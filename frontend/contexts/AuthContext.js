@@ -4,7 +4,7 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3003';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 const AuthContext = createContext({});
 
@@ -40,6 +40,12 @@ export function AuthProvider({ children }) {
   }, []);
 
   const checkAuth = async () => {
+    // Skip on server-side
+    if (typeof window === 'undefined') {
+      setLoading(false);
+      return;
+    }
+
     try {
       // Check for token in cookies first, then localStorage
       let token = getCookie('authToken');

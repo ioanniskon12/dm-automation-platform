@@ -6,8 +6,9 @@ import TextMessageNodeConfig from './TextMessageNodeConfig'
 import InstagramAdsTriggerWizard from './InstagramAdsTriggerWizard'
 import InstagramMessageWizard from './InstagramMessageWizard'
 import CommentTriggerWizard from './CommentTriggerWizard'
+import TagSelector from './TagSelector'
 
-export default function NodeConfigPanel({ node, onUpdate, onDelete, onClose, onAddConnectedNode }) {
+export default function NodeConfigPanel({ node, onUpdate, onDelete, onClose, onAddConnectedNode, workspaceId }) {
   const [showPostSelector, setShowPostSelector] = useState(false)
   const [postSelectorTab, setPostSelectorTab] = useState('posts')
   const [showDmActionSelector, setShowDmActionSelector] = useState(false)
@@ -1131,13 +1132,22 @@ export default function NodeConfigPanel({ node, onUpdate, onDelete, onClose, onA
 
           {node.data.actionType === 'add_tag' && (
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">Tag Name</label>
-              <input
-                type="text"
-                value={node.data.tagName || ''}
-                onChange={(e) => handleUpdate('tagName', e.target.value)}
-                placeholder="e.g., interested, vip, lead"
-                className="w-full p-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:border-transparent"
+              <label className="block text-sm font-medium mb-3 text-gray-900 dark:text-white">Select or Create Tags</label>
+              <TagSelector
+                workspaceId={workspaceId}
+                selectedTags={node.data.selectedTags || []}
+                onSelectTags={(tags) => {
+                  onUpdate(node.id, {
+                    selectedTags: tags,
+                    tags: tags.map(t => ({
+                      id: t.id,
+                      name: t.name,
+                      color: t.color,
+                      category: t.category?.name || null,
+                    })),
+                  })
+                }}
+                multiple={true}
               />
             </div>
           )}

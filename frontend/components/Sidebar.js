@@ -54,8 +54,6 @@ export default function Sidebar({ addNode, isMinimized, onToggleMinimize, channe
 
   const conditionTypes = [
     { type: 'is_follower', label: 'Is Follower?', icon: '👥' },
-    { type: 'has_interacted', label: 'Has Interacted?', icon: '🔄' },
-    { type: 'time_based', label: 'Time-Based', icon: '⏰' },
     { type: 'custom_field', label: 'Custom Field Check', icon: '📋' },
   ]
 
@@ -72,8 +70,18 @@ export default function Sidebar({ addNode, isMinimized, onToggleMinimize, channe
     { type: 'ai_decision', label: 'AI Decision Router', icon: '🧠' },
   ]
 
-  // All media types for Instagram and Facebook
-  const allMediaTypes = [
+  // Instagram media types (no file support)
+  const instagramMediaTypes = [
+    { type: 'send_message', label: 'Send Message', icon: '💌' },
+    { type: 'send_image', label: 'Send Image', icon: '🖼️' },
+    { type: 'send_video', label: 'Send Video', icon: '🎥' },
+    { type: 'send_voice', label: 'Send Voice', icon: '🎤' },
+    { type: 'send_carousel', label: 'Send Carousel', icon: '🎠' },
+    { type: 'send_card', label: 'Send Card', icon: '🃏' },
+  ]
+
+  // Facebook media types (includes file support + carousel/card)
+  const facebookMediaTypes = [
     { type: 'send_message', label: 'Send Message', icon: '💌' },
     { type: 'send_image', label: 'Send Image', icon: '🖼️' },
     { type: 'send_video', label: 'Send Video', icon: '🎥' },
@@ -83,7 +91,7 @@ export default function Sidebar({ addNode, isMinimized, onToggleMinimize, channe
     { type: 'send_card', label: 'Send Card', icon: '🃏' },
   ]
 
-  // Telegram and WhatsApp media types (only 5 basic types)
+  // Telegram and WhatsApp media types (basic types with file support)
   const basicMediaTypes = [
     { type: 'send_message', label: 'Send Message', icon: '💌' },
     { type: 'send_image', label: 'Send Image', icon: '🖼️' },
@@ -93,9 +101,20 @@ export default function Sidebar({ addNode, isMinimized, onToggleMinimize, channe
   ]
 
   // Select media types based on channel
-  const mediaTypes = (channelType === 'telegram' || channelType === 'whatsapp')
-    ? basicMediaTypes
-    : allMediaTypes
+  const getMediaTypes = () => {
+    switch (channelType) {
+      case 'instagram':
+        return instagramMediaTypes
+      case 'facebook':
+        return facebookMediaTypes
+      case 'telegram':
+      case 'whatsapp':
+        return basicMediaTypes
+      default:
+        return instagramMediaTypes
+    }
+  }
+  const mediaTypes = getMediaTypes()
 
   const handleAddNode = (nodeType, specificType, label) => {
     const data = { label }

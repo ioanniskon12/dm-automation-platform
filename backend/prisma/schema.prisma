@@ -313,3 +313,35 @@ model Template {
 
   @@map("templates")
 }
+
+// ============================================
+// TAGS & TAG CATEGORIES
+// ============================================
+model TagCategory {
+  id          String   @id @default(uuid())
+  workspaceId String
+  name        String
+  color       String   @default("#6366f1") // Default indigo color
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tags Tag[]
+
+  @@unique([workspaceId, name])
+  @@map("tag_categories")
+}
+
+model Tag {
+  id          String   @id @default(uuid())
+  workspaceId String
+  categoryId  String?
+  name        String
+  color       String   @default("#8b5cf6") // Default purple color
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  category TagCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@unique([workspaceId, name])
+  @@map("tags")
+}

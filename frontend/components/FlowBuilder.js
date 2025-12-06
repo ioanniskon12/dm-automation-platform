@@ -36,7 +36,8 @@ const nodeTypes = {
 const defaultInitialNodes = []
 const defaultInitialEdges = []
 
-export default function FlowBuilder({ automationType = null, selectedTemplate = null, prePopulatedTrigger = null, channelType = 'instagram' }) {
+export default function FlowBuilder({ automationType = null, selectedTemplate = null, prePopulatedTrigger = null, channelType = 'instagram', workspaceId = null }) {
+  console.log('🔧 FlowBuilder: workspaceId =', workspaceId)
   const searchParams = useSearchParams()
   const templateId = searchParams.get('templateId')
   const flowId = searchParams.get('flowId')
@@ -658,6 +659,7 @@ export default function FlowBuilder({ automationType = null, selectedTemplate = 
           onDelete={deleteNode}
           onClose={() => setSelectedNodeId(null)}
           onAddConnectedNode={addConnectedNode}
+          workspaceId={workspaceId}
         />
       )}
 

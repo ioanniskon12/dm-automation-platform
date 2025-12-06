@@ -41,7 +41,125 @@ export default function AINode({ data, isConnectable }) {
           {data.label}
         </div>
 
-        {data.prompt && (
+        {/* AI Response node */}
+        {data.aiType === 'ai_response' && (
+          <>
+            {data.prompt && (
+              <div className="bg-violet-50 dark:bg-violet-900/20 rounded-lg p-3 border border-violet-200 dark:border-violet-700">
+                <div className="text-xs text-violet-600 dark:text-violet-400 font-semibold mb-1">AI Prompt:</div>
+                <div className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3">
+                  {data.prompt}
+                </div>
+              </div>
+            )}
+            {data.model && (
+              <div className="text-xs">
+                <span className="text-violet-600 dark:text-violet-400 font-semibold">Model:</span>
+                <span className="text-gray-700 dark:text-gray-300 ml-1">{data.model}</span>
+              </div>
+            )}
+            {data.temperature !== undefined && (
+              <div className="text-xs">
+                <span className="text-violet-600 dark:text-violet-400 font-semibold">Temperature:</span>
+                <span className="text-gray-700 dark:text-gray-300 ml-1">{data.temperature}</span>
+              </div>
+            )}
+            {!data.prompt && (
+              <div className="bg-violet-50 dark:bg-violet-900/20 rounded-lg p-3 border border-violet-200 dark:border-violet-700">
+                <div className="text-sm text-gray-500 dark:text-gray-400 italic">
+                  Not configured
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* AI Fallback node */}
+        {data.aiType === 'ai_fallback' && (
+          <>
+            {data.prompt && (
+              <div className="bg-violet-50 dark:bg-violet-900/20 rounded-lg p-3 border border-violet-200 dark:border-violet-700">
+                <div className="text-xs text-violet-600 dark:text-violet-400 font-semibold mb-1">Fallback Prompt:</div>
+                <div className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3">
+                  {data.prompt}
+                </div>
+              </div>
+            )}
+            {data.fallbackMessage && (
+              <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-3 border border-orange-200 dark:border-orange-700">
+                <div className="text-xs text-orange-600 dark:text-orange-400 font-semibold mb-1">Fallback Message:</div>
+                <div className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">
+                  {data.fallbackMessage}
+                </div>
+              </div>
+            )}
+            {data.maxRetries && (
+              <div className="text-xs">
+                <span className="text-violet-600 dark:text-violet-400 font-semibold">Max Retries:</span>
+                <span className="text-gray-700 dark:text-gray-300 ml-1">{data.maxRetries}</span>
+              </div>
+            )}
+            {!data.prompt && !data.fallbackMessage && (
+              <div className="bg-violet-50 dark:bg-violet-900/20 rounded-lg p-3 border border-violet-200 dark:border-violet-700">
+                <div className="text-sm text-gray-500 dark:text-gray-400 italic">
+                  Not configured
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* AI Decision Router node */}
+        {data.aiType === 'ai_decision' && (
+          <>
+            {data.prompt && (
+              <div className="bg-violet-50 dark:bg-violet-900/20 rounded-lg p-3 border border-violet-200 dark:border-violet-700">
+                <div className="text-xs text-violet-600 dark:text-violet-400 font-semibold mb-1">Decision Prompt:</div>
+                <div className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3">
+                  {data.prompt}
+                </div>
+              </div>
+            )}
+            <div className="space-y-2">
+              {data.route1Label && (
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-2 border border-yellow-200 dark:border-yellow-700">
+                  <div className="text-xs">
+                    <span className="text-yellow-600 dark:text-yellow-400 font-semibold">Route 1:</span>
+                    <span className="text-gray-700 dark:text-gray-300 ml-1">{data.route1Label}</span>
+                  </div>
+                  {data.route1Description && (
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">
+                      {data.route1Description}
+                    </div>
+                  )}
+                </div>
+              )}
+              {data.route2Label && (
+                <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-2 border border-orange-200 dark:border-orange-700">
+                  <div className="text-xs">
+                    <span className="text-orange-600 dark:text-orange-400 font-semibold">Route 2:</span>
+                    <span className="text-gray-700 dark:text-gray-300 ml-1">{data.route2Label}</span>
+                  </div>
+                  {data.route2Description && (
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">
+                      {data.route2Description}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            {!data.prompt && !data.route1Label && !data.route2Label && (
+              <div className="bg-violet-50 dark:bg-violet-900/20 rounded-lg p-3 border border-violet-200 dark:border-violet-700">
+                <div className="text-sm text-gray-500 dark:text-gray-400 italic">
+                  Not configured
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Legacy prompt display for unknown aiTypes */}
+        {!['ai_response', 'ai_fallback', 'ai_decision'].includes(data.aiType) && data.prompt && (
           <div className="bg-violet-50 dark:bg-violet-900/20 rounded-lg p-3 border border-violet-200 dark:border-violet-700">
             <div className="text-xs text-violet-600 dark:text-violet-400 font-semibold mb-1">AI Prompt:</div>
             <div className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3">

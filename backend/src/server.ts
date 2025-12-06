@@ -27,6 +27,7 @@ import templatesModule from './modules/templates/index.js';
 import facebookModule from './modules/facebook/index.js';
 import facebookSyncService from './services/facebook-sync.service.js';
 import authModule from './modules/auth/index.js';
+import tagsModule from './modules/tags/index.js';
 
 const PORT = parseInt(process.env.PORT || '3001', 10);
 const HOST = process.env.HOST || '0.0.0.0';
@@ -97,6 +98,7 @@ await fastify.register(complianceModule, { prefix: '/api/compliance' });
 await fastify.register(templatesModule, { prefix: '/api/templates' });
 await fastify.register(facebookModule, { prefix: '/api' });
 await fastify.register(authModule, { prefix: '/api/auth' });
+await fastify.register(tagsModule, { prefix: '/api/tags' });
 
 // Webhook endpoints (public, no auth)
 // Meta webhook verification (GET request for webhook setup)
