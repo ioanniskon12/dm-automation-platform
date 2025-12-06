@@ -550,8 +550,8 @@ export default function Home() {
             <div>
               <h4 className="font-semibold text-white mb-4">Product</h4>
               <ul className="space-y-3 text-sm">
-                <li><a href="#features" className="hover:text-white transition-colors">Features</a></li>
-                <li><a href="#pricing" className="hover:text-white transition-colors">Pricing</a></li>
+                <li><Link href="/features" className="hover:text-white transition-colors">Features</Link></li>
+                <li><Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
                 <li><Link href="/supported-channels" className="hover:text-white transition-colors">Channels</Link></li>
                 <li><a href="#" className="hover:text-white transition-colors">API</a></li>
               </ul>

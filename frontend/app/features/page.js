@@ -205,10 +205,10 @@ export default function FeaturesPage() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-8">
-            <Link href="/#features" className="text-sm text-blue-600 font-medium">Features</Link>
-            <Link href="/#pricing" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">Pricing</Link>
-            <Link href="/#testimonials" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">Testimonials</Link>
-            <Link href="/#faq" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">FAQ</Link>
+            <Link href="/features" className="text-sm text-blue-600 font-medium">Features</Link>
+            <Link href="/pricing" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">Pricing</Link>
+            <Link href="/supported-channels" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">Channels</Link>
+            <Link href="/faq" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">FAQ</Link>
           </nav>
 
           <div className="flex items-center gap-3">
@@ -403,7 +403,7 @@ export default function FeaturesPage() {
               </svg>
             </Link>
             <Link
-              href="/#pricing"
+              href="/pricing"
               className="w-full sm:w-auto px-8 py-4 text-base font-medium text-white border-2 border-white/30 rounded-xl hover:bg-white/10 hover:border-white/50 transition-all"
             >
               View Pricing
@@ -438,7 +438,7 @@ export default function FeaturesPage() {
               <h4 className="font-semibold text-white mb-4">Product</h4>
               <ul className="space-y-3 text-sm">
                 <li><Link href="/features" className="hover:text-white transition-colors">Features</Link></li>
-                <li><Link href="/#pricing" className="hover:text-white transition-colors">Pricing</Link></li>
+                <li><Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
                 <li><a href="/supported-channels" className="hover:text-white transition-colors">Channels</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">API</a></li>
               </ul>
