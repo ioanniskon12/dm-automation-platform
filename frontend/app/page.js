@@ -123,8 +123,8 @@ export default function Home() {
               Pricing
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
             </Link>
-            <Link href="/integrations" className="text-sm text-gray-600 hover:text-blue-600 transition-colors relative group">
-              Integrations
+            <Link href="/supported-channels" className="text-sm text-gray-600 hover:text-blue-600 transition-colors relative group">
+              Channels
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
             </Link>
             <Link href="/faq" className="text-sm text-gray-600 hover:text-blue-600 transition-colors relative group">
@@ -552,7 +552,7 @@ export default function Home() {
               <ul className="space-y-3 text-sm">
                 <li><a href="#features" className="hover:text-white transition-colors">Features</a></li>
                 <li><a href="#pricing" className="hover:text-white transition-colors">Pricing</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Integrations</a></li>
+                <li><Link href="/supported-channels" className="hover:text-white transition-colors">Channels</Link></li>
                 <li><a href="#" className="hover:text-white transition-colors">API</a></li>
               </ul>
             </div>

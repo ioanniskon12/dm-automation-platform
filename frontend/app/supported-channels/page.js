@@ -150,7 +150,7 @@ export default function IntegrationsPage() {
           <nav className="hidden md:flex items-center gap-8">
             <Link href="/features" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">Features</Link>
             <Link href="/pricing" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">Pricing</Link>
-            <Link href="/integrations" className="text-sm text-blue-600 font-medium">Integrations</Link>
+            <Link href="/supported-channels" className="text-sm text-blue-600 font-medium">Channels</Link>
             <Link href="/faq" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">FAQ</Link>
           </nav>
 
@@ -474,7 +474,7 @@ export default function IntegrationsPage() {
               <ul className="space-y-2 text-sm">
                 <li><Link href="/features" className="hover:text-white transition-colors">Features</Link></li>
                 <li><Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
-                <li><Link href="/integrations" className="hover:text-white transition-colors">Integrations</Link></li>
+                <li><Link href="/supported-channels" className="hover:text-white transition-colors">Channels</Link></li>
                 <li><Link href="/faq" className="hover:text-white transition-colors">FAQ</Link></li>
               </ul>
             </div>

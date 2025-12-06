@@ -439,7 +439,7 @@ export default function FeaturesPage() {
               <ul className="space-y-3 text-sm">
                 <li><Link href="/features" className="hover:text-white transition-colors">Features</Link></li>
                 <li><Link href="/#pricing" className="hover:text-white transition-colors">Pricing</Link></li>
-                <li><a href="#" className="hover:text-white transition-colors">Integrations</a></li>
+                <li><a href="/supported-channels" className="hover:text-white transition-colors">Channels</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">API</a></li>
               </ul>
             </div>
