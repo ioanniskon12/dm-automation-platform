@@ -2,19 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '../contexts/AuthContext';
 
-export default function Home() {
-  const { isAuthenticated, loading } = useAuth();
-  const router = useRouter();
+export default function DemoHomepage() {
   const [openFaq, setOpenFaq] = useState(null);
-
-  useEffect(() => {
-    if (!loading && isAuthenticated) {
-      router.push('/dashboard');
-    }
-  }, [isAuthenticated, loading, router]);
+  const [currentTestimonial, setCurrentTestimonial] = useState(0);
 
   const testimonials = [
     {
@@ -89,25 +80,25 @@ export default function Home() {
 
   const brands = ['Shopify', 'Stripe', 'Notion', 'Figma', 'Webflow', 'Vercel', 'Slack', 'Discord'];
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center font-mono text-sm font-bold text-white mx-auto mb-3 animate-pulse">
-            DM
-          </div>
-          <p className="text-gray-600 text-sm">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  // Auto-rotate testimonials
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [testimonials.length]);
 
   return (
     <div className="min-h-screen bg-white overflow-hidden">
+      {/* Demo Banner */}
+      <div className="bg-gradient-to-r from-yellow-400 via-orange-400 to-yellow-400 animate-gradient-x text-black text-center py-2 text-sm font-medium">
+        DEMO PREVIEW - This is how the new homepage will look
+      </div>
+
       {/* Header */}
       <header className="sticky top-0 bg-white/80 backdrop-blur-md z-50 border-b border-gray-100">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity group">
+          <Link href="/demo-homepage" className="flex items-center gap-2 hover:opacity-70 transition-opacity group">
             <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center font-mono text-xs font-bold text-white group-hover:animate-pulse-glow transition-all">
               DM
             </div>
@@ -115,22 +106,22 @@ export default function Home() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-8">
-            <Link href="/features" className="text-sm text-gray-600 hover:text-blue-600 transition-colors relative group">
+            <a href="#features" className="text-sm text-gray-600 hover:text-blue-600 transition-colors relative group">
               Features
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
-            </Link>
-            <Link href="/pricing" className="text-sm text-gray-600 hover:text-blue-600 transition-colors relative group">
+            </a>
+            <a href="#pricing" className="text-sm text-gray-600 hover:text-blue-600 transition-colors relative group">
               Pricing
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
-            </Link>
-            <Link href="/integrations" className="text-sm text-gray-600 hover:text-blue-600 transition-colors relative group">
-              Integrations
+            </a>
+            <a href="#testimonials" className="text-sm text-gray-600 hover:text-blue-600 transition-colors relative group">
+              Testimonials
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
-            </Link>
-            <Link href="/faq" className="text-sm text-gray-600 hover:text-blue-600 transition-colors relative group">
+            </a>
+            <a href="#faq" className="text-sm text-gray-600 hover:text-blue-600 transition-colors relative group">
               FAQ
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
-            </Link>
+            </a>
           </nav>
 
           <div className="flex items-center gap-3">
@@ -262,12 +253,12 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
-              { icon: "M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z", title: "Unified Inbox", desc: "Manage Instagram, Messenger, WhatsApp, and Telegram conversations in one beautiful inbox.", color: "blue", link: "/features#unified-inbox" },
-              { icon: "M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z", title: "AI-Powered Responses", desc: "Train your AI with your knowledge base. Get intelligent, brand-aligned responses.", color: "purple", link: "/features#ai-responses" },
-              { icon: "M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z", title: "Visual Flow Builder", desc: "Build complex automation workflows with drag-and-drop simplicity. No coding required.", color: "green", link: "/features#flow-builder" },
-              { icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z", title: "Advanced Analytics", desc: "Track response times, conversion rates, and customer satisfaction.", color: "orange", link: "/features#analytics" },
-              { icon: "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253", title: "Knowledge Base", desc: "Upload PDFs, scrape websites, or paste content. Your AI learns everything.", color: "indigo", link: "/features#knowledge-base" },
-              { icon: "M13 10V3L4 14h7v7l9-11h-7z", title: "Instant Templates", desc: "Launch in seconds with pre-built templates for FAQ bots, lead capture, and more.", color: "pink", link: "/features#templates" }
+              { icon: "M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z", title: "Unified Inbox", desc: "Manage Instagram, Messenger, WhatsApp, and Telegram conversations in one beautiful inbox.", color: "blue" },
+              { icon: "M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z", title: "AI-Powered Responses", desc: "Train your AI with your knowledge base. Get intelligent, brand-aligned responses.", color: "purple" },
+              { icon: "M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z", title: "Visual Flow Builder", desc: "Build complex automation workflows with drag-and-drop simplicity. No coding required.", color: "green" },
+              { icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z", title: "Advanced Analytics", desc: "Track response times, conversion rates, and customer satisfaction.", color: "orange" },
+              { icon: "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253", title: "Knowledge Base", desc: "Upload PDFs, scrape websites, or paste content. Your AI learns everything.", color: "indigo" },
+              { icon: "M13 10V3L4 14h7v7l9-11h-7z", title: "Instant Templates", desc: "Launch in seconds with pre-built templates for FAQ bots, lead capture, and more.", color: "pink" }
             ].map((feature, i) => (
               <div key={i} className={`bg-white p-8 rounded-2xl border border-gray-100 hover:border-${feature.color}-200 hover:shadow-2xl transition-all duration-300 group hover:-translate-y-2`}>
                 <div className={`w-14 h-14 bg-gradient-to-br from-${feature.color}-500 to-${feature.color}-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all shadow-lg shadow-${feature.color}-500/30`}>
@@ -276,16 +267,7 @@ export default function Home() {
                   </svg>
                 </div>
                 <h3 className={`text-xl font-semibold text-black mb-3 group-hover:text-${feature.color}-600 transition-colors`}>{feature.title}</h3>
-                <p className="text-gray-600 leading-relaxed mb-4">{feature.desc}</p>
-                <Link
-                  href={feature.link}
-                  className={`inline-flex items-center gap-2 text-sm font-medium text-${feature.color}-600 hover:text-${feature.color}-700 transition-colors group/link`}
-                >
-                  Learn more
-                  <svg className="w-4 h-4 group-hover/link:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </Link>
+                <p className="text-gray-600 leading-relaxed">{feature.desc}</p>
               </div>
             ))}
           </div>
@@ -563,7 +545,7 @@ export default function Home() {
                 <li><a href="#" className="hover:text-white transition-colors">About</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Careers</a></li>
-                <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
+                <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
               </ul>
             </div>
 
