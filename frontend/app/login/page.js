@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../contexts/AuthContext';
 import axios from 'axios';
+import MarketingNavbar from '../../components/MarketingNavbar';
+import MarketingFooter from '../../components/MarketingFooter';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3003';
 
@@ -56,22 +58,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      {/* Navbar */}
-      <header className="border-b border-gray-200">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
-            <div className="w-8 h-8 border border-black rounded-lg flex items-center justify-center font-mono text-xs font-bold">
-              DM
-            </div>
-            <span className="font-medium text-sm">DM Automation</span>
-          </Link>
-          <div className="flex items-center gap-4">
-            <Link href="/signup" className="text-sm text-gray-600 hover:text-black transition-colors">
-              Sign up
-            </Link>
-          </div>
-        </div>
-      </header>
+      <MarketingNavbar />
 
       {/* Main Content */}
       <div className="flex-1 flex items-center justify-center p-6">
@@ -219,24 +206,7 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="border-t border-gray-200 py-6">
-        <div className="max-w-5xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 border border-black rounded-lg flex items-center justify-center font-mono text-xs font-bold">
-                DM
-              </div>
-              <span className="text-sm font-medium">DM Automation</span>
-            </div>
-            <div className="flex items-center gap-6 text-sm text-gray-600">
-              <Link href="/terms" className="hover:text-black transition-colors">Terms</Link>
-              <Link href="/privacy" className="hover:text-black transition-colors">Privacy</Link>
-              <span className="text-gray-400">© 2025</span>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <MarketingFooter />
     </div>
   );
 }
