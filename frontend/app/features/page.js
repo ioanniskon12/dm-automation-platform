@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import MarketingNavbar from '../../components/MarketingNavbar';
+import MarketingFooter from '../../components/MarketingFooter';
 
 export default function FeaturesPage() {
   const [activeFeature, setActiveFeature] = useState(0);
@@ -194,36 +196,7 @@ export default function FeaturesPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="sticky top-0 bg-white/80 backdrop-blur-md z-50 border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 hover:opacity-70 transition-opacity group">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center font-mono text-xs font-bold text-white">
-              DM
-            </div>
-            <span className="font-semibold text-lg">DM Automation</span>
-          </Link>
-
-          <nav className="hidden md:flex items-center gap-8">
-            <Link href="/features" className="text-sm text-blue-600 font-medium">Features</Link>
-            <Link href="/pricing" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">Pricing</Link>
-            <Link href="/supported-channels" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">Channels</Link>
-            <Link href="/faq" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">FAQ</Link>
-          </nav>
-
-          <div className="flex items-center gap-3">
-            <Link href="/login" className="text-sm text-gray-600 hover:text-black transition-colors px-4 py-2">
-              Sign In
-            </Link>
-            <Link
-              href="/signup"
-              className="px-5 py-2.5 text-sm bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:opacity-90 transition-all rounded-lg font-medium shadow-lg shadow-blue-500/25"
-            >
-              Start Free Trial
-            </Link>
-          </div>
-        </div>
-      </header>
+      <MarketingNavbar />
 
       {/* Hero Section */}
       <section className="pt-20 pb-16 px-6 relative overflow-hidden">
@@ -418,61 +391,7 @@ export default function FeaturesPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-gray-400 py-16">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
-            <div className="col-span-2">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center font-mono text-xs font-bold text-white">
-                  DM
-                </div>
-                <span className="font-semibold text-lg text-white">DM Automation</span>
-              </div>
-              <p className="text-sm leading-relaxed mb-4 max-w-xs">
-                Automate your social media conversations with AI. Save time, close more deals, delight customers.
-              </p>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-white mb-4">Product</h4>
-              <ul className="space-y-3 text-sm">
-                <li><Link href="/features" className="hover:text-white transition-colors">Features</Link></li>
-                <li><Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link></li>
-                <li><a href="/supported-channels" className="hover:text-white transition-colors">Channels</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">API</a></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-white mb-4">Company</h4>
-              <ul className="space-y-3 text-sm">
-                <li><a href="#" className="hover:text-white transition-colors">About</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Careers</a></li>
-                <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-white mb-4">Legal</h4>
-              <ul className="space-y-3 text-sm">
-                <li><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
-                <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
-                <li><a href="#" className="hover:text-white transition-colors">Cookie Policy</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">GDPR</a></li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-sm">&copy; 2025 DM Automation. All rights reserved.</p>
-            <p className="text-sm flex items-center gap-1">
-              Made with <span className="text-red-500 animate-pulse">&#10084;</span> for businesses everywhere
-            </p>
-          </div>
-        </div>
-      </footer>
+      <MarketingFooter />
     </div>
   );
 }
