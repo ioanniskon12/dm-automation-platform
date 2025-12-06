@@ -44,6 +44,7 @@ export default function MarketingFooter() {
               <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link></li>
               <li><Link href="/terms" className="hover:text-white transition-colors">Terms</Link></li>
               <li><Link href="/security" className="hover:text-white transition-colors">Security</Link></li>
+              <li><Link href="/cookies" className="hover:text-white transition-colors">Cookies</Link></li>
             </ul>
           </div>
         </div>
