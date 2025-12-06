@@ -309,16 +309,27 @@ export default function FlowBuilder({ automationType = null, selectedTemplate = 
       // Original signature for single node
       const type = typeOrNodes
       const data = dataOrEdges
-      const newNode = {
-        id: `${Date.now()}`,
-        type,
-        data,
-        position: {
-          x: Math.random() * 400 + 100,
-          y: Math.random() * 400 + 100,
-        },
-      }
-      setNodes((nds) => [...nds, newNode])
+
+      // Find the rightmost node to position new node to its right
+      setNodes((nds) => {
+        let maxX = 100
+        let avgY = 150
+        if (nds.length > 0) {
+          maxX = Math.max(...nds.map(n => n.position.x)) + 280
+          avgY = nds.reduce((sum, n) => sum + n.position.y, 0) / nds.length
+        }
+
+        const newNode = {
+          id: `${Date.now()}`,
+          type,
+          data,
+          position: {
+            x: maxX,
+            y: avgY,
+          },
+        }
+        return [...nds, newNode]
+      })
     }
   }, [setNodes, setEdges])
 
@@ -388,7 +399,7 @@ export default function FlowBuilder({ automationType = null, selectedTemplate = 
       type: nodeType,
       data,
       position: {
-        x: sourceNode.position.x + 400,
+        x: sourceNode.position.x + 260,
         y: sourceNode.position.y
       }
     }
@@ -403,6 +414,110 @@ export default function FlowBuilder({ automationType = null, selectedTemplate = 
     setNodes((nds) => [...nds, newNode])
     setEdges((eds) => [...eds, newEdge])
   }, [nodes, setNodes, setEdges])
+
+  // Auto-arrange nodes in a clean horizontal layout
+  const rearrangeNodes = useCallback(() => {
+    if (nodes.length === 0) return
+
+    // Build adjacency map from edges
+    const childrenMap = {} // nodeId -> [childNodeIds]
+    const parentMap = {} // nodeId -> parentNodeId
+
+    edges.forEach(edge => {
+      if (!childrenMap[edge.source]) {
+        childrenMap[edge.source] = []
+      }
+      childrenMap[edge.source].push(edge.target)
+      parentMap[edge.target] = edge.source
+    })
+
+    // Find root nodes (nodes with no parent)
+    const rootNodes = nodes.filter(n => !parentMap[n.id])
+
+    // Calculate positions using BFS
+    const positions = {}
+    const nodeWidth = 240
+    const nodeHeight = 120
+    const horizontalGap = 60
+    const verticalGap = 40
+
+    let currentX = 50
+
+    // Process each root and its descendants
+    const processTree = (rootId, startY) => {
+      const queue = [{ id: rootId, depth: 0 }]
+      const depthNodes = {} // depth -> [nodeIds at this depth]
+      const visited = new Set()
+
+      // BFS to group nodes by depth
+      while (queue.length > 0) {
+        const { id, depth } = queue.shift()
+        if (visited.has(id)) continue
+        visited.add(id)
+
+        if (!depthNodes[depth]) depthNodes[depth] = []
+        depthNodes[depth].push(id)
+
+        const children = childrenMap[id] || []
+        children.forEach(childId => {
+          if (!visited.has(childId)) {
+            queue.push({ id: childId, depth: depth + 1 })
+          }
+        })
+      }
+
+      // Calculate max height needed for this tree
+      let maxNodesAtDepth = 0
+      Object.values(depthNodes).forEach(nodesAtDepth => {
+        maxNodesAtDepth = Math.max(maxNodesAtDepth, nodesAtDepth.length)
+      })
+
+      // Position nodes at each depth
+      Object.entries(depthNodes).forEach(([depth, nodeIds]) => {
+        const x = currentX + parseInt(depth) * (nodeWidth + horizontalGap)
+        const totalHeight = nodeIds.length * nodeHeight + (nodeIds.length - 1) * verticalGap
+        const startYForDepth = startY + (maxNodesAtDepth * (nodeHeight + verticalGap) - totalHeight) / 2
+
+        nodeIds.forEach((nodeId, index) => {
+          positions[nodeId] = {
+            x,
+            y: startYForDepth + index * (nodeHeight + verticalGap)
+          }
+        })
+      })
+
+      // Return the width of this tree
+      const maxDepth = Math.max(...Object.keys(depthNodes).map(Number))
+      return {
+        width: (maxDepth + 1) * (nodeWidth + horizontalGap),
+        height: maxNodesAtDepth * (nodeHeight + verticalGap)
+      }
+    }
+
+    // Process all root nodes
+    let currentY = 50
+    rootNodes.forEach(root => {
+      const treeSize = processTree(root.id, currentY)
+      currentY += treeSize.height + verticalGap * 2
+    })
+
+    // Handle orphan nodes (no connections)
+    const positionedIds = new Set(Object.keys(positions))
+    const orphanNodes = nodes.filter(n => !positionedIds.has(n.id))
+
+    orphanNodes.forEach((node, index) => {
+      positions[node.id] = {
+        x: 50 + index * (nodeWidth + horizontalGap),
+        y: currentY
+      }
+    })
+
+    // Update node positions
+    setNodes(nds => nds.map(node => ({
+      ...node,
+      position: positions[node.id] || node.position
+    })))
+  }, [nodes, edges, setNodes])
 
   const validateNodes = useCallback(() => {
     const errors = []
@@ -609,6 +724,13 @@ export default function FlowBuilder({ automationType = null, selectedTemplate = 
       <div className="flex-1 relative bg-white dark:bg-gray-900 h-full overflow-hidden">
         {/* Fixed Action Buttons */}
         <div className="fixed top-20 right-4 z-[60] flex gap-2">
+          <button
+            onClick={rearrangeNodes}
+            className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:border-black dark:hover:border-white text-black dark:text-white font-semibold py-2 px-4 text-sm transition-colors flex items-center gap-2"
+          >
+            <span>✨</span>
+            <span>Rearrange</span>
+          </button>
           <button
             onClick={testFlow}
             className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:border-black dark:hover:border-white text-black dark:text-white font-semibold py-2 px-4 text-sm transition-colors flex items-center gap-2"

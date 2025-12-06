@@ -27,232 +27,87 @@ export default function MediaNode({ data, isConnectable }) {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border-2 border-orange-500 min-w-[280px] max-w-[320px]">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border-2 border-orange-500 min-w-[180px] max-w-[220px] overflow-hidden">
       {/* Left Handle */}
       <Handle
         type="target"
         position={Position.Left}
         isConnectable={isConnectable}
-        className="w-3 h-3 !bg-orange-500"
+        className="w-2.5 h-2.5 !bg-orange-500"
       />
 
       {/* Header */}
-      <div className="bg-gradient-to-r from-orange-500 to-amber-500 px-4 py-2 flex items-center gap-2">
-        <span className="text-2xl">{getMediaIcon(data.mediaType)}</span>
+      <div className="bg-gradient-to-r from-orange-500 to-amber-500 px-2.5 py-1.5 flex items-center gap-1.5">
+        <span className="text-base">{getMediaIcon(data.mediaType)}</span>
         <div className="flex-1">
-          <div className="text-xs font-bold text-white/90 uppercase tracking-wide">Media Send</div>
+          <div className="text-[10px] font-bold text-white/90 uppercase tracking-wide">Media</div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="p-4 space-y-3">
-        <div className="font-bold text-gray-900 dark:text-white text-sm">
+      <div className="p-2.5 space-y-2">
+        <div className="font-bold text-gray-900 dark:text-white text-xs">
           {data.label}
         </div>
 
         {data.mediaType === 'send_message' && (
-          <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-3 border border-orange-200 dark:border-orange-700">
-            <div className="text-xs text-orange-600 dark:text-orange-400 font-semibold mb-1">Message:</div>
+          <div className="bg-orange-50 dark:bg-orange-900/20 rounded p-2 border border-orange-200 dark:border-orange-700">
             {data.message ? (
               <>
-                <div className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3">
-                  {data.message}
-                </div>
-                {data.buttons && data.buttons.length > 1 && (
-                  <div className="mt-3 space-y-1.5">
-                    {data.buttons.map((button, index) => (
-                      <div key={button.id || index} className="flex items-center justify-between text-xs">
-                        <span className="text-gray-700 dark:text-gray-300 truncate flex-1">
-                          {index + 1}. {button.text}
-                        </span>
-                        <span className="ml-2 px-1.5 py-0.5 rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 font-semibold">
-                          {getButtonCTR(index)}%
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {data.quickReplies && data.quickReplies.length > 0 && (
-                  <div className="mt-2 text-xs text-orange-600 dark:text-orange-400 font-semibold">
-                    ✓ {data.quickReplies.length} Quick {data.quickReplies.length === 1 ? 'Reply' : 'Replies'}
-                  </div>
-                )}
-                {data.includeButtons && !data.buttons && !data.quickReplies && (
-                  <div className="mt-2 text-xs text-orange-600 dark:text-orange-400 font-semibold">
-                    ✓ Quick Reply Buttons
-                  </div>
+                <div className="text-xs text-gray-700 dark:text-gray-300 line-clamp-2">{data.message}</div>
+                {data.buttons && data.buttons.length > 0 && (
+                  <div className="text-[10px] text-orange-600 dark:text-orange-400 mt-1">{data.buttons.length} buttons</div>
                 )}
               </>
             ) : (
-              <div className="text-sm text-gray-500 dark:text-gray-400 italic">
-                No message configured
-              </div>
+              <div className="text-xs text-gray-500 dark:text-gray-400 italic">No message</div>
             )}
           </div>
         )}
 
         {data.mediaType === 'send_image' && (
-          <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg overflow-hidden border border-orange-200 dark:border-orange-700">
+          <div className="bg-orange-50 dark:bg-orange-900/20 rounded overflow-hidden border border-orange-200 dark:border-orange-700">
             {data.imageUrl ? (
-              <>
-                {data.imageUrl.startsWith('http') ? (
-                  <img src={data.imageUrl} alt="Preview" className="w-full h-32 object-cover" />
-                ) : (
-                  <div className="p-3 text-xs text-orange-600 dark:text-orange-400 font-semibold">
-                    📷 {data.imageUrl}
-                  </div>
-                )}
-                {data.caption && (
-                  <div className="p-2 text-xs text-gray-700 dark:text-gray-300 border-t border-orange-200 dark:border-orange-700">
-                    {data.caption}
-                  </div>
-                )}
-              </>
+              data.imageUrl.startsWith('http') ? (
+                <img src={data.imageUrl} alt="Preview" className="w-full h-16 object-cover" />
+              ) : (
+                <div className="p-2 text-[10px] text-orange-600 dark:text-orange-400">📷 Image</div>
+              )
             ) : (
-              <div className="p-3 text-sm text-gray-500 dark:text-gray-400 italic">
-                No image configured
-              </div>
+              <div className="p-2 text-xs text-gray-500 dark:text-gray-400 italic">No image</div>
             )}
           </div>
         )}
 
         {data.mediaType === 'send_video' && (
-          <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-3 border border-orange-200 dark:border-orange-700">
-            <div className="text-xs text-orange-600 dark:text-orange-400 font-semibold mb-1">Video:</div>
-            {data.videoUrl ? (
-              <>
-                <div className="text-xs text-gray-700 dark:text-gray-300 line-clamp-1">
-                  🎬 {data.videoUrl}
-                </div>
-                {data.caption && (
-                  <div className="text-xs text-gray-600 dark:text-gray-400 mt-2 line-clamp-2">
-                    {data.caption}
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="text-sm text-gray-500 dark:text-gray-400 italic">
-                No video configured
-              </div>
-            )}
+          <div className="text-[10px] text-orange-600 dark:text-orange-400">
+            {data.videoUrl ? '🎬 Video attached' : 'No video'}
           </div>
         )}
 
         {data.mediaType === 'send_voice' && (
-          <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-3 border border-orange-200 dark:border-orange-700">
-            <div className="text-xs text-orange-600 dark:text-orange-400 font-semibold mb-1">Voice Note:</div>
-            {data.voiceUrl ? (
-              <>
-                <div className="text-xs text-gray-700 dark:text-gray-300 line-clamp-1">
-                  🎙️ {data.voiceUrl}
-                </div>
-                {data.duration && (
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Duration: {data.duration}
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="text-sm text-gray-500 dark:text-gray-400 italic">
-                No voice configured
-              </div>
-            )}
+          <div className="text-[10px] text-orange-600 dark:text-orange-400">
+            {data.voiceUrl ? '🎙️ Voice note' : 'No voice'}
           </div>
         )}
 
         {data.mediaType === 'send_file' && (
-          <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-3 border border-orange-200 dark:border-orange-700">
-            <div className="text-xs text-orange-600 dark:text-orange-400 font-semibold mb-1">File:</div>
-            {data.fileUrl ? (
-              <>
-                {data.fileName && (
-                  <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    📎 {data.fileName}
-                  </div>
-                )}
-                <div className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1">
-                  {data.fileUrl}
-                </div>
-                {data.caption && (
-                  <div className="text-xs text-gray-600 dark:text-gray-400 mt-2 line-clamp-2 border-t border-orange-200 dark:border-orange-700 pt-2">
-                    {data.caption}
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="text-sm text-gray-500 dark:text-gray-400 italic">
-                No file configured
-              </div>
-            )}
+          <div className="text-[10px] text-orange-600 dark:text-orange-400">
+            {data.fileUrl ? `📎 ${data.fileName || 'File'}` : 'No file'}
           </div>
         )}
 
         {data.mediaType === 'send_carousel' && (
-          <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-3 border border-orange-200 dark:border-orange-700">
-            <div className="text-xs text-orange-600 dark:text-orange-400 font-semibold mb-1">Carousel:</div>
-            {data.cards && data.cards.length > 0 ? (
-              <div className="text-sm text-gray-700 dark:text-gray-300">
-                🎠 {data.cards.length} {data.cards.length === 1 ? 'card' : 'cards'}
-              </div>
-            ) : (
-              <div className="text-sm text-gray-500 dark:text-gray-400 italic">
-                No cards configured
-              </div>
-            )}
+          <div className="text-[10px] text-orange-600 dark:text-orange-400">
+            {data.cards?.length > 0 ? `🎠 ${data.cards.length} cards` : 'No cards'}
           </div>
         )}
 
         {data.mediaType === 'send_card' && (
-          <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-3 border border-orange-200 dark:border-orange-700">
-            <div className="text-xs text-orange-600 dark:text-orange-400 font-semibold mb-1">Card:</div>
-            {(data.title || data.subtitle || data.imageUrl || (data.buttons && data.buttons.length > 0)) ? (
-              <>
-                {data.imageUrl && (
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                    🖼️ Has image
-                  </div>
-                )}
-                {data.title && (
-                  <div className="text-sm font-bold text-gray-900 dark:text-white mb-1">
-                    {data.title}
-                  </div>
-                )}
-                {data.subtitle && (
-                  <div className="text-xs text-gray-600 dark:text-gray-400 mb-2 line-clamp-2">
-                    {data.subtitle}
-                  </div>
-                )}
-                {data.buttons && data.buttons.length > 1 && (
-                  <div className="mt-2 space-y-1.5">
-                    {data.buttons.map((button, index) => (
-                      <div key={button.id || index} className="flex items-center justify-between text-xs">
-                        <span className="text-gray-700 dark:text-gray-300 truncate flex-1">
-                          {index + 1}. {button.text}
-                        </span>
-                        <span className="ml-2 px-1.5 py-0.5 rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 font-semibold">
-                          {getButtonCTR(index)}%
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {data.buttons?.length === 1 && (
-                  <div className="text-xs text-orange-600 dark:text-orange-400 font-semibold">
-                    1 button
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="text-sm text-gray-500 dark:text-gray-400 italic">
-                Not configured
-              </div>
-            )}
+          <div className="text-[10px] text-orange-600 dark:text-orange-400">
+            {data.title || 'Card'}
           </div>
         )}
-
-        <div className="text-xs text-gray-500 dark:text-gray-400">
-          Send media content to the user
-        </div>
       </div>
 
       {/* Right Handle */}
@@ -260,7 +115,7 @@ export default function MediaNode({ data, isConnectable }) {
         type="source"
         position={Position.Right}
         isConnectable={isConnectable}
-        className="w-3 h-3 !bg-orange-500"
+        className="w-2.5 h-2.5 !bg-orange-500"
       />
     </div>
   )
