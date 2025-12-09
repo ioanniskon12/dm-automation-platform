@@ -29,7 +29,7 @@ import facebookSyncService from './services/facebook-sync.service.js';
 import authModule from './modules/auth/index.js';
 import tagsModule from './modules/tags/index.js';
 
-const PORT = parseInt(process.env.PORT || '3001', 10);
+const PORT = parseInt(process.env.PORT || '3000', 10);
 const HOST = process.env.HOST || '0.0.0.0';
 
 // In-memory store for typing indicators

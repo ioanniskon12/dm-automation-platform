@@ -1,8 +1,9 @@
 'use client'
 
-import { useCallback, useState, useEffect } from 'react'
+import { useCallback, useState, useEffect, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import axios from 'axios'
+import { fetchTriggersOnce, getCachedTriggersForChannel } from '../lib/triggers-cache'
 import ReactFlow, {
   MiniMap,
   Controls,
@@ -23,7 +24,7 @@ import Sidebar from './Sidebar'
 import NodeConfigPanel from './NodeConfigPanel'
 import AIAssistant from './AIAssistant'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
 
 const nodeTypes = {
   trigger: TriggerNode,
@@ -41,7 +42,13 @@ export default function FlowBuilder({ automationType = null, selectedTemplate = 
   const searchParams = useSearchParams()
   const templateId = searchParams.get('templateId')
   const flowId = searchParams.get('flowId')
-  const [availableTriggers, setAvailableTriggers] = useState([])
+  const hasFetchedTriggersRef = useRef(false)
+  const [availableTriggers, setAvailableTriggers] = useState(() => {
+    // Initialize with cached data ONLY if it matches this channel
+    // This prevents showing Instagram triggers when opening a Messenger flow
+    const cachedTriggers = getCachedTriggersForChannel(channelType)
+    return cachedTriggers || []
+  })
 
   // Get automation type labels
   const getAutomationLabels = () => {
@@ -169,27 +176,24 @@ export default function FlowBuilder({ automationType = null, selectedTemplate = 
     }
   }, [prePopulatedTrigger])
 
-  // Fetch available triggers based on channel type
+  // Fetch available triggers based on channel type - only once per mount
   useEffect(() => {
-    const fetchTriggers = async () => {
+    if (!channelType) return
+    if (hasFetchedTriggersRef.current) return
+    hasFetchedTriggersRef.current = true
+
+    const loadTriggers = async () => {
       try {
-        // Map channel type: facebook -> messenger (backend uses 'messenger')
-        const backendChannelType = channelType === 'facebook' ? 'messenger' : channelType
-
-        const response = await axios.get(`/api/triggers/types?channel=${backendChannelType}`)
-
-        if (response.data.success) {
-          setAvailableTriggers(response.data.triggerTypes)
-        }
+        // fetchTriggersOnce handles deduplication, rate limiting, and loop protection via singleton cache
+        const triggers = await fetchTriggersOnce(channelType, axios)
+        setAvailableTriggers(triggers)
       } catch (error) {
         console.error('Error fetching triggers:', error)
         setAvailableTriggers([])
       }
     }
 
-    if (channelType) {
-      fetchTriggers()
-    }
+    loadTriggers()
   }, [channelType])
 
   // Handle trigger selection

@@ -136,8 +136,11 @@ export default function Contacts() {
   const currentBrand = getCurrentBrand();
   const currentChannel = getCurrentChannel();
 
-  // Filter contacts
+  // Filter contacts based on selected channel
   const filteredContacts = contacts.filter(contact => {
+    // Channel filter - if a channel is selected, only show contacts from that platform
+    const matchesChannel = !currentChannel || contact.platform.toLowerCase() === currentChannel.type.toLowerCase();
+
     const matchesSearch = !searchQuery ||
       contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       contact.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -147,7 +150,7 @@ export default function Contacts() {
 
     const matchesStatus = selectedStatus === 'all' || contact.status === selectedStatus;
 
-    return matchesSearch && matchesTag && matchesStatus;
+    return matchesChannel && matchesSearch && matchesTag && matchesStatus;
   });
 
   // Get tag color classes
@@ -233,6 +236,12 @@ export default function Contacts() {
                   )}
                 </div>
               </div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">
+                {currentChannel
+                  ? `Showing only ${currentChannel.type} contacts`
+                  : 'Showing contacts from all channels'
+                }
+              </div>
             </div>
           </div>
         )}
@@ -269,7 +278,7 @@ export default function Contacts() {
             >
               Contacts
               <span className="ml-2 px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-800 rounded-full">
-                {contacts.length}
+                {filteredContacts.length}
               </span>
               {activeTab === 'contacts' && (
                 <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 dark:bg-blue-400" />

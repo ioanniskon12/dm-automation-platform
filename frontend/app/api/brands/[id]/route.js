@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { brands } from '../../auth/dataStore';
 
-export async function GET(request, { params }) {
+export async function GET(request, context) {
   try {
-    const { id } = params;
+    const { id } = await context.params;
     const brand = brands.get(id);
 
     if (!brand) {
@@ -26,9 +26,9 @@ export async function GET(request, { params }) {
   }
 }
 
-export async function DELETE(request, { params }) {
+export async function DELETE(request, context) {
   try {
-    const { id } = params;
+    const { id } = await context.params;
 
     // Check if brand exists
     const brand = brands.get(id);
@@ -65,9 +65,9 @@ export async function DELETE(request, { params }) {
   }
 }
 
-export async function PUT(request, { params }) {
+export async function PUT(request, context) {
   try {
-    const { id } = params;
+    const { id } = await context.params;
     const body = await request.json();
 
     // Check if brand exists

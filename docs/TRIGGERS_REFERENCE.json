@@ -1,0 +1,710 @@
+{
+  "description": "Complete reference of all available triggers for each channel",
+  "lastUpdated": "2024-12-09",
+  "channels": {
+    "instagram": {
+      "triggers": [
+        {
+          "id": "instagram_message",
+          "name": "Instagram Direct Message",
+          "description": "Fires when a user sends a message to your Instagram account",
+          "icon": "📷",
+          "category": "messaging",
+          "configSchema": [
+            {
+              "field": "triggerType",
+              "label": "Trigger On",
+              "type": "select",
+              "options": [
+                { "value": "any", "label": "Any Message" },
+                { "value": "keywords", "label": "Specific Keywords" }
+              ],
+              "defaultValue": "any",
+              "required": true
+            },
+            {
+              "field": "keywords",
+              "label": "Keywords",
+              "type": "keywords",
+              "placeholder": "Enter keywords",
+              "required": false
+            }
+          ],
+          "webhookEvents": ["messages"],
+          "examples": [
+            "Auto-respond to Instagram DMs",
+            "Qualify leads from Instagram",
+            "Provide customer support via Instagram"
+          ]
+        },
+        {
+          "id": "instagram_comment",
+          "name": "Instagram Comment",
+          "description": "Triggers when someone comments on your Instagram post",
+          "icon": "💬",
+          "category": "engagement",
+          "configSchema": [
+            {
+              "field": "postId",
+              "label": "Post ID",
+              "type": "postId",
+              "placeholder": "Enter Instagram Post ID",
+              "required": false,
+              "helpText": "Leave empty to monitor all posts"
+            },
+            {
+              "field": "keywords",
+              "label": "Keyword Filter",
+              "type": "keywords",
+              "required": false
+            }
+          ],
+          "webhookEvents": ["comments"],
+          "examples": [
+            "Auto-reply to comments with DM",
+            "Engage with post commenters",
+            "Convert engagement into conversations"
+          ]
+        },
+        {
+          "id": "instagram_story_reply",
+          "name": "Instagram Story Reply",
+          "description": "Triggers when someone replies to your Instagram Story",
+          "icon": "📖",
+          "category": "engagement",
+          "configSchema": [
+            {
+              "field": "storySelection",
+              "label": "Story Selection",
+              "type": "select",
+              "options": [
+                { "value": "all", "label": "All Stories" },
+                { "value": "specific", "label": "Specific Story" }
+              ],
+              "defaultValue": "all",
+              "required": true
+            },
+            {
+              "field": "selectedStoryId",
+              "label": "Story ID",
+              "type": "text",
+              "placeholder": "Enter Story ID",
+              "required": false
+            },
+            {
+              "field": "triggerType",
+              "label": "Trigger Type",
+              "type": "select",
+              "options": [
+                { "value": "any", "label": "Any Reply" },
+                { "value": "keywords", "label": "Specific Keywords" }
+              ],
+              "defaultValue": "any",
+              "required": true
+            },
+            {
+              "field": "triggerKeywords",
+              "label": "Keywords",
+              "type": "keywords",
+              "placeholder": "Enter keywords",
+              "required": false
+            },
+            {
+              "field": "replyDelay",
+              "label": "Reply Delay (seconds)",
+              "type": "number",
+              "defaultValue": 0,
+              "required": false
+            },
+            {
+              "field": "autoReact",
+              "label": "Auto-react to Story Reply",
+              "type": "boolean",
+              "defaultValue": false
+            }
+          ],
+          "webhookEvents": ["story_reply"],
+          "examples": [
+            "Auto-reply to story responses",
+            "Collect feedback from story viewers",
+            "Drive engagement from story interactions"
+          ]
+        },
+        {
+          "id": "instagram_post_share",
+          "name": "Instagram Post or Reel Share",
+          "description": "Triggers when someone shares your post or reel via DM",
+          "icon": "🔄",
+          "category": "engagement",
+          "configSchema": [
+            {
+              "field": "postSelection",
+              "label": "Post Selection",
+              "type": "select",
+              "options": [
+                { "value": "any", "label": "Any Post/Reel" },
+                { "value": "specific", "label": "Specific Post/Reel" },
+                { "value": "scheduled", "label": "Scheduled Content" }
+              ],
+              "defaultValue": "any",
+              "required": true
+            },
+            {
+              "field": "postId",
+              "label": "Post/Reel ID",
+              "type": "text",
+              "placeholder": "Enter Post or Reel ID",
+              "required": false
+            },
+            {
+              "field": "shareDelay",
+              "label": "Response Delay (seconds)",
+              "type": "number",
+              "defaultValue": 0,
+              "required": false
+            }
+          ],
+          "webhookEvents": ["share"],
+          "examples": [
+            "Thank users for sharing your content",
+            "Reward viral content sharers",
+            "Track content performance through shares"
+          ]
+        },
+        {
+          "id": "instagram_ref_url",
+          "name": "Instagram Ref URL",
+          "description": "Triggers when someone clicks a special Instagram link with ref parameter",
+          "icon": "🔗",
+          "category": "messaging",
+          "configSchema": [
+            {
+              "field": "refParameter",
+              "label": "Ref Parameter",
+              "type": "text",
+              "placeholder": "e.g., \"summer_promo\" or \"bio_link\"",
+              "required": true
+            },
+            {
+              "field": "linkUrl",
+              "label": "Full Link (for reference)",
+              "type": "text",
+              "placeholder": "https://ig.me/m/yourpage?ref=summer_promo",
+              "required": false
+            }
+          ],
+          "webhookEvents": ["messaging_referrals"],
+          "requiresSetup": [
+            "Create Instagram link with ref parameter",
+            "Share link in bio, ads, or external sites"
+          ],
+          "examples": [
+            "Track different traffic sources",
+            "Segment users by campaign origin",
+            "Trigger different flows for different link sources"
+          ]
+        },
+        {
+          "id": "instagram_ads",
+          "name": "Instagram Ads",
+          "description": "Triggers when someone clicks an Instagram Ad with \"Send Message\" CTA",
+          "icon": "📢",
+          "category": "ads",
+          "configSchema": [
+            {
+              "field": "adCampaignId",
+              "label": "Ad Campaign ID",
+              "type": "text",
+              "placeholder": "Enter Instagram Ad Campaign ID",
+              "required": false
+            },
+            {
+              "field": "adId",
+              "label": "Specific Ad ID",
+              "type": "text",
+              "placeholder": "Enter specific Ad ID",
+              "required": false
+            }
+          ],
+          "webhookEvents": ["messaging_referrals"],
+          "requiresSetup": [
+            "Instagram Ad with \"Send Message\" CTA",
+            "Ad connected to your Instagram Business account"
+          ],
+          "examples": [
+            "Start lead qualification from ad clicks",
+            "Offer discounts to ad responders",
+            "Collect customer information from ads"
+          ]
+        },
+        {
+          "id": "instagram_live_comment",
+          "name": "Instagram Live Comments",
+          "description": "Triggers when someone comments during your Instagram Live broadcast",
+          "icon": "🎥",
+          "category": "engagement",
+          "configSchema": [
+            {
+              "field": "liveVideoId",
+              "label": "Live Video ID",
+              "type": "text",
+              "placeholder": "Auto-detected during live",
+              "required": false
+            },
+            {
+              "field": "keywords",
+              "label": "Keyword Filter",
+              "type": "keywords",
+              "placeholder": "Enter keywords to detect",
+              "required": false
+            },
+            {
+              "field": "respondDuringLive",
+              "label": "Respond During Live",
+              "type": "boolean",
+              "defaultValue": false
+            }
+          ],
+          "webhookEvents": ["live_comments"],
+          "examples": [
+            "Capture questions during live Q&A",
+            "Collect leads from live viewers",
+            "Engage with active live participants"
+          ]
+        }
+      ]
+    },
+    "messenger": {
+      "triggers": [
+        {
+          "id": "messenger_ad_click",
+          "name": "Facebook Ads",
+          "description": "Trigger fires when someone clicks a connected Facebook Ad that uses \"Send Message\" as its CTA",
+          "icon": "📢",
+          "category": "ads",
+          "configSchema": [
+            {
+              "field": "adCampaignId",
+              "label": "Ad Campaign ID",
+              "type": "text",
+              "placeholder": "Enter Facebook Ad Campaign ID",
+              "required": false
+            },
+            {
+              "field": "adId",
+              "label": "Specific Ad ID",
+              "type": "text",
+              "placeholder": "Enter specific Ad ID",
+              "required": false
+            }
+          ],
+          "webhookEvents": ["messaging_referrals"],
+          "requiresSetup": [
+            "Facebook Ad with \"Send Message\" CTA",
+            "Ad connected to your Facebook Page"
+          ],
+          "examples": [
+            "Start a lead qualification flow when users click your ad",
+            "Offer a discount code to ad clickers",
+            "Collect email addresses from ad leads"
+          ]
+        },
+        {
+          "id": "messenger_comment",
+          "name": "Facebook Comments",
+          "description": "Trigger activates when a user leaves a comment on a specific Facebook Page post",
+          "icon": "💬",
+          "category": "engagement",
+          "configSchema": [
+            {
+              "field": "postId",
+              "label": "Post ID",
+              "type": "postId",
+              "placeholder": "Enter Facebook Post ID",
+              "required": true
+            },
+            {
+              "field": "keywords",
+              "label": "Keyword Filter",
+              "type": "keywords",
+              "placeholder": "Enter keywords (e.g., \"interested\", \"yes\", \"info\")",
+              "required": false
+            },
+            {
+              "field": "sendDM",
+              "label": "Send DM Automatically",
+              "type": "boolean",
+              "defaultValue": true
+            }
+          ],
+          "webhookEvents": ["feed_comment"],
+          "requiresSetup": [
+            "Facebook Page with posts",
+            "Comment monitoring enabled in Page settings"
+          ],
+          "examples": [
+            "Auto-reply to post comments with a DM",
+            "Collect leads from engagement posts",
+            "Send exclusive content to commenters"
+          ]
+        },
+        {
+          "id": "messenger_message",
+          "name": "Messenger Message",
+          "description": "Fires when a user sends any message to the connected Facebook Page via Messenger",
+          "icon": "💌",
+          "category": "messaging",
+          "configSchema": [
+            {
+              "field": "triggerType",
+              "label": "Trigger On",
+              "type": "select",
+              "options": [
+                { "value": "any", "label": "Any Message" },
+                { "value": "keywords", "label": "Specific Keywords" },
+                { "value": "intent", "label": "AI Intent Recognition" }
+              ],
+              "defaultValue": "any",
+              "required": true
+            },
+            {
+              "field": "keywords",
+              "label": "Keywords",
+              "type": "keywords",
+              "placeholder": "Enter keywords (e.g., \"help\", \"support\", \"pricing\")",
+              "required": false
+            },
+            {
+              "field": "intent",
+              "label": "Intent",
+              "type": "select",
+              "options": [
+                { "value": "question", "label": "User has a question" },
+                { "value": "complaint", "label": "User has a complaint" },
+                { "value": "purchase", "label": "User wants to buy" },
+                { "value": "support", "label": "User needs support" }
+              ],
+              "required": false
+            },
+            {
+              "field": "excludeExisting",
+              "label": "Only New Conversations",
+              "type": "boolean",
+              "defaultValue": false
+            }
+          ],
+          "webhookEvents": ["messages"],
+          "examples": [
+            "Auto-respond to all incoming messages",
+            "Trigger support flow when users say \"help\"",
+            "Start sales flow for purchase-related messages"
+          ]
+        },
+        {
+          "id": "messenger_ref_url",
+          "name": "Messenger Ref URL",
+          "description": "Triggered when a user lands in Messenger through a special referral link (m.me link with ref parameter)",
+          "icon": "🔗",
+          "category": "messaging",
+          "configSchema": [
+            {
+              "field": "refParameter",
+              "label": "Ref Parameter",
+              "type": "text",
+              "placeholder": "e.g., \"summer_promo\" or \"lead_magnet\"",
+              "required": true
+            },
+            {
+              "field": "linkUrl",
+              "label": "Full Link (for reference)",
+              "type": "text",
+              "placeholder": "https://m.me/yourpage?ref=summer_promo",
+              "required": false
+            }
+          ],
+          "webhookEvents": ["messaging_referrals"],
+          "requiresSetup": [
+            "Create m.me link with ref parameter",
+            "Share link in emails, ads, or website"
+          ],
+          "examples": [
+            "Track different traffic sources (email, website, social)",
+            "Segment users by where they came from",
+            "Trigger different flows for different campaigns"
+          ]
+        },
+        {
+          "id": "messenger_qr_code",
+          "name": "QR Code",
+          "description": "Starts an automation when someone scans a Messenger-connected QR code",
+          "icon": "📱",
+          "category": "general",
+          "configSchema": [
+            {
+              "field": "qrCodeId",
+              "label": "QR Code ID",
+              "type": "text",
+              "placeholder": "Enter unique QR code identifier",
+              "required": true
+            },
+            {
+              "field": "qrCodeName",
+              "label": "QR Code Name",
+              "type": "text",
+              "placeholder": "e.g., \"Event Booth\", \"Product Packaging\"",
+              "required": false
+            },
+            {
+              "field": "trackLocation",
+              "label": "Track Location",
+              "type": "boolean",
+              "defaultValue": false
+            }
+          ],
+          "webhookEvents": ["messaging_referrals"],
+          "requiresSetup": [
+            "Generate Messenger QR code with unique ref",
+            "Print or display QR code at physical location"
+          ],
+          "examples": [
+            "Event booth lead capture",
+            "Product packaging engagement",
+            "Restaurant menu ordering",
+            "Store window promotions"
+          ]
+        },
+        {
+          "id": "messenger_shop_message",
+          "name": "Facebook Shop Message",
+          "description": "Activates when a user sends a message directly from a product or checkout area in the connected Facebook Shop",
+          "icon": "🛒",
+          "category": "commerce",
+          "configSchema": [
+            {
+              "field": "productId",
+              "label": "Product ID",
+              "type": "text",
+              "placeholder": "Enter specific product ID (optional)",
+              "required": false
+            },
+            {
+              "field": "messageType",
+              "label": "Message Type",
+              "type": "select",
+              "options": [
+                { "value": "any", "label": "Any Shop Message" },
+                { "value": "product_inquiry", "label": "Product Inquiry" },
+                { "value": "order_tracking", "label": "Order Tracking" },
+                { "value": "support", "label": "Support Request" }
+              ],
+              "defaultValue": "any",
+              "required": true
+            },
+            {
+              "field": "autoTag",
+              "label": "Auto-tag as",
+              "type": "select",
+              "options": [
+                { "value": "none", "label": "No tag" },
+                { "value": "shop_customer", "label": "Shop Customer" },
+                { "value": "potential_buyer", "label": "Potential Buyer" }
+              ],
+              "defaultValue": "shop_customer"
+            }
+          ],
+          "webhookEvents": ["messages"],
+          "requiresSetup": [
+            "Facebook Shop configured on Page",
+            "Shop products published",
+            "Messaging enabled in Shop settings"
+          ],
+          "examples": [
+            "Answer product questions automatically",
+            "Provide order tracking information",
+            "Offer personalized product recommendations",
+            "Send cart abandonment reminders"
+          ]
+        }
+      ]
+    },
+    "telegram": {
+      "triggers": [
+        {
+          "id": "telegram_message",
+          "name": "Telegram Message",
+          "description": "User sends a message",
+          "icon": "✈️",
+          "category": "messaging",
+          "configSchema": [
+            {
+              "field": "triggerType",
+              "label": "Trigger On",
+              "type": "select",
+              "options": [
+                { "value": "any", "label": "Any Message" },
+                { "value": "keywords", "label": "Specific Keywords" }
+              ],
+              "defaultValue": "any",
+              "required": true
+            },
+            {
+              "field": "keywords",
+              "label": "Keywords",
+              "type": "keywords",
+              "placeholder": "Enter keywords (e.g., \"help\", \"support\", \"info\")",
+              "required": false
+            }
+          ],
+          "webhookEvents": ["message"],
+          "examples": [
+            "Auto-respond to Telegram messages",
+            "Trigger flows based on keywords",
+            "Provide customer support via Telegram"
+          ]
+        },
+        {
+          "id": "telegram_ref_url",
+          "name": "Telegram Ref URL",
+          "description": "User clicks a referral link",
+          "icon": "🔗",
+          "category": "messaging",
+          "configSchema": [
+            {
+              "field": "refParameter",
+              "label": "Ref Parameter",
+              "type": "text",
+              "placeholder": "e.g., \"promo_code\" or \"campaign_id\"",
+              "required": true
+            },
+            {
+              "field": "linkUrl",
+              "label": "Full Link (for reference)",
+              "type": "text",
+              "placeholder": "https://t.me/yourbot?start=promo_code",
+              "required": false
+            }
+          ],
+          "webhookEvents": ["message"],
+          "requiresSetup": [
+            "Create Telegram deep link with start parameter",
+            "Share link in campaigns, ads, or website"
+          ],
+          "examples": [
+            "Track different traffic sources",
+            "Segment users by campaign origin",
+            "Trigger different flows for different campaigns"
+          ]
+        }
+      ]
+    },
+    "whatsapp": {
+      "triggers": [
+        {
+          "id": "whatsapp_message",
+          "name": "WhatsApp Message",
+          "description": "User sends a message",
+          "icon": "💬",
+          "category": "messaging",
+          "configSchema": [
+            {
+              "field": "triggerType",
+              "label": "Trigger On",
+              "type": "select",
+              "options": [
+                { "value": "any", "label": "Any Message" },
+                { "value": "keywords", "label": "Specific Keywords" }
+              ],
+              "defaultValue": "any",
+              "required": true
+            },
+            {
+              "field": "keywords",
+              "label": "Keywords",
+              "type": "keywords",
+              "placeholder": "Enter keywords (e.g., \"help\", \"support\", \"info\")",
+              "required": false
+            }
+          ],
+          "webhookEvents": ["message"],
+          "examples": [
+            "Auto-respond to WhatsApp messages",
+            "Trigger flows based on keywords",
+            "Provide customer support via WhatsApp"
+          ]
+        },
+        {
+          "id": "whatsapp_ref_url",
+          "name": "WhatsApp Ref URL",
+          "description": "User clicks a referral link",
+          "icon": "🔗",
+          "category": "messaging",
+          "configSchema": [
+            {
+              "field": "refParameter",
+              "label": "Ref Parameter",
+              "type": "text",
+              "placeholder": "e.g., \"promo_code\" or \"campaign_id\"",
+              "required": true
+            },
+            {
+              "field": "linkUrl",
+              "label": "Full Link (for reference)",
+              "type": "text",
+              "placeholder": "https://wa.me/1234567890?text=promo_code",
+              "required": false
+            }
+          ],
+          "webhookEvents": ["message"],
+          "requiresSetup": [
+            "Create WhatsApp link with text parameter",
+            "Share link in campaigns, ads, or website"
+          ],
+          "examples": [
+            "Track different traffic sources",
+            "Segment users by campaign origin",
+            "Trigger different flows for different campaigns"
+          ]
+        }
+      ]
+    }
+  },
+  "summary": {
+    "instagram": {
+      "count": 7,
+      "triggers": [
+        "instagram_message - Instagram Direct Message",
+        "instagram_comment - Instagram Comment",
+        "instagram_story_reply - Instagram Story Reply",
+        "instagram_post_share - Instagram Post or Reel Share",
+        "instagram_ref_url - Instagram Ref URL",
+        "instagram_ads - Instagram Ads",
+        "instagram_live_comment - Instagram Live Comments"
+      ]
+    },
+    "messenger": {
+      "count": 6,
+      "triggers": [
+        "messenger_ad_click - Facebook Ads",
+        "messenger_comment - Facebook Comments",
+        "messenger_message - Messenger Message",
+        "messenger_ref_url - Messenger Ref URL",
+        "messenger_qr_code - QR Code",
+        "messenger_shop_message - Facebook Shop Message"
+      ]
+    },
+    "telegram": {
+      "count": 2,
+      "triggers": [
+        "telegram_message - Telegram Message",
+        "telegram_ref_url - Telegram Ref URL"
+      ]
+    },
+    "whatsapp": {
+      "count": 2,
+      "triggers": [
+        "whatsapp_message - WhatsApp Message",
+        "whatsapp_ref_url - WhatsApp Ref URL"
+      ]
+    }
+  }
+}

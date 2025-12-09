@@ -9,7 +9,7 @@ import { useBrandChannel } from '../../contexts/BrandChannelContext';
 import { useSidebar } from '../../contexts/SidebarContext';
 import api from '../../utils/api';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
 
 export default function Analytics() {
   const { isCollapsed } = useSidebar();

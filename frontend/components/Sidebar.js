@@ -1,55 +1,55 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
+import { fetchTriggersOnce, getCachedTriggersForChannel } from '../lib/triggers-cache'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002'
 
 export default function Sidebar({ addNode, isMinimized, onToggleMinimize, channelType = 'instagram' }) {
   const [showTriggersModal, setShowTriggersModal] = useState(false)
-  const [triggerTypes, setTriggerTypes] = useState([])
+  const hasFetchedRef = useRef(false)
+  const [triggerTypes, setTriggerTypes] = useState(() => {
+    // Initialize with cached data ONLY if it matches this channel
+    // This prevents showing Instagram triggers when opening a Messenger flow
+    const cachedTriggers = getCachedTriggersForChannel(channelType)
+    if (cachedTriggers) {
+      // Map backend trigger format to sidebar format
+      return cachedTriggers.map(trigger => ({
+        type: trigger.id,
+        label: trigger.name,
+        icon: trigger.icon,
+        description: trigger.description
+      }))
+    }
+    return []
+  })
 
-  // Fetch available triggers based on channel type
+  // Fetch available triggers based on channel type - only once per mount
   useEffect(() => {
-    const fetchTriggers = async () => {
+    if (!channelType) return
+    if (hasFetchedRef.current) return
+    hasFetchedRef.current = true
+
+    const loadTriggers = async () => {
       try {
-        console.log('🔍 Sidebar - channelType received:', channelType)
-
-        // Map channel type: facebook -> messenger (backend uses 'messenger')
-        const backendChannelType = channelType === 'facebook' ? 'messenger' : channelType
-
-        console.log('🔍 Sidebar - backendChannelType:', backendChannelType)
-        console.log('🔍 Sidebar - API URL:', `/api/triggers/types?channel=${backendChannelType}`)
-
-        const response = await axios.get(`/api/triggers/types?channel=${backendChannelType}`)
-
-        console.log('🔍 Sidebar - API response:', response.data)
-
-        if (response.data.success) {
-          // Map backend trigger format to sidebar format
-          const mappedTriggers = response.data.triggerTypes.map(trigger => ({
-            type: trigger.id,
-            label: trigger.name,
-            icon: trigger.icon,
-            description: trigger.description
-          }))
-
-          console.log('🔍 Sidebar - Mapped triggers count:', mappedTriggers.length)
-          setTriggerTypes(mappedTriggers)
-        }
+        // fetchTriggersOnce handles deduplication, rate limiting, and infinite loop protection via singleton cache
+        const triggers = await fetchTriggersOnce(channelType, axios)
+        // Map backend trigger format to sidebar format
+        const mappedTriggers = triggers.map(trigger => ({
+          type: trigger.id,
+          label: trigger.name,
+          icon: trigger.icon,
+          description: trigger.description
+        }))
+        setTriggerTypes(mappedTriggers)
       } catch (error) {
-        console.error('❌ Sidebar - Error fetching triggers:', error)
-        // Fallback to empty array if API fails
+        console.error('Error fetching triggers:', error)
         setTriggerTypes([])
       }
     }
 
-    if (channelType) {
-      console.log('✅ Sidebar - channelType exists, fetching triggers...')
-      fetchTriggers()
-    } else {
-      console.log('⚠️ Sidebar - No channelType provided!')
-    }
+    loadTriggers()
   }, [channelType])
 
   const conditionTypes = [

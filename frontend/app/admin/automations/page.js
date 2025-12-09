@@ -15,10 +15,26 @@ const mockAutomations = [
 ];
 
 const metrics = [
-  { label: 'Total Runs (24h)', value: '2,847', icon: '🔄' },
-  { label: 'Success Rate', value: '98.2%', icon: '✅' },
-  { label: 'Avg Duration', value: '0.9s', icon: '⏱️' },
-  { label: 'Failed Runs', value: '52', icon: '❌' },
+  { label: 'Total Runs (24h)', value: '2,847', icon: (
+    <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+    </svg>
+  ) },
+  { label: 'Success Rate', value: '98.2%', icon: (
+    <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  ) },
+  { label: 'Avg Duration', value: '0.9s', icon: (
+    <svg className="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  ) },
+  { label: 'Failed Runs', value: '52', icon: (
+    <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  ) },
 ];
 
 export default function AutomationsPage() {
@@ -37,8 +53,8 @@ export default function AutomationsPage() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Automations</h1>
-        <p className="text-gray-600 mt-1">Global view of all automation runs.</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Automations</h1>
+        <p className="text-gray-600 dark:text-gray-400 mt-1">Global view of all automation runs.</p>
       </div>
 
       {/* Metrics */}
@@ -46,25 +62,27 @@ export default function AutomationsPage() {
         {metrics.map((metric, index) => (
           <div
             key={index}
-            className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4"
+            className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 flex items-center gap-4"
           >
-            <span className="text-2xl">{metric.icon}</span>
+            <div className="w-12 h-12 bg-gray-50 dark:bg-gray-900/50 rounded-lg flex items-center justify-center">
+              {metric.icon}
+            </div>
             <div>
-              <p className="text-sm text-gray-600">{metric.label}</p>
-              <p className="text-xl font-bold text-gray-900">{metric.value}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">{metric.label}</p>
+              <p className="text-xl font-bold text-gray-900 dark:text-white">{metric.value}</p>
             </div>
           </div>
         ))}
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Search */}
           <div className="flex-1">
             <div className="relative">
               <svg
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -81,7 +99,7 @@ export default function AutomationsPage() {
                 placeholder="Search flows or users..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
               />
             </div>
           </div>
@@ -90,7 +108,7 @@ export default function AutomationsPage() {
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
+            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           >
             <option value="all">All Status</option>
             <option value="Success">Success</option>
@@ -100,11 +118,11 @@ export default function AutomationsPage() {
       </div>
 
       {/* Automations Table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
             Automation Runs
-            <span className="ml-2 text-sm font-normal text-gray-500">
+            <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
               ({filteredAutomations.length} runs)
             </span>
           </h3>
@@ -112,60 +130,60 @@ export default function AutomationsPage() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-gray-50">
-                <th className="text-left text-xs font-semibold text-gray-600 uppercase tracking-wider px-6 py-3">
+              <tr className="bg-gray-50 dark:bg-gray-900/50">
+                <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider px-6 py-3">
                   Flow Name
                 </th>
-                <th className="text-left text-xs font-semibold text-gray-600 uppercase tracking-wider px-6 py-3">
+                <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider px-6 py-3">
                   User
                 </th>
-                <th className="text-left text-xs font-semibold text-gray-600 uppercase tracking-wider px-6 py-3">
+                <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider px-6 py-3">
                   Status
                 </th>
-                <th className="text-left text-xs font-semibold text-gray-600 uppercase tracking-wider px-6 py-3">
+                <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider px-6 py-3">
                   Duration
                 </th>
-                <th className="text-left text-xs font-semibold text-gray-600 uppercase tracking-wider px-6 py-3">
+                <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider px-6 py-3">
                   Run At
                 </th>
-                <th className="text-left text-xs font-semibold text-gray-600 uppercase tracking-wider px-6 py-3">
+                <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider px-6 py-3">
                   Error
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
               {filteredAutomations.map((automation) => (
-                <tr key={automation.id} className="hover:bg-gray-50">
+                <tr key={automation.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                   <td className="px-6 py-4">
-                    <p className="text-sm font-medium text-gray-900">{automation.flowName}</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">{automation.flowName}</p>
                   </td>
                   <td className="px-6 py-4">
-                    <p className="text-sm text-gray-600">{automation.user}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{automation.user}</p>
                   </td>
                   <td className="px-6 py-4">
                     <span
                       className={`text-xs font-medium px-2.5 py-1 rounded-full ${
                         automation.status === 'Success'
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-red-100 text-red-700'
+                          ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                          : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
                       }`}
                     >
                       {automation.status}
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <p className="text-sm text-gray-600">{automation.duration}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{automation.duration}</p>
                   </td>
                   <td className="px-6 py-4">
-                    <p className="text-sm text-gray-600">{automation.runAt}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{automation.runAt}</p>
                   </td>
                   <td className="px-6 py-4">
                     {automation.error ? (
-                      <p className="text-sm text-red-600 max-w-xs truncate" title={automation.error}>
+                      <p className="text-sm text-red-600 dark:text-red-400 max-w-xs truncate" title={automation.error}>
                         {automation.error}
                       </p>
                     ) : (
-                      <span className="text-sm text-gray-400">-</span>
+                      <span className="text-sm text-gray-400 dark:text-gray-500">-</span>
                     )}
                   </td>
                 </tr>
@@ -177,7 +195,7 @@ export default function AutomationsPage() {
         {filteredAutomations.length === 0 && (
           <div className="p-12 text-center">
             <svg
-              className="w-12 h-12 text-gray-400 mx-auto mb-4"
+              className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-4"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -189,7 +207,7 @@ export default function AutomationsPage() {
                 d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
               />
             </svg>
-            <p className="text-gray-500">No automations found matching your criteria.</p>
+            <p className="text-gray-500 dark:text-gray-400">No automations found matching your criteria.</p>
           </div>
         )}
       </div>

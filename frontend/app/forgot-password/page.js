@@ -82,7 +82,7 @@ export default function ForgotPassword() {
                         Emails are not actually sent in development. Check your <strong>backend terminal</strong> to see the reset link.
                       </p>
                       <p className="text-yellow-600 text-xs mt-2 font-mono bg-yellow-100 p-2 rounded">
-                        Look for: 🔗 Reset Link: http://localhost:3001/reset-password?token=...
+                        Look for: 🔗 Reset Link: http://localhost:3002/reset-password?token=...
                       </p>
                     </div>
                   </div>

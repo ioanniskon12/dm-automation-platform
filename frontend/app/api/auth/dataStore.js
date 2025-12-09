@@ -4,6 +4,23 @@
 // Use globalThis to ensure the Map is shared across all API routes
 if (!globalThis.users) {
   globalThis.users = new Map();
+
+  // Pre-seed admin users
+  globalThis.users.set('gianniskon12@gmail.com', {
+    id: 'admin-1',
+    name: 'Giannis',
+    email: 'gianniskon12@gmail.com',
+    password: 'admin123',
+    createdAt: new Date().toISOString(),
+  });
+
+  globalThis.users.set('sotiris040197@gmail.com', {
+    id: 'admin-2',
+    name: 'Sotiris',
+    email: 'sotiris040197@gmail.com',
+    password: 'admin123',
+    createdAt: new Date().toISOString(),
+  });
 }
 
 if (!globalThis.brands) {

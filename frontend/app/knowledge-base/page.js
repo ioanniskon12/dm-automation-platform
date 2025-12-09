@@ -7,7 +7,7 @@ import axios from 'axios';
 import NavigationSidebar from '../../components/NavigationSidebar';
 import ProtectedRoute from '../../components/ProtectedRoute';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
 
 export default function KnowledgeBase() {
   const { isCollapsed } = useSidebar();
