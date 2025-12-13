@@ -2,6 +2,20 @@
 
 import { useCallback, useState, useEffect, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
+
+// Custom hook to detect mobile viewport
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  return isMobile
+}
 import axios from 'axios'
 import { fetchTriggersOnce, getCachedTriggersForChannel } from '../lib/triggers-cache'
 import ReactFlow, {
@@ -40,6 +54,9 @@ const defaultInitialEdges = []
 export default function FlowBuilder({ automationType = null, selectedTemplate = null, prePopulatedTrigger = null, channelType = 'instagram', workspaceId = null }) {
   console.log('🔧 FlowBuilder: workspaceId =', workspaceId)
   const searchParams = useSearchParams()
+  const isMobile = useIsMobile()
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false)
+  const [showMobileActions, setShowMobileActions] = useState(false)
   const templateId = searchParams.get('templateId')
   const flowId = searchParams.get('flowId')
   const hasFetchedTriggersRef = useRef(false)
@@ -714,20 +731,42 @@ export default function FlowBuilder({ automationType = null, selectedTemplate = 
         </div>
       )}
 
-      {/* Sidebar */}
-      <div className="flex-shrink-0 h-full overflow-hidden bg-gray-900">
+      {/* Mobile Sidebar Overlay */}
+      {isMobile && showMobileSidebar && (
+        <div
+          className="fixed inset-0 bg-black/50 z-[70] animate-fade-in"
+          onClick={() => setShowMobileSidebar(false)}
+        />
+      )}
+
+      {/* Sidebar - Desktop: always visible, Mobile: slide-in drawer */}
+      <div className={`
+        ${isMobile
+          ? `fixed inset-y-0 left-0 z-[80] transform transition-transform duration-300 ease-in-out ${showMobileSidebar ? 'translate-x-0' : '-translate-x-full'}`
+          : 'flex-shrink-0 h-full overflow-hidden'
+        } bg-gray-900
+      `}>
         <Sidebar
-          addNode={addNode}
-          isMinimized={sidebarMinimized}
-          onToggleMinimize={() => setSidebarMinimized(!sidebarMinimized)}
+          addNode={(type, data) => {
+            addNode(type, data)
+            if (isMobile) setShowMobileSidebar(false)
+          }}
+          isMinimized={isMobile ? false : sidebarMinimized}
+          onToggleMinimize={() => {
+            if (isMobile) {
+              setShowMobileSidebar(false)
+            } else {
+              setSidebarMinimized(!sidebarMinimized)
+            }
+          }}
           channelType={channelType}
         />
       </div>
 
       {/* Flow Canvas */}
       <div className="flex-1 relative bg-white dark:bg-gray-900 h-full overflow-hidden">
-        {/* Fixed Action Buttons */}
-        <div className="fixed top-20 right-4 z-[60] flex gap-2">
+        {/* Desktop Action Buttons */}
+        <div className="hidden md:flex fixed top-20 right-4 z-[60] gap-2">
           <button
             onClick={rearrangeNodes}
             className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:border-black dark:hover:border-white text-black dark:text-white font-semibold py-2 px-4 text-sm transition-colors flex items-center gap-2"
@@ -751,6 +790,63 @@ export default function FlowBuilder({ automationType = null, selectedTemplate = 
           </button>
         </div>
 
+        {/* Mobile Floating Action Buttons */}
+        {isMobile && (
+          <>
+            {/* Add Node Button - Bottom Left */}
+            <button
+              onClick={() => setShowMobileSidebar(true)}
+              className="fixed bottom-20 left-4 z-[60] bg-purple-600 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-2xl touch-target"
+            >
+              ➕
+            </button>
+
+            {/* More Actions Button - Bottom Right */}
+            <button
+              onClick={() => setShowMobileActions(!showMobileActions)}
+              className="fixed bottom-20 right-4 z-[60] bg-black dark:bg-white text-white dark:text-black w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-xl touch-target"
+            >
+              {showMobileActions ? '✕' : '⋮'}
+            </button>
+
+            {/* Mobile Actions Menu */}
+            {showMobileActions && (
+              <div className="fixed bottom-36 right-4 z-[60] flex flex-col gap-2 animate-slide-in-bottom">
+                <button
+                  onClick={() => {
+                    saveFlow()
+                    setShowMobileActions(false)
+                  }}
+                  className="bg-black dark:bg-white text-white dark:text-black font-semibold py-3 px-4 text-sm rounded-lg shadow-lg flex items-center gap-2 touch-target"
+                >
+                  <span>💾</span>
+                  <span>Save</span>
+                </button>
+                <button
+                  onClick={() => {
+                    testFlow()
+                    setShowMobileActions(false)
+                  }}
+                  className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-black dark:text-white font-semibold py-3 px-4 text-sm rounded-lg shadow-lg flex items-center gap-2 touch-target"
+                >
+                  <span>▶️</span>
+                  <span>Test</span>
+                </button>
+                <button
+                  onClick={() => {
+                    rearrangeNodes()
+                    setShowMobileActions(false)
+                  }}
+                  className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-black dark:text-white font-semibold py-3 px-4 text-sm rounded-lg shadow-lg flex items-center gap-2 touch-target"
+                >
+                  <span>✨</span>
+                  <span>Rearrange</span>
+                </button>
+              </div>
+            )}
+          </>
+        )}
+
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -758,15 +854,22 @@ export default function FlowBuilder({ automationType = null, selectedTemplate = 
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           onNodeClick={onNodeClick}
-          onPaneClick={onPaneClick}
+          onPaneClick={() => {
+            onPaneClick()
+            if (isMobile) setShowMobileActions(false)
+          }}
           nodeTypes={nodeTypes}
           fitView
+          minZoom={0.2}
+          maxZoom={2}
         >
-          <Controls />
-          <MiniMap
-            className="!bg-gray-100 dark:!bg-gray-800"
-            maskColor="rgb(0, 0, 0, 0.1)"
-          />
+          <Controls className="!bottom-4 !left-4 md:!bottom-auto md:!left-auto" />
+          {!isMobile && (
+            <MiniMap
+              className="!bg-gray-100 dark:!bg-gray-800"
+              maskColor="rgb(0, 0, 0, 0.1)"
+            />
+          )}
           <Background
             variant={BackgroundVariant.Dots}
             gap={12}
@@ -798,7 +901,7 @@ export default function FlowBuilder({ automationType = null, selectedTemplate = 
 
       {/* Validation Errors */}
       {validationErrors.length > 0 && (
-        <div className="fixed bottom-4 left-4 z-50 bg-white dark:bg-gray-800 border-2 border-red-600 dark:border-red-400 p-4 max-w-md">
+        <div className="fixed bottom-20 md:bottom-4 left-2 right-2 md:left-4 md:right-auto z-50 bg-white dark:bg-gray-800 border-2 border-red-600 dark:border-red-400 p-3 md:p-4 md:max-w-md rounded-lg md:rounded-none">
           <div className="flex items-start gap-3">
             <span className="text-2xl">⚠️</span>
             <div className="flex-1">
@@ -834,13 +937,17 @@ export default function FlowBuilder({ automationType = null, selectedTemplate = 
 
       {/* Trigger Selection Modal */}
       {showTriggerModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[200]">
-          <div className="bg-gray-900 rounded-xl border border-gray-700 p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto m-4">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-white">Select a Trigger</h2>
+        <div className="fixed inset-0 bg-black/70 flex items-end md:items-center justify-center z-[200]">
+          <div className="bg-gray-900 rounded-t-2xl md:rounded-xl border border-gray-700 p-4 md:p-6 w-full md:max-w-2xl max-h-[85vh] md:max-h-[80vh] overflow-y-auto md:m-4 safe-area-bottom">
+            {/* Mobile drag handle */}
+            <div className="md:hidden flex justify-center mb-3">
+              <div className="w-10 h-1 bg-gray-600 rounded-full"></div>
+            </div>
+            <div className="flex items-center justify-between mb-4 md:mb-6">
+              <h2 className="text-xl md:text-2xl font-bold text-white">Select a Trigger</h2>
               <button
                 onClick={() => setShowTriggerModal(false)}
-                className="text-gray-400 hover:text-white text-2xl"
+                className="text-gray-400 hover:text-white text-2xl touch-target flex items-center justify-center"
               >
                 ✕
               </button>
@@ -852,19 +959,19 @@ export default function FlowBuilder({ automationType = null, selectedTemplate = 
                   <button
                     key={trigger.id}
                     onClick={() => handleTriggerSelect(trigger.id)}
-                    className="bg-yellow-800/30 hover:bg-yellow-700/50 text-left p-4 rounded-lg transition-colors border border-yellow-600/30 hover:border-yellow-500"
+                    className="bg-yellow-800/30 hover:bg-yellow-700/50 active:bg-yellow-700/70 text-left p-4 rounded-lg transition-colors border border-yellow-600/30 hover:border-yellow-500 touch-target"
                   >
                     <div className="flex items-center gap-3 mb-2">
-                      <span className="text-3xl">{trigger.icon}</span>
+                      <span className="text-2xl md:text-3xl">{trigger.icon}</span>
                       <span className="text-sm font-medium text-white">{trigger.name}</span>
                     </div>
                     {trigger.description && (
-                      <p className="text-xs text-gray-400 ml-12">{trigger.description}</p>
+                      <p className="text-xs text-gray-400 ml-10 md:ml-12">{trigger.description}</p>
                     )}
                   </button>
                 ))
               ) : (
-                <div className="col-span-2 text-center py-8">
+                <div className="col-span-1 md:col-span-2 text-center py-8">
                   <div className="text-4xl mb-4">⚠️</div>
                   <p className="text-white font-bold mb-2">No triggers available</p>
                   <p className="text-gray-400 text-sm">channelType: {channelType || 'undefined'}</p>
@@ -878,8 +985,8 @@ export default function FlowBuilder({ automationType = null, selectedTemplate = 
 
       {/* Save Modal */}
       {showSaveModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/50 p-0 md:p-4">
+          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 md:p-6 w-full md:max-w-lg max-h-[90vh] overflow-y-auto rounded-t-2xl md:rounded-lg safe-area-bottom">
             <h2 className="text-xl font-bold text-black dark:text-white mb-2">{automationLabels.modalTitle}</h2>
             <p className="text-gray-600 dark:text-gray-400 text-sm mb-6">
               {automationLabels.modalDescription}
@@ -970,7 +1077,7 @@ export default function FlowBuilder({ automationType = null, selectedTemplate = 
 
       {/* Success/Error Notification */}
       {notification && (
-        <div className={`fixed top-4 right-4 z-50 p-4 flex items-center gap-3 border-2 ${
+        <div className={`fixed top-4 left-4 right-4 md:left-auto md:right-4 md:w-auto z-[100] p-3 md:p-4 flex items-center gap-3 border-2 rounded-lg md:rounded-none ${
           notification.type === 'success'
             ? 'bg-white dark:bg-gray-800 border-black dark:border-white'
             : 'bg-white dark:bg-gray-800 border-red-600 dark:border-red-400'
@@ -978,7 +1085,7 @@ export default function FlowBuilder({ automationType = null, selectedTemplate = 
           <span className="text-xl">
             {notification.type === 'success' ? '✅' : '❌'}
           </span>
-          <span className="font-semibold text-black dark:text-white text-sm">
+          <span className="font-semibold text-black dark:text-white text-sm flex-1">
             {notification.message}
           </span>
         </div>

@@ -74,3 +74,104 @@ body {
 .animate-slide-up { animation: slide-up 0.6s ease-out forwards; }
 .animate-bounce-slow { animation: bounce-slow 3s ease-in-out infinite; }
 .animate-marquee { animation: marquee 30s linear infinite; }
+
+/* Mobile-specific utilities for flow builder */
+@layer utilities {
+  /* Hide on mobile, show on desktop */
+  .desktop-only {
+    @apply hidden md:block;
+  }
+
+  /* Show on mobile, hide on desktop */
+  .mobile-only {
+    @apply block md:hidden;
+  }
+
+  /* Mobile-friendly touch targets (minimum 44x44px) */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+
+  /* Mobile drawer/overlay background */
+  .mobile-overlay {
+    @apply fixed inset-0 bg-black/50 z-40 md:hidden;
+  }
+
+  /* Mobile bottom sheet */
+  .mobile-bottom-sheet {
+    @apply fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-gray-900 rounded-t-2xl max-h-[85vh] overflow-y-auto md:hidden;
+  }
+
+  /* Mobile full-screen panel */
+  .mobile-fullscreen {
+    @apply fixed inset-0 z-50 bg-white dark:bg-gray-900 overflow-y-auto md:relative md:inset-auto md:z-auto;
+  }
+
+  /* Safe area padding for mobile devices with notches */
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top, 0);
+  }
+}
+
+/* Mobile slide-in animations */
+@keyframes slide-in-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes slide-in-bottom {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-slide-in-right { animation: slide-in-right 0.3s ease-out; }
+.animate-slide-in-bottom { animation: slide-in-bottom 0.3s ease-out; }
+.animate-fade-in { animation: fade-in 0.2s ease-out; }
+
+/* ReactFlow mobile optimizations */
+@media (max-width: 767px) {
+  .react-flow__minimap {
+    display: none !important;
+  }
+
+  .react-flow__controls {
+    bottom: 80px !important;
+    left: 10px !important;
+  }
+
+  .react-flow__controls button {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  /* Make handles larger for touch */
+  .react-flow__handle {
+    width: 14px !important;
+    height: 14px !important;
+  }
+
+  /* Make nodes slightly more compact on mobile */
+  .react-flow__node {
+    touch-action: none;
+  }
+
+  /* Prevent text selection on nodes during drag */
+  .react-flow__node * {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+}
+
+/* Improve touch scrolling */
+.react-flow__pane {
+  touch-action: pan-x pan-y pinch-zoom;
+}

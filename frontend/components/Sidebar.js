@@ -251,13 +251,24 @@ export default function Sidebar({ addNode, isMinimized, onToggleMinimize, channe
   return (
     <div
       className={`bg-gray-900 text-white shadow-2xl flex-shrink-0 transition-all duration-300 ${
-        isMinimized ? 'w-16' : 'w-64'
-      } p-3 pb-24 relative h-full overflow-y-auto`}
+        isMinimized ? 'w-16' : 'w-72 md:w-64'
+      } p-3 pb-24 relative h-full overflow-y-auto safe-area-top`}
     >
-      {/* Toggle Button */}
+      {/* Mobile Header with Close Button */}
+      <div className="md:hidden flex items-center justify-between mb-4 pt-2">
+        <h1 className="text-lg font-bold">Add Nodes</h1>
+        <button
+          onClick={onToggleMinimize}
+          className="bg-gray-800 hover:bg-gray-700 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg border border-gray-600 touch-target"
+        >
+          <span className="text-xl">✕</span>
+        </button>
+      </div>
+
+      {/* Desktop Toggle Button */}
       <button
         onClick={onToggleMinimize}
-        className={`absolute top-4 bg-gray-800 hover:bg-gray-700 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg z-50 border border-gray-600 transition-all ${
+        className={`hidden md:flex absolute top-4 bg-gray-800 hover:bg-gray-700 text-white rounded-full w-8 h-8 items-center justify-center shadow-lg z-50 border border-gray-600 transition-all ${
           isMinimized ? 'right-2' : 'right-2'
         }`}
       >
@@ -266,7 +277,7 @@ export default function Sidebar({ addNode, isMinimized, onToggleMinimize, channe
 
       {!isMinimized && (
         <>
-          <div className="mb-6">
+          <div className="mb-6 hidden md:block">
             <h1 className="text-2xl font-bold mb-2">Automation Builder</h1>
             <p className="text-sm text-gray-400">Drag and connect nodes to build your flow</p>
           </div>
@@ -276,17 +287,17 @@ export default function Sidebar({ addNode, isMinimized, onToggleMinimize, channe
       {!isMinimized ? (
         <>
           {/* Triggers Button */}
-          <div className="mb-6">
+          <div className="mb-4 md:mb-6">
             <button
               onClick={() => setShowTriggersModal(true)}
-              className="w-full bg-yellow-800/30 hover:bg-yellow-700/50 text-left p-3 rounded-lg transition-colors border border-yellow-600/30 hover:border-yellow-500"
+              className="w-full bg-yellow-800/30 hover:bg-yellow-700/50 active:bg-yellow-700/70 text-left p-3 md:p-3 rounded-lg transition-colors border border-yellow-600/30 hover:border-yellow-500 touch-target"
             >
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-semibold text-yellow-400 uppercase tracking-wider">
                     Triggers
                   </h3>
-                  <p className="text-xs text-gray-400 mt-1">Click to select a trigger</p>
+                  <p className="text-xs text-gray-400 mt-1">Tap to select a trigger</p>
                 </div>
                 <span className="text-2xl">⚡</span>
               </div>
@@ -294,7 +305,7 @@ export default function Sidebar({ addNode, isMinimized, onToggleMinimize, channe
           </div>
 
           {/* Conditions */}
-          <div className="mb-6">
+          <div className="mb-4 md:mb-6">
             <h3 className="text-sm font-semibold text-blue-400 mb-2 uppercase tracking-wider">
               Conditions
             </h3>
@@ -303,7 +314,7 @@ export default function Sidebar({ addNode, isMinimized, onToggleMinimize, channe
                 <button
                   key={condition.type}
                   onClick={() => handleAddNode('condition', condition.type, condition.label)}
-                  className="w-full bg-blue-800/30 hover:bg-blue-700/50 text-left p-3 rounded-lg transition-colors border border-blue-600/30 hover:border-blue-500"
+                  className="w-full bg-blue-800/30 hover:bg-blue-700/50 active:bg-blue-700/70 text-left p-3 rounded-lg transition-colors border border-blue-600/30 hover:border-blue-500 touch-target"
                 >
                   <span className="mr-2">{condition.icon}</span>
                   <span className="text-sm">{condition.label}</span>
@@ -313,7 +324,7 @@ export default function Sidebar({ addNode, isMinimized, onToggleMinimize, channe
           </div>
 
           {/* Actions */}
-          <div className="mb-6">
+          <div className="mb-4 md:mb-6">
             <h3 className="text-sm font-semibold text-green-400 mb-2 uppercase tracking-wider">
               Actions
             </h3>
@@ -322,7 +333,7 @@ export default function Sidebar({ addNode, isMinimized, onToggleMinimize, channe
                 <button
                   key={action.type}
                   onClick={() => handleAddNode('action', action.type, action.label)}
-                  className="w-full bg-green-800/30 hover:bg-green-700/50 text-left p-3 rounded-lg transition-colors border border-green-600/30 hover:border-green-500"
+                  className="w-full bg-green-800/30 hover:bg-green-700/50 active:bg-green-700/70 text-left p-3 rounded-lg transition-colors border border-green-600/30 hover:border-green-500 touch-target"
                 >
                   <span className="mr-2">{action.icon}</span>
                   <span className="text-sm">{action.label}</span>
@@ -332,7 +343,7 @@ export default function Sidebar({ addNode, isMinimized, onToggleMinimize, channe
           </div>
 
           {/* AI Nodes */}
-          <div className="mb-6">
+          <div className="mb-4 md:mb-6">
             <h3 className="text-sm font-semibold text-violet-400 mb-2 uppercase tracking-wider flex items-center gap-2">
               <span>AI Nodes</span>
               <span className="inline-block w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
@@ -342,7 +353,7 @@ export default function Sidebar({ addNode, isMinimized, onToggleMinimize, channe
                 <button
                   key={ai.type}
                   onClick={() => handleAddNode('ai', ai.type, ai.label)}
-                  className="w-full bg-violet-800/30 hover:bg-violet-700/50 text-left p-3 rounded-lg transition-colors border border-violet-600/30 hover:border-violet-500"
+                  className="w-full bg-violet-800/30 hover:bg-violet-700/50 active:bg-violet-700/70 text-left p-3 rounded-lg transition-colors border border-violet-600/30 hover:border-violet-500 touch-target"
                 >
                   <span className="mr-2">{ai.icon}</span>
                   <span className="text-sm">{ai.label}</span>
@@ -352,7 +363,7 @@ export default function Sidebar({ addNode, isMinimized, onToggleMinimize, channe
           </div>
 
           {/* Media Nodes */}
-          <div className="mb-6">
+          <div className="mb-4 md:mb-6">
             <h3 className="text-sm font-semibold text-orange-400 mb-2 uppercase tracking-wider">
               Media Nodes
             </h3>
@@ -361,7 +372,7 @@ export default function Sidebar({ addNode, isMinimized, onToggleMinimize, channe
                 <button
                   key={media.type}
                   onClick={() => handleAddNode('media', media.type, media.label)}
-                  className="w-full bg-orange-800/30 hover:bg-orange-700/50 text-left p-3 rounded-lg transition-colors border border-orange-600/30 hover:border-orange-500"
+                  className="w-full bg-orange-800/30 hover:bg-orange-700/50 active:bg-orange-700/70 text-left p-3 rounded-lg transition-colors border border-orange-600/30 hover:border-orange-500 touch-target"
                 >
                   <span className="mr-2">{media.icon}</span>
                   <span className="text-sm">{media.label}</span>
@@ -382,13 +393,17 @@ export default function Sidebar({ addNode, isMinimized, onToggleMinimize, channe
 
       {/* Triggers Modal */}
       {showTriggersModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[200]">
-          <div className="bg-gray-900 rounded-xl border border-gray-700 p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto m-4">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-white">Select a Trigger</h2>
+        <div className="fixed inset-0 bg-black/70 flex items-end md:items-center justify-center z-[200]">
+          <div className="bg-gray-900 rounded-t-2xl md:rounded-xl border border-gray-700 p-4 md:p-6 w-full md:max-w-2xl max-h-[85vh] md:max-h-[80vh] overflow-y-auto md:m-4 safe-area-bottom">
+            {/* Mobile drag handle */}
+            <div className="md:hidden flex justify-center mb-3">
+              <div className="w-10 h-1 bg-gray-600 rounded-full"></div>
+            </div>
+            <div className="flex items-center justify-between mb-4 md:mb-6">
+              <h2 className="text-xl md:text-2xl font-bold text-white">Select a Trigger</h2>
               <button
                 onClick={() => setShowTriggersModal(false)}
-                className="text-gray-400 hover:text-white text-2xl"
+                className="text-gray-400 hover:text-white text-2xl touch-target flex items-center justify-center"
               >
                 ✕
               </button>
@@ -403,19 +418,19 @@ export default function Sidebar({ addNode, isMinimized, onToggleMinimize, channe
                       handleAddNode('trigger', trigger.type, trigger.label)
                       setShowTriggersModal(false)
                     }}
-                    className="bg-yellow-800/30 hover:bg-yellow-700/50 text-left p-4 rounded-lg transition-colors border border-yellow-600/30 hover:border-yellow-500"
+                    className="bg-yellow-800/30 hover:bg-yellow-700/50 active:bg-yellow-700/70 text-left p-4 rounded-lg transition-colors border border-yellow-600/30 hover:border-yellow-500 touch-target"
                   >
                     <div className="flex items-center gap-3 mb-2">
-                      <span className="text-3xl">{trigger.icon}</span>
+                      <span className="text-2xl md:text-3xl">{trigger.icon}</span>
                       <span className="text-sm font-medium text-white">{trigger.label}</span>
                     </div>
                     {trigger.description && (
-                      <p className="text-xs text-gray-400 ml-12">{trigger.description}</p>
+                      <p className="text-xs text-gray-400 ml-10 md:ml-12">{trigger.description}</p>
                     )}
                   </button>
                 ))
               ) : (
-                <div className="col-span-2 text-center py-8">
+                <div className="col-span-1 md:col-span-2 text-center py-8">
                   <div className="text-4xl mb-4">⚠️</div>
                   <p className="text-white font-bold mb-2">No triggers available</p>
                   <p className="text-gray-400 text-sm">channelType: {channelType || 'undefined'}</p>

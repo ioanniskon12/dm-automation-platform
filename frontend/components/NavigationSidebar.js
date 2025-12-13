@@ -10,6 +10,20 @@ import { useSidebar } from '../contexts/SidebarContext';
 import BrandChannelSwitcher from './BrandChannelSwitcher';
 import OnboardingModal from './OnboardingModal';
 
+// Custom hook to detect mobile viewport
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  return isMobile;
+}
+
 export default function NavigationSidebar() {
   const { user, logout } = useAuth();
   const pathname = usePathname();
@@ -17,6 +31,8 @@ export default function NavigationSidebar() {
   const { getCurrentBrand, getCurrentChannel } = useBrandChannel();
   const { isCollapsed, toggleSidebar } = useSidebar();
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   // Cookie helper functions
   const getCookie = (name) => {
@@ -138,44 +154,99 @@ export default function NavigationSidebar() {
     },
   ];
 
+  // Close mobile menu when navigating
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
   return (
-    <aside className={`fixed left-0 top-0 h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 z-50 flex flex-col ${isCollapsed ? 'w-20' : 'w-64'}`}>
+    <>
+      {/* Mobile Header Bar */}
+      <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 z-50 flex items-center justify-between px-4 safe-area-top">
+        <button
+          onClick={() => setMobileMenuOpen(true)}
+          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg touch-target"
+          aria-label="Open menu"
+        >
+          <svg className="w-6 h-6 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        <Link href="/dashboard" className="flex items-center gap-2">
+          <div className="w-7 h-7 border-2 border-black dark:border-white rounded-lg flex items-center justify-center font-mono text-xs font-bold text-black dark:text-white">
+            DM
+          </div>
+          <span className="text-sm font-bold text-black dark:text-white">DM Automation</span>
+        </Link>
+        <div className="w-10"></div>
+      </div>
+
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-black/50 z-[60] animate-fade-in"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Sidebar - Desktop: fixed sidebar, Mobile: slide-in drawer */}
+      <aside className={`
+        fixed left-0 top-0 h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 flex flex-col
+        ${isMobile
+          ? `z-[70] w-72 transform ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`
+          : `z-50 ${isCollapsed ? 'w-20' : 'w-64'}`
+        }
+      `}>
       {/* Sidebar Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-        {!isCollapsed && (
-          <Link href="/dashboard" className="flex items-center gap-2 hover:opacity-70 transition-opacity">
+        {/* Mobile close button */}
+        {isMobile && (
+          <button
+            onClick={() => setMobileMenuOpen(false)}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg mr-2 touch-target"
+            aria-label="Close menu"
+          >
+            <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
+        {(!isCollapsed || isMobile) && (
+          <Link href="/dashboard" className="flex items-center gap-2 hover:opacity-70 transition-opacity flex-1">
             <div className="w-8 h-8 border-2 border-black dark:border-white rounded-lg flex items-center justify-center font-mono text-xs font-bold text-black dark:text-white">
               DM
             </div>
             <span className="text-sm font-bold text-black dark:text-white">DM Automation</span>
           </Link>
         )}
-        {isCollapsed && (
+        {isCollapsed && !isMobile && (
           <Link href="/dashboard" className="flex items-center justify-center w-full">
             <div className="w-8 h-8 border-2 border-black dark:border-white rounded-lg flex items-center justify-center font-mono text-xs font-bold text-black dark:text-white">
               DM
             </div>
           </Link>
         )}
-        <button
-          onClick={toggleSidebar}
-          className={`p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors ${isCollapsed ? 'absolute right-2' : ''}`}
-          aria-label="Toggle sidebar"
-        >
-          <svg
-            className={`w-5 h-5 text-gray-600 dark:text-gray-400 transition-transform ${isCollapsed ? 'rotate-180' : ''}`}
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+        {!isMobile && (
+          <button
+            onClick={toggleSidebar}
+            className={`p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors ${isCollapsed ? 'absolute right-2' : ''}`}
+            aria-label="Toggle sidebar"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-          </svg>
-        </button>
+            <svg
+              className={`w-5 h-5 text-gray-600 dark:text-gray-400 transition-transform ${isCollapsed ? 'rotate-180' : ''}`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+            </svg>
+          </button>
+        )}
       </div>
 
       {/* Brand/Channel Context Switcher */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-        {!isCollapsed ? (
+        {(!isCollapsed || isMobile) ? (
           <BrandChannelSwitcher />
         ) : (
           <div className="flex justify-center">
@@ -195,17 +266,17 @@ export default function NavigationSidebar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-sm font-medium ${
+                className={`flex items-center gap-3 px-3 py-3 md:py-2.5 rounded-lg transition-all text-sm font-medium touch-target ${
                   isActive
                     ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md'
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-                } ${isCollapsed ? 'justify-center' : ''}`}
-                title={isCollapsed ? link.label : ''}
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200 dark:active:bg-gray-700'
+                } ${isCollapsed && !isMobile ? 'justify-center' : ''}`}
+                title={isCollapsed && !isMobile ? link.label : ''}
               >
                 <span className={isActive ? 'text-white' : 'text-gray-500 dark:text-gray-400'}>
                   {link.icon}
                 </span>
-                {!isCollapsed && (
+                {(!isCollapsed || isMobile) && (
                   <div className="flex-1 flex items-center justify-between">
                     <span>{link.label}</span>
                     {link.badge && (
@@ -226,45 +297,45 @@ export default function NavigationSidebar() {
       </nav>
 
       {/* Sidebar Footer */}
-      <div className="p-3 border-t border-gray-200 dark:border-gray-700">
+      <div className="p-3 border-t border-gray-200 dark:border-gray-700 safe-area-bottom">
         {/* Admin Panel - Only visible to admin emails */}
         {(user?.email === 'gianniskon12@gmail.com' || user?.email === 'sotiris040197@gmail.com') && (
           <Link
             href="/admin"
-            className={`flex items-center gap-3 w-full px-3 py-2.5 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors text-sm font-medium text-purple-600 dark:text-purple-400 mb-2 ${isCollapsed ? 'justify-center' : ''}`}
-            title={isCollapsed ? 'Admin Panel' : ''}
+            className={`flex items-center gap-3 w-full px-3 py-3 md:py-2.5 hover:bg-purple-50 dark:hover:bg-purple-900/20 active:bg-purple-100 rounded-lg transition-colors text-sm font-medium text-purple-600 dark:text-purple-400 mb-2 touch-target ${isCollapsed && !isMobile ? 'justify-center' : ''}`}
+            title={isCollapsed && !isMobile ? 'Admin Panel' : ''}
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
             </svg>
-            {!isCollapsed && <span>Admin Panel</span>}
+            {(!isCollapsed || isMobile) && <span>Admin Panel</span>}
           </Link>
         )}
 
         {/* Platform Guide */}
         <button
           onClick={handleOpenOnboarding}
-          className={`flex items-center gap-3 w-full px-3 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 ${isCollapsed ? 'justify-center' : ''}`}
-          title={isCollapsed ? 'Platform Guide' : ''}
+          className={`flex items-center gap-3 w-full px-3 py-3 md:py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200 rounded-lg transition-colors text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 touch-target ${isCollapsed && !isMobile ? 'justify-center' : ''}`}
+          title={isCollapsed && !isMobile ? 'Platform Guide' : ''}
         >
           <svg className="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
           </svg>
-          {!isCollapsed && <span>Platform Guide</span>}
+          {(!isCollapsed || isMobile) && <span>Platform Guide</span>}
         </button>
 
         {/* Account Settings */}
         {currentBrand && (
           <Link
             href={`/settings?brand=${currentBrand.id}`}
-            className={`flex items-center gap-3 w-full px-3 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 ${isCollapsed ? 'justify-center' : ''}`}
-            title={isCollapsed ? 'Account Settings' : ''}
+            className={`flex items-center gap-3 w-full px-3 py-3 md:py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200 rounded-lg transition-colors text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 touch-target ${isCollapsed && !isMobile ? 'justify-center' : ''}`}
+            title={isCollapsed && !isMobile ? 'Account Settings' : ''}
           >
             <svg className="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            {!isCollapsed && <span>Account Settings</span>}
+            {(!isCollapsed || isMobile) && <span>Account Settings</span>}
           </Link>
         )}
 
@@ -272,8 +343,8 @@ export default function NavigationSidebar() {
         {mounted && (
           <button
             onClick={toggleDarkMode}
-            className={`flex items-center gap-3 w-full px-3 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 ${isCollapsed ? 'justify-center' : ''}`}
-            title={isCollapsed ? (isDarkMode ? 'Light Mode' : 'Dark Mode') : ''}
+            className={`flex items-center gap-3 w-full px-3 py-3 md:py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 active:bg-gray-200 rounded-lg transition-colors text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 touch-target ${isCollapsed && !isMobile ? 'justify-center' : ''}`}
+            title={isCollapsed && !isMobile ? (isDarkMode ? 'Light Mode' : 'Dark Mode') : ''}
           >
             {isDarkMode ? (
               <svg className="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -284,25 +355,26 @@ export default function NavigationSidebar() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
               </svg>
             )}
-            {!isCollapsed && <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>}
+            {(!isCollapsed || isMobile) && <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>}
           </button>
         )}
 
         {/* Logout */}
         <button
           onClick={logout}
-          className={`flex items-center gap-3 w-full px-3 py-2.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors text-sm font-medium text-red-600 dark:text-red-400 ${isCollapsed ? 'justify-center' : ''}`}
-          title={isCollapsed ? 'Logout' : ''}
+          className={`flex items-center gap-3 w-full px-3 py-3 md:py-2.5 hover:bg-red-50 dark:hover:bg-red-900/20 active:bg-red-100 rounded-lg transition-colors text-sm font-medium text-red-600 dark:text-red-400 touch-target ${isCollapsed && !isMobile ? 'justify-center' : ''}`}
+          title={isCollapsed && !isMobile ? 'Logout' : ''}
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
-          {!isCollapsed && <span>Logout</span>}
+          {(!isCollapsed || isMobile) && <span>Logout</span>}
         </button>
       </div>
 
       {/* Onboarding Modal */}
       <OnboardingModal isOpen={showOnboarding} onClose={handleCloseOnboarding} />
     </aside>
+    </>
   );
 }

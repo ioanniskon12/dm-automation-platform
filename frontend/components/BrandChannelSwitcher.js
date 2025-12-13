@@ -6,6 +6,20 @@ import { useBrandChannel } from '../contexts/BrandChannelContext';
 import { ChannelIcon } from './ChannelIcon';
 import ConfirmModal from './ConfirmModal';
 
+// Custom hook to detect mobile viewport
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  return isMobile;
+}
+
 export default function BrandChannelSwitcher() {
   const router = useRouter();
   const {
@@ -23,6 +37,7 @@ export default function BrandChannelSwitcher() {
   const [channelToDisconnect, setChannelToDisconnect] = useState(null);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const dropdownRef = useRef(null);
+  const isMobile = useIsMobile();
 
   // Directly compute current brand from brands array for better reactivity
   const currentBrand = brands.find(b => b.id === selectedBrand);
@@ -190,23 +205,56 @@ export default function BrandChannelSwitcher() {
         </svg>
       </button>
 
-      {/* Dropdown Menu */}
+      {/* Mobile Overlay */}
+      {isOpen && isMobile && (
+        <div
+          className="fixed inset-0 bg-black/50 z-[100]"
+          onClick={() => {
+            setIsOpen(false);
+            setShowChannelSelector(false);
+          }}
+        />
+      )}
+
+      {/* Dropdown Menu - Desktop: dropdown, Mobile: bottom sheet */}
       {isOpen && (
-        <div className="absolute left-0 mt-2 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl z-50 overflow-hidden">
+        <div className={`
+          ${isMobile
+            ? 'fixed inset-x-0 bottom-0 z-[110] rounded-t-2xl max-h-[80vh] animate-slide-in-bottom safe-area-bottom'
+            : 'absolute left-0 mt-2 w-64 rounded-xl'
+          }
+          bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-xl overflow-hidden
+        `}>
+          {/* Mobile drag handle */}
+          {isMobile && (
+            <div className="flex justify-center pt-3 pb-1">
+              <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+            </div>
+          )}
           {!showChannelSelector ? (
             /* Brand List */
             <>
-              <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+              <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
                 <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Select Brand
                 </div>
+                {isMobile && (
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 touch-target"
+                  >
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
               </div>
-              <div className="max-h-64 overflow-y-auto">
+              <div className={`${isMobile ? 'max-h-[50vh]' : 'max-h-64'} overflow-y-auto`}>
                 {brands.map((brand) => (
                   <button
                     key={brand.id}
                     onClick={() => handleBrandSelect(brand.id)}
-                    className={`w-full px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-3 ${
+                    className={`w-full px-4 py-4 md:py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700 active:bg-gray-100 transition-colors flex items-center gap-3 touch-target ${
                       brand.id === selectedBrand ? 'bg-blue-50 dark:bg-blue-900/20' : ''
                     }`}
                   >
@@ -252,24 +300,39 @@ export default function BrandChannelSwitcher() {
           ) : (
             /* Channel List for Selected Brand */
             <>
-              <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2">
-                <button
-                  onClick={() => setShowChannelSelector(false)}
-                  className="text-gray-500 hover:text-black dark:hover:text-white"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-                <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Select Channel
+              <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setShowChannelSelector(false)}
+                    className="text-gray-500 hover:text-black dark:hover:text-white touch-target flex items-center justify-center"
+                  >
+                    <svg className="w-5 h-5 md:w-4 md:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Select Channel
+                  </div>
                 </div>
+                {isMobile && (
+                  <button
+                    onClick={() => {
+                      setIsOpen(false);
+                      setShowChannelSelector(false);
+                    }}
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 touch-target"
+                  >
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
               </div>
-              <div className="max-h-64 overflow-y-auto">
+              <div className={`${isMobile ? 'max-h-[50vh]' : 'max-h-64'} overflow-y-auto`}>
                 {channels.filter(c => c.status === 'connected').map((channel) => (
                   <div
                     key={channel.id}
-                    className={`w-full px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-3 ${
+                    className={`w-full px-4 py-4 md:py-3 hover:bg-gray-50 dark:hover:bg-gray-700 active:bg-gray-100 transition-colors flex items-center gap-3 ${
                       channel.id === selectedChannel ? 'bg-blue-50 dark:bg-blue-900/20' : ''
                     }`}
                   >

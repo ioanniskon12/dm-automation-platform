@@ -67,8 +67,10 @@ export default function ContactPage() {
 
       {/* Hero Section */}
       <section className="pt-20 pb-12 px-6 relative overflow-hidden">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float"></div>
-        <div className="absolute top-40 right-10 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float-delayed"></div>
+        {/* Floating elements at edges - non-overlapping */}
+        <div className="absolute -top-16 -left-16 w-56 h-56 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-25 animate-float"></div>
+        <div className="absolute top-1/4 -right-20 w-48 h-48 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-25 animate-float-delayed"></div>
+        <div className="absolute -bottom-12 left-1/4 w-40 h-40 bg-pink-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"></div>
 
         <div className="max-w-4xl mx-auto text-center relative">
           <span className="inline-block px-4 py-1.5 text-sm font-semibold text-blue-600 bg-blue-50 rounded-full uppercase tracking-wider mb-6">

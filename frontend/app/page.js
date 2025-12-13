@@ -109,11 +109,12 @@ export default function Home() {
       <MarketingNavbar />
 
       {/* Hero Section */}
-      <section className="pt-20 pb-20 px-6 relative">
-        {/* Animated background elements */}
-        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float"></div>
-        <div className="absolute top-40 right-10 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float-delayed"></div>
-        <div className="absolute bottom-20 left-1/2 w-72 h-72 bg-pink-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-float"></div>
+      <section className="pt-20 pb-20 px-6 relative overflow-hidden">
+        {/* Animated background elements - positioned at edges, non-overlapping */}
+        <div className="absolute -top-20 -left-20 w-64 h-64 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-25 animate-float"></div>
+        <div className="absolute top-1/4 -right-20 w-56 h-56 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-25 animate-float-delayed"></div>
+        <div className="absolute -bottom-16 left-1/4 w-48 h-48 bg-pink-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float"></div>
+        <div className="absolute bottom-1/3 -left-16 w-40 h-40 bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-float-delayed"></div>
 
         <div className="max-w-6xl mx-auto relative">
           <div className="text-center max-w-4xl mx-auto">
@@ -442,8 +443,11 @@ export default function Home() {
       {/* CTA Section */}
       <section className="py-24 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 relative overflow-hidden">
         <div className="absolute inset-0">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-float"></div>
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-float-delayed"></div>
+          {/* Floating elements at edges - non-overlapping */}
+          <div className="absolute -top-24 -left-24 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-float"></div>
+          <div className="absolute -top-16 -right-16 w-56 h-56 bg-white/8 rounded-full blur-3xl animate-float-delayed"></div>
+          <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl animate-float"></div>
+          <div className="absolute -bottom-16 left-1/4 w-48 h-48 bg-white/6 rounded-full blur-3xl animate-float-delayed"></div>
         </div>
 
         <div className="max-w-4xl mx-auto px-6 text-center relative">

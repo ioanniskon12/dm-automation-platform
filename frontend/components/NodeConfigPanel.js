@@ -1690,16 +1690,23 @@ export default function NodeConfigPanel({ node, onUpdate, onDelete, onClose, onA
   }
 
   return (
-    <div className="w-96 h-full bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 p-6 overflow-y-auto shadow-xl">
-      <div className="flex justify-between items-center mb-4 sticky top-0 bg-white dark:bg-gray-800 pb-4 z-10">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white">{getNodeCategory()}</h2>
-        <button
-          onClick={onClose}
-          className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-2xl"
-        >
-          ×
-        </button>
-      </div>
+    <>
+      {/* Mobile overlay */}
+      <div
+        className="md:hidden fixed inset-0 bg-black/50 z-[80]"
+        onClick={onClose}
+      />
+      {/* Panel - Full screen on mobile, side panel on desktop */}
+      <div className="fixed inset-0 md:relative md:inset-auto md:w-96 h-full bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 p-4 md:p-6 overflow-y-auto shadow-xl z-[90] md:z-auto safe-area-top safe-area-bottom">
+        <div className="flex justify-between items-center mb-4 sticky top-0 bg-white dark:bg-gray-800 pb-4 z-10">
+          <h2 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">{getNodeCategory()}</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 text-2xl touch-target flex items-center justify-center"
+          >
+            ×
+          </button>
+        </div>
 
       <div className="mb-6">
         <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
@@ -1732,13 +1739,13 @@ export default function NodeConfigPanel({ node, onUpdate, onDelete, onClose, onA
 
         <button
           onClick={handleSave}
-          className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+          className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 dark:bg-blue-700 dark:hover:bg-blue-800 text-white font-semibold py-3 md:py-2 px-4 rounded-lg transition-colors touch-target"
         >
           💾 Save Changes
         </button>
         <button
           onClick={() => onDelete(node.id)}
-          className="w-full bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+          className="w-full bg-red-600 hover:bg-red-700 active:bg-red-800 dark:bg-red-700 dark:hover:bg-red-800 text-white font-semibold py-3 md:py-2 px-4 rounded-lg transition-colors touch-target"
         >
           🗑️ Delete Node
         </button>
@@ -1852,5 +1859,6 @@ export default function NodeConfigPanel({ node, onUpdate, onDelete, onClose, onA
         </div>
       )}
     </div>
+    </>
   )
 }
