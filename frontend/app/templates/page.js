@@ -396,10 +396,10 @@ export default function Templates() {
 
         {/* Context Banner - Shows current brand/channel */}
         {currentBrand && currentChannel && (
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/10 dark:to-purple-900/10 border-b border-blue-200 dark:border-blue-800 px-4 py-3">
-            <div className="max-w-6xl mx-auto flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="text-xs text-gray-600 dark:text-gray-400">
+          <div className={`bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/10 dark:to-purple-900/10 border-b border-blue-200 dark:border-blue-800 px-4 py-3 ${isCollapsed ? 'md:ml-20' : 'md:ml-64'}`}>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className="text-xs text-gray-600 dark:text-gray-400 hidden md:block">
                   Templates scoped to:
                 </div>
                 <div className="flex items-center gap-2">
@@ -412,7 +412,7 @@ export default function Templates() {
                   </span>
                 </div>
               </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">
+              <div className="text-xs text-gray-500 dark:text-gray-400 hidden md:block">
                 Templates will launch in this context
               </div>
             </div>
@@ -420,10 +420,10 @@ export default function Templates() {
         )}
 
       {/* Main Content - with left padding for sidebar */}
-      <main className={`transition-all duration-300 ${isCollapsed ? 'ml-20' : 'ml-64'} max-w-6xl mx-auto px-4 py-12`}>
+      <main className={`transition-all duration-300 ${isCollapsed ? 'md:ml-20' : 'md:ml-64'} px-3 md:px-4 py-6 md:py-12`}>
         {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-black dark:text-white mb-2">Template Gallery</h1>
+        <div className="mb-6 md:mb-8">
+          <h1 className="text-xl md:text-2xl font-bold text-black dark:text-white mb-2">Template Gallery</h1>
           <p className="text-sm text-gray-600 dark:text-gray-400 max-w-3xl">
             Launch pre-built automation workflows in seconds. Each template is fully customizable and ready to use.
           </p>
@@ -452,14 +452,14 @@ export default function Templates() {
         </div>
 
         {/* Category Filter */}
-        <div className="flex items-center gap-4 mb-8 overflow-x-auto">
+        <div className="flex items-center gap-2 md:gap-4 mb-6 md:mb-8 overflow-x-auto pb-2 scrollbar-hide">
           {categories.map((category) => {
             const isCustomCategory = !baseCategories.includes(category);
             return (
-              <div key={category} className="relative">
+              <div key={category} className="relative flex-shrink-0">
                 <button
                   onClick={() => setSelectedCategory(category)}
-                  className={`px-4 py-2 border font-semibold whitespace-nowrap transition-all text-xs rounded-lg ${
+                  className={`px-3 md:px-4 py-2 border font-semibold whitespace-nowrap transition-all text-xs rounded-lg touch-target ${
                     selectedCategory === category
                       ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white border-transparent shadow-md'
                       : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-purple-500 dark:hover:border-purple-500 hover:shadow-sm'
@@ -473,7 +473,7 @@ export default function Templates() {
                       e.stopPropagation();
                       handleDeleteCategory(category);
                     }}
-                    className="absolute right-1 top-1/2 -translate-y-1/2 w-4 h-4 flex items-center justify-center text-xs font-bold text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center text-xs font-bold text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white touch-target"
                     title={`Delete ${category} category`}
                   >
                     ×
@@ -485,24 +485,24 @@ export default function Templates() {
         </div>
 
         {/* Templates Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 mb-8 md:mb-12">
           {filteredTemplates.map((template) => (
             <div
               key={template.id}
-              className={`p-6 rounded-xl transition-all ${
+              className={`p-3 md:p-6 rounded-xl transition-all flex flex-col ${
                 template.isAIBuilder
-                  ? 'bg-gradient-to-br from-purple-600 to-pink-600 border-2 border-purple-400 shadow-2xl shadow-purple-500/50 ring-4 ring-purple-300/30 hover:shadow-purple-500/70 hover:scale-105'
+                  ? 'bg-gradient-to-br from-purple-600 to-pink-600 border-2 border-purple-400 shadow-2xl shadow-purple-500/50 ring-2 md:ring-4 ring-purple-300/30 hover:shadow-purple-500/70 hover:scale-105'
                   : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-xl'
               }`}
             >
               {/* Icon & Categories */}
-              <div className="flex items-start justify-between mb-4">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl ${
+              <div className="flex items-start justify-between mb-2 md:mb-4">
+                <div className={`w-8 h-8 md:w-10 md:h-10 rounded-lg flex items-center justify-center text-lg md:text-xl ${
                   template.isAIBuilder ? 'border-2 border-white bg-white/20' : 'border border-black dark:border-white'
                 }`}>
                   {template.icon}
                 </div>
-                <div className="flex flex-wrap gap-2 justify-end">
+                <div className="hidden md:flex flex-wrap gap-2 justify-end">
                   {template.categories && Array.isArray(template.categories) ? (
                     template.categories.map((cat, idx) => (
                       <span key={idx} className={`px-3 py-1 rounded-full text-xs font-semibold ${
@@ -522,15 +522,15 @@ export default function Templates() {
               </div>
 
               {/* Title & Description */}
-              <h3 className={`text-base font-bold mb-2 ${
+              <h3 className={`text-sm md:text-base font-bold mb-1 md:mb-2 line-clamp-2 ${
                 template.isAIBuilder ? 'text-white' : 'text-gray-900 dark:text-white'
               }`}>{template.name}</h3>
-              <p className={`text-xs mb-4 ${
+              <p className={`text-xs mb-2 md:mb-4 line-clamp-2 md:line-clamp-none ${
                 template.isAIBuilder ? 'text-white/90' : 'text-gray-600 dark:text-gray-400'
               }`}>{template.description}</p>
 
-              {/* Features */}
-              <div className="mb-4">
+              {/* Features - Hidden on mobile */}
+              <div className="hidden md:block mb-4">
                 <h4 className={`text-xs font-semibold mb-2 ${
                   template.isAIBuilder ? 'text-white' : 'text-gray-700 dark:text-gray-300'
                 }`}>Includes:</h4>
@@ -546,25 +546,30 @@ export default function Templates() {
                 </ul>
               </div>
 
-              {/* Stats */}
-              <div className={`flex items-center justify-between mb-4 text-xs ${
+              {/* Stats - Simplified on mobile */}
+              <div className={`flex items-center justify-between mb-2 md:mb-4 text-xs ${
                 template.isAIBuilder ? 'text-white/80' : 'text-gray-500 dark:text-gray-400'
               }`}>
-                <div>{Array.isArray(template.nodes) ? template.nodes.length : template.nodes} nodes</div>
-                <div>{template.views || 0} views</div>
+                <div className="hidden md:block">{Array.isArray(template.nodes) ? template.nodes.length : template.nodes} nodes</div>
+                <div className="md:hidden">{Array.isArray(template.nodes) ? template.nodes.length : template.nodes}n</div>
+                <div className="hidden md:block">{template.views || 0} views</div>
               </div>
+
+              {/* Spacer to push button to bottom */}
+              <div className="flex-1"></div>
 
               {/* Launch Button */}
               <button
                 onClick={() => launchTemplate(template)}
                 disabled={loadingTemplate === template.id}
-                className={`w-full px-4 py-2 text-sm font-semibold transition-all rounded-lg shadow-sm hover:shadow-md ${
+                className={`w-full px-3 md:px-4 py-2 text-xs md:text-sm font-semibold transition-all rounded-lg shadow-sm hover:shadow-md touch-target ${
                   template.isAIBuilder
                     ? 'bg-white text-purple-600 hover:bg-purple-50 hover:text-purple-700'
                     : 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white'
                 } ${loadingTemplate === template.id ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                {loadingTemplate === template.id ? 'Launching...' : 'Launch Template'}
+                {loadingTemplate === template.id ? '...' : <span className="md:hidden">Launch</span>}
+                {loadingTemplate !== template.id && <span className="hidden md:inline">Launch Template</span>}
               </button>
 
               {/* Delete Button - Only for user-created flows */}
@@ -574,9 +579,10 @@ export default function Templates() {
                     e.stopPropagation();
                     deleteFlow(template.id);
                   }}
-                  className="w-full mt-2 px-4 py-2 bg-white dark:bg-gray-800 text-red-600 dark:text-red-400 text-sm font-semibold hover:bg-red-50 dark:hover:bg-gray-700 hover:border-red-500 transition-all border border-red-200 dark:border-red-800 rounded-lg"
+                  className="w-full mt-2 px-3 md:px-4 py-2 bg-white dark:bg-gray-800 text-red-600 dark:text-red-400 text-xs md:text-sm font-semibold hover:bg-red-50 dark:hover:bg-gray-700 hover:border-red-500 transition-all border border-red-200 dark:border-red-800 rounded-lg"
                 >
-                  Delete Flow
+                  <span className="md:hidden">Delete</span>
+                  <span className="hidden md:inline">Delete Flow</span>
                 </button>
               )}
             </div>
@@ -584,14 +590,14 @@ export default function Templates() {
         </div>
 
         {/* Custom Flow CTA */}
-        <div className="border border-gray-200 dark:border-gray-700 p-8 text-center">
-          <h2 className="text-xl font-bold text-black dark:text-white mb-2">Need Something Custom?</h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-6 max-w-2xl mx-auto">
+        <div className="border border-gray-200 dark:border-gray-700 p-4 md:p-8 text-center rounded-xl">
+          <h2 className="text-lg md:text-xl font-bold text-black dark:text-white mb-2">Need Something Custom?</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 md:mb-6 max-w-2xl mx-auto">
             Start from scratch and build your own automation flow with our visual builder.
           </p>
           <button
             onClick={handleBuildCustomFlow}
-            className="inline-block px-6 py-2 bg-black dark:bg-white text-white dark:text-black text-sm font-semibold hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors"
+            className="inline-block px-6 py-2 bg-black dark:bg-white text-white dark:text-black text-sm font-semibold hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors rounded-lg touch-target"
           >
             Build Custom Flow
           </button>
@@ -617,8 +623,12 @@ export default function Templates() {
 
       {/* Delete Category Confirmation Modal */}
       {showDeleteCategoryModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 max-w-md w-full p-6 border border-gray-200 dark:border-gray-700">
+        <div className="fixed inset-0 bg-black/50 flex items-end md:items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 max-w-md w-full p-4 md:p-6 border border-gray-200 dark:border-gray-700 rounded-t-2xl md:rounded-xl md:mx-4 safe-area-bottom">
+            {/* Mobile drag handle */}
+            <div className="md:hidden flex justify-center mb-4">
+              <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+            </div>
             <div className="text-center mb-6">
               <div className="text-3xl mb-4">⚠️</div>
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Delete Category</h2>

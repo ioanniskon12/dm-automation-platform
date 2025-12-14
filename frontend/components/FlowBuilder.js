@@ -26,6 +26,8 @@ import ReactFlow, {
   useEdgesState,
   addEdge,
   BackgroundVariant,
+  useReactFlow,
+  ReactFlowProvider,
 } from 'reactflow'
 import 'reactflow/dist/style.css'
 
@@ -51,10 +53,21 @@ const nodeTypes = {
 const defaultInitialNodes = []
 const defaultInitialEdges = []
 
-export default function FlowBuilder({ automationType = null, selectedTemplate = null, prePopulatedTrigger = null, channelType = 'instagram', workspaceId = null }) {
+// Wrapper component to provide ReactFlow context
+export default function FlowBuilder(props) {
+  return (
+    <ReactFlowProvider>
+      <FlowBuilderInner {...props} />
+    </ReactFlowProvider>
+  )
+}
+
+function FlowBuilderInner({ automationType = null, selectedTemplate = null, prePopulatedTrigger = null, channelType = 'instagram', workspaceId = null }) {
   console.log('🔧 FlowBuilder: workspaceId =', workspaceId)
   const searchParams = useSearchParams()
   const isMobile = useIsMobile()
+  const { fitView } = useReactFlow()
+  const lastTapRef = useRef(0)
   const [showMobileSidebar, setShowMobileSidebar] = useState(false)
   const [showMobileActions, setShowMobileActions] = useState(false)
   const templateId = searchParams.get('templateId')
@@ -318,6 +331,40 @@ export default function FlowBuilder({ automationType = null, selectedTemplate = 
   const onPaneClick = useCallback(() => {
     setSelectedNodeId(null)
   }, [])
+
+  // Focus on the first node (trigger node)
+  const focusFirstNode = useCallback(() => {
+    if (nodes.length === 0) return
+
+    // Find the first node (usually the trigger node with id '1' or the first in array)
+    const firstNode = nodes.find(n => n.id === '1') || nodes[0]
+
+    if (firstNode) {
+      fitView({
+        nodes: [firstNode],
+        padding: 0.5,
+        duration: 300,
+        maxZoom: 1.5
+      })
+    }
+  }, [nodes, fitView])
+
+  // Track clicks/taps for double-click/double-tap detection
+  const handlePaneClickWithDoubleTap = useCallback((event) => {
+    const now = Date.now()
+    const DOUBLE_TAP_DELAY = 400 // ms - slightly longer for better detection
+
+    const timeSinceLastTap = now - lastTapRef.current
+
+    if (lastTapRef.current !== 0 && timeSinceLastTap < DOUBLE_TAP_DELAY) {
+      // Double tap/click detected - focus on first node
+      focusFirstNode()
+      lastTapRef.current = 0 // Reset after successful double-tap
+    } else {
+      // First tap - record the time
+      lastTapRef.current = now
+    }
+  }, [focusFirstNode])
 
   const addNode = useCallback((typeOrNodes, dataOrEdges) => {
     // Check if we're receiving arrays (new signature for multiple nodes)
@@ -796,22 +843,22 @@ export default function FlowBuilder({ automationType = null, selectedTemplate = 
             {/* Add Node Button - Bottom Left */}
             <button
               onClick={() => setShowMobileSidebar(true)}
-              className="fixed bottom-20 left-4 z-[60] bg-purple-600 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-2xl touch-target"
+              className="fixed bottom-6 left-4 z-[60] bg-purple-600 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-2xl touch-target safe-area-bottom"
             >
               ➕
             </button>
 
-            {/* More Actions Button - Bottom Right */}
+            {/* More Actions Button - Bottom Right (positioned to avoid AI Assistant) */}
             <button
               onClick={() => setShowMobileActions(!showMobileActions)}
-              className="fixed bottom-20 right-4 z-[60] bg-black dark:bg-white text-white dark:text-black w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-xl touch-target"
+              className="fixed bottom-24 right-4 z-[60] bg-black dark:bg-white text-white dark:text-black w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-xl touch-target"
             >
               {showMobileActions ? '✕' : '⋮'}
             </button>
 
             {/* Mobile Actions Menu */}
             {showMobileActions && (
-              <div className="fixed bottom-36 right-4 z-[60] flex flex-col gap-2 animate-slide-in-bottom">
+              <div className="fixed bottom-40 right-4 z-[60] flex flex-col gap-2 animate-slide-in-bottom">
                 <button
                   onClick={() => {
                     saveFlow()
@@ -854,9 +901,10 @@ export default function FlowBuilder({ automationType = null, selectedTemplate = 
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           onNodeClick={onNodeClick}
-          onPaneClick={() => {
+          onPaneClick={(event) => {
             onPaneClick()
             if (isMobile) setShowMobileActions(false)
+            handlePaneClickWithDoubleTap(event)
           }}
           nodeTypes={nodeTypes}
           fitView
@@ -901,7 +949,7 @@ export default function FlowBuilder({ automationType = null, selectedTemplate = 
 
       {/* Validation Errors */}
       {validationErrors.length > 0 && (
-        <div className="fixed bottom-20 md:bottom-4 left-2 right-2 md:left-4 md:right-auto z-50 bg-white dark:bg-gray-800 border-2 border-red-600 dark:border-red-400 p-3 md:p-4 md:max-w-md rounded-lg md:rounded-none">
+        <div className="fixed bottom-24 md:bottom-4 left-2 right-2 md:left-4 md:right-auto z-[70] bg-white dark:bg-gray-800 border-2 border-red-600 dark:border-red-400 p-3 md:p-4 md:max-w-md rounded-lg md:rounded-none safe-area-bottom">
           <div className="flex items-start gap-3">
             <span className="text-2xl">⚠️</span>
             <div className="flex-1">

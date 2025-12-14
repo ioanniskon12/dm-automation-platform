@@ -216,10 +216,10 @@ export default function Contacts() {
 
         {/* Context Banner */}
         {currentBrand && (
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/10 dark:to-purple-900/10 border-b border-blue-200 dark:border-blue-800 px-4 py-3">
-            <div className="max-w-7xl mx-auto flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="text-xs text-gray-600 dark:text-gray-400">
+          <div className={`bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/10 dark:to-purple-900/10 border-b border-blue-200 dark:border-blue-800 px-4 py-3 ${isCollapsed ? 'md:ml-20' : 'md:ml-64'}`}>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-1">
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className="text-xs text-gray-600 dark:text-gray-400 hidden md:block">
                   Contacts for:
                 </div>
                 <div className="flex items-center gap-2">
@@ -236,7 +236,7 @@ export default function Contacts() {
                   )}
                 </div>
               </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">
+              <div className="text-xs text-gray-500 dark:text-gray-400 hidden md:block">
                 {currentChannel
                   ? `Showing only ${currentChannel.type} contacts`
                   : 'Showing contacts from all channels'
@@ -247,37 +247,37 @@ export default function Contacts() {
         )}
 
         {/* Main Content */}
-        <main className={`transition-all duration-300 ${isCollapsed ? 'ml-20' : 'ml-64'} px-6 py-8`}>
+        <main className={`transition-all duration-300 ${isCollapsed ? 'md:ml-20' : 'md:ml-64'} px-4 md:px-6 py-6 md:py-8 pt-16 md:pt-8`}>
           {/* Page Header */}
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 md:mb-6 gap-3">
             <div>
-              <h1 className="text-2xl font-bold text-black dark:text-white mb-1">Contacts & Subscribers</h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Manage your contacts, view their info, and organize with tags
+              <h1 className="text-xl md:text-2xl font-bold text-black dark:text-white mb-1">Contacts</h1>
+              <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                Manage your contacts and organize with tags
               </p>
             </div>
             <div className="flex gap-2">
-              <button className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold text-sm rounded-lg hover:border-gray-400 dark:hover:border-gray-500 transition-colors flex items-center gap-2">
+              <button className="px-3 md:px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold text-sm rounded-lg hover:border-gray-400 dark:hover:border-gray-500 transition-colors flex items-center gap-2 touch-target">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                 </svg>
-                Export
+                <span className="hidden md:inline">Export</span>
               </button>
             </div>
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-4 mb-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex gap-2 md:gap-4 mb-4 md:mb-6 border-b border-gray-200 dark:border-gray-700 overflow-x-auto scrollbar-hide">
             <button
               onClick={() => setActiveTab('contacts')}
-              className={`pb-3 px-1 text-sm font-semibold transition-colors relative ${
+              className={`pb-3 px-1 text-sm font-semibold transition-colors relative whitespace-nowrap touch-target ${
                 activeTab === 'contacts'
                   ? 'text-blue-600 dark:text-blue-400'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
               }`}
             >
               Contacts
-              <span className="ml-2 px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-800 rounded-full">
+              <span className="ml-1 md:ml-2 px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-800 rounded-full">
                 {filteredContacts.length}
               </span>
               {activeTab === 'contacts' && (
@@ -286,14 +286,15 @@ export default function Contacts() {
             </button>
             <button
               onClick={() => setActiveTab('tags')}
-              className={`pb-3 px-1 text-sm font-semibold transition-colors relative ${
+              className={`pb-3 px-1 text-sm font-semibold transition-colors relative whitespace-nowrap touch-target ${
                 activeTab === 'tags'
                   ? 'text-blue-600 dark:text-blue-400'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
               }`}
             >
-              Tags & Categories
-              <span className="ml-2 px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-800 rounded-full">
+              <span className="hidden md:inline">Tags & Categories</span>
+              <span className="md:hidden">Tags</span>
+              <span className="ml-1 md:ml-2 px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-800 rounded-full">
                 {tags.length}
               </span>
               {activeTab === 'tags' && (
@@ -304,11 +305,11 @@ export default function Contacts() {
 
           {/* Contacts Tab */}
           {activeTab === 'contacts' && (
-            <div className="flex gap-6">
+            <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
               {/* Contacts List */}
               <div className="flex-1">
                 {/* Search and Filters */}
-                <div className="flex gap-3 mb-4">
+                <div className="flex flex-col md:flex-row gap-2 md:gap-3 mb-4">
                   <div className="flex-1 relative">
                     <svg className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -321,30 +322,33 @@ export default function Contacts() {
                       className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-blue-500 focus:outline-none"
                     />
                   </div>
-                  <select
-                    value={selectedStatus}
-                    onChange={(e) => setSelectedStatus(e.target.value)}
-                    className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-blue-500 focus:outline-none"
-                  >
-                    <option value="all">All Status</option>
-                    <option value="subscribed">Subscribed</option>
-                    <option value="unsubscribed">Unsubscribed</option>
-                  </select>
-                  <select
-                    value={selectedTag || ''}
-                    onChange={(e) => setSelectedTag(e.target.value || null)}
-                    className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-blue-500 focus:outline-none"
-                  >
-                    <option value="">All Tags</option>
-                    {tags.map(tag => (
-                      <option key={tag.id} value={tag.name}>{tag.name}</option>
-                    ))}
-                  </select>
+                  <div className="flex gap-2">
+                    <select
+                      value={selectedStatus}
+                      onChange={(e) => setSelectedStatus(e.target.value)}
+                      className="flex-1 md:flex-none px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-blue-500 focus:outline-none"
+                    >
+                      <option value="all">All Status</option>
+                      <option value="subscribed">Subscribed</option>
+                      <option value="unsubscribed">Unsubscribed</option>
+                    </select>
+                    <select
+                      value={selectedTag || ''}
+                      onChange={(e) => setSelectedTag(e.target.value || null)}
+                      className="flex-1 md:flex-none px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:border-blue-500 focus:outline-none"
+                    >
+                      <option value="">All Tags</option>
+                      {tags.map(tag => (
+                        <option key={tag.id} value={tag.name}>{tag.name}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
-                {/* Contacts Table */}
+                {/* Contacts - Table on Desktop, Cards on Mobile */}
                 <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
-                  <table className="w-full">
+                  {/* Desktop Table */}
+                  <table className="w-full hidden md:table">
                     <thead>
                       <tr className="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
                         <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">Contact</th>
@@ -423,6 +427,62 @@ export default function Contacts() {
                     </tbody>
                   </table>
 
+                  {/* Mobile Cards */}
+                  <div className="md:hidden divide-y divide-gray-100 dark:divide-gray-700">
+                    {filteredContacts.map((contact) => (
+                      <div
+                        key={contact.id}
+                        onClick={() => setSelectedContact(contact)}
+                        className={`p-4 cursor-pointer transition-colors ${
+                          selectedContact?.id === contact.id ? 'bg-blue-50 dark:bg-blue-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-900/30'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 mb-2">
+                          <img
+                            src={contact.avatar}
+                            alt={contact.name}
+                            className="w-10 h-10 rounded-full object-cover"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-semibold text-gray-900 dark:text-white truncate">{contact.name}</span>
+                              {getPlatformIcon(contact.platform)}
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">{contact.username}</div>
+                          </div>
+                          <span className={`px-2 py-1 text-xs font-semibold rounded-full flex-shrink-0 ${
+                            contact.status === 'subscribed'
+                              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
+                              : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
+                          }`}>
+                            {contact.status === 'subscribed' ? '✓' : '✕'}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex flex-wrap gap-1">
+                            {contact.tags.slice(0, 2).map(tagName => {
+                              const tag = getTagByName(tagName);
+                              return (
+                                <span
+                                  key={tagName}
+                                  className={`px-2 py-0.5 text-xs font-medium rounded-full border ${getTagColorClasses(tag?.color || 'gray')}`}
+                                >
+                                  {tagName}
+                                </span>
+                              );
+                            })}
+                            {contact.tags.length > 2 && (
+                              <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
+                                +{contact.tags.length - 2}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">{contact.totalMessages} msgs</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
                   {filteredContacts.length === 0 && (
                     <div className="p-8 text-center">
                       <div className="text-4xl mb-3">👥</div>
@@ -432,16 +492,26 @@ export default function Contacts() {
                 </div>
               </div>
 
-              {/* Contact Details Sidebar */}
+              {/* Contact Details Sidebar - Bottom sheet on mobile */}
               {selectedContact && (
-                <div className="w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 h-fit sticky top-6">
+                <>
+                  {/* Mobile overlay */}
+                  <div
+                    className="lg:hidden fixed inset-0 bg-black/50 z-40"
+                    onClick={() => setSelectedContact(null)}
+                  />
+                  <div className="fixed inset-x-0 bottom-0 lg:relative lg:inset-auto lg:w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-t-2xl lg:rounded-xl p-4 lg:p-5 max-h-[80vh] lg:max-h-none overflow-y-auto z-50 lg:z-auto lg:h-fit lg:sticky lg:top-6 safe-area-bottom">
+                  {/* Mobile drag handle */}
+                  <div className="lg:hidden flex justify-center mb-3">
+                    <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+                  </div>
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-sm font-bold text-gray-900 dark:text-white">Contact Details</h3>
                     <button
                       onClick={() => setSelectedContact(null)}
-                      className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                      className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 touch-target"
                     >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </button>
@@ -551,19 +621,20 @@ export default function Contacts() {
                     </div>
                   </div>
                 </div>
+                </>
               )}
             </div>
           )}
 
           {/* Tags Tab */}
           {activeTab === 'tags' && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
               {/* Categories Overview */}
-              <div className="lg:col-span-1">
-                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5">
+              <div className="lg:col-span-1 order-2 lg:order-1">
+                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 lg:p-5">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-sm font-bold text-gray-900 dark:text-white">Categories</h3>
-                    <button className="text-xs text-blue-600 dark:text-blue-400 hover:underline">+ Add</button>
+                    <button className="text-xs text-blue-600 dark:text-blue-400 hover:underline touch-target">+ Add</button>
                   </div>
                   <div className="space-y-2">
                     {categories.map(category => (
@@ -582,7 +653,7 @@ export default function Contacts() {
                 </div>
 
                 {/* Summary Stats */}
-                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 mt-6">
+                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 lg:p-5 mt-4 lg:mt-6">
                   <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-4">Tag Summary</h3>
                   <div className="space-y-3">
                     <div className="flex justify-between">
@@ -604,11 +675,11 @@ export default function Contacts() {
               </div>
 
               {/* Tags List */}
-              <div className="lg:col-span-2">
+              <div className="lg:col-span-2 order-1 lg:order-2">
                 <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl">
-                  <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center justify-between p-4 lg:p-5 border-b border-gray-200 dark:border-gray-700">
                     <h3 className="text-sm font-bold text-gray-900 dark:text-white">All Tags</h3>
-                    <button className="px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+                    <button className="px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors touch-target">
                       + Create Tag
                     </button>
                   </div>
@@ -652,7 +723,7 @@ export default function Contacts() {
                 </div>
 
                 {/* Tag Usage Chart */}
-                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 mt-6">
+                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 lg:p-5 mt-4 lg:mt-6">
                   <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-4">Tag Usage</h3>
                   <div className="space-y-3">
                     {tags.filter(t => t.userCount > 0).sort((a, b) => b.userCount - a.userCount).map(tag => {

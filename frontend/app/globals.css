@@ -143,14 +143,9 @@ body {
     display: none !important;
   }
 
+  /* Hide all controls on mobile - double-tap to fit view, pinch to zoom */
   .react-flow__controls {
-    bottom: 80px !important;
-    left: 10px !important;
-  }
-
-  .react-flow__controls button {
-    width: 36px !important;
-    height: 36px !important;
+    display: none !important;
   }
 
   /* Make handles larger for touch */

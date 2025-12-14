@@ -294,19 +294,19 @@ function FlowsListContent() {
     <div className="min-h-screen bg-white dark:bg-gray-900">
       <NavigationSidebar />
 
-      <main className={`px-6 py-8 min-h-screen max-w-7xl mx-auto transition-all duration-300 ${isCollapsed ? 'ml-20' : 'ml-64'}`}>
+      <main className={`px-4 md:px-6 py-6 md:py-8 min-h-screen transition-all duration-300 pt-16 md:pt-8 ${isCollapsed ? 'md:ml-20' : 'md:ml-64'}`}>
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
+        <div className="mb-6 md:mb-8">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
             <div>
-              <h1 className="text-3xl font-bold text-black dark:text-white mb-2">Automation Flows</h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <h1 className="text-xl md:text-3xl font-bold text-black dark:text-white mb-1 md:mb-2">Automation Flows</h1>
+              <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
                 Manage and monitor all your automation workflows
               </p>
               {currentBrand && currentChannel && (
-                <div className="flex items-center gap-2 mt-3">
-                  <span className="text-xs text-gray-500 dark:text-gray-500">Viewing flows for:</span>
-                  <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-semibold rounded-full">
+                <div className="flex items-center gap-2 mt-2 md:mt-3">
+                  <span className="text-xs text-gray-500 dark:text-gray-500 hidden md:inline">Viewing flows for:</span>
+                  <span className="px-2 md:px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-semibold rounded-full">
                     {currentBrand.name} • {currentChannel.type}
                   </span>
                 </div>
@@ -314,45 +314,45 @@ function FlowsListContent() {
             </div>
             <button
               onClick={handleCreateFlowClick}
-              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all"
+              className="px-4 md:px-6 py-2.5 md:py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all text-sm md:text-base touch-target"
             >
-              + Create New Flow
+              + Create Flow
             </button>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-              <div className="text-2xl font-bold text-black dark:text-white">{stats.total}</div>
-              <div className="text-xs text-gray-600 dark:text-gray-400">Total Flows</div>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-4">
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 md:p-4">
+              <div className="text-xl md:text-2xl font-bold text-black dark:text-white">{stats.total}</div>
+              <div className="text-xs text-gray-600 dark:text-gray-400">Total</div>
             </div>
-            <div className="bg-white dark:bg-gray-800 border border-green-200 dark:border-green-700 rounded-lg p-4">
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.active}</div>
+            <div className="bg-white dark:bg-gray-800 border border-green-200 dark:border-green-700 rounded-lg p-3 md:p-4">
+              <div className="text-xl md:text-2xl font-bold text-green-600 dark:text-green-400">{stats.active}</div>
               <div className="text-xs text-gray-600 dark:text-gray-400">Active</div>
             </div>
-            <div className="bg-white dark:bg-gray-800 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4">
-              <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{stats.paused}</div>
+            <div className="bg-white dark:bg-gray-800 border border-yellow-200 dark:border-yellow-700 rounded-lg p-3 md:p-4">
+              <div className="text-xl md:text-2xl font-bold text-yellow-600 dark:text-yellow-400">{stats.paused}</div>
               <div className="text-xs text-gray-600 dark:text-gray-400">Paused</div>
             </div>
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-              <div className="text-2xl font-bold text-gray-600 dark:text-gray-400">{stats.draft}</div>
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 md:p-4">
+              <div className="text-xl md:text-2xl font-bold text-gray-600 dark:text-gray-400">{stats.draft}</div>
               <div className="text-xs text-gray-600 dark:text-gray-400">Drafts</div>
             </div>
-            <div className="bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.totalTriggered.toLocaleString()}</div>
-              <div className="text-xs text-gray-600 dark:text-gray-400">Total Triggered</div>
+            <div className="col-span-2 md:col-span-1 bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 rounded-lg p-3 md:p-4">
+              <div className="text-xl md:text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.totalTriggered.toLocaleString()}</div>
+              <div className="text-xs text-gray-600 dark:text-gray-400">Triggered</div>
             </div>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="mb-6 flex flex-wrap gap-3">
+        <div className="mb-4 md:mb-6 flex flex-wrap gap-2 md:gap-3">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Status:</span>
+            <span className="text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300">Status:</span>
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-black dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="px-2 md:px-3 py-1.5 md:py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-xs md:text-sm text-black dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
             >
               <option value="all">All</option>
               <option value="active">Active</option>
@@ -363,11 +363,11 @@ function FlowsListContent() {
           {/* Only show channel filter if no channel is selected in context */}
           {!currentChannel && (
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Channel:</span>
+              <span className="text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300">Channel:</span>
               <select
                 value={filterChannel}
                 onChange={(e) => setFilterChannel(e.target.value)}
-                className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-black dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                className="px-2 md:px-3 py-1.5 md:py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-xs md:text-sm text-black dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
               >
                 <option value="all">All Channels</option>
                 <option value="Instagram">Instagram</option>
@@ -380,12 +380,12 @@ function FlowsListContent() {
         </div>
 
         {/* Flows List */}
-        <div className="space-y-4">
+        <div className="space-y-3 md:space-y-4">
           {filteredFlows.length === 0 ? (
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-12 text-center">
-              <div className="text-6xl mb-4">🤖</div>
-              <h3 className="text-xl font-bold text-black dark:text-white mb-2">No flows found</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-8 md:p-12 text-center">
+              <div className="text-4xl md:text-6xl mb-3 md:mb-4">🤖</div>
+              <h3 className="text-lg md:text-xl font-bold text-black dark:text-white mb-2">No flows found</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 md:mb-6">
                 {filterStatus !== 'all' || (!currentChannel && filterChannel !== 'all')
                   ? 'Try adjusting your filters'
                   : currentChannel
@@ -395,7 +395,7 @@ function FlowsListContent() {
               {filterStatus === 'all' && (!currentChannel || filterChannel === 'all') && (
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="inline-block px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all"
+                  className="inline-block px-4 md:px-6 py-2.5 md:py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all text-sm md:text-base"
                 >
                   Create Your First Flow
                 </button>
@@ -406,38 +406,38 @@ function FlowsListContent() {
               <Link
                 key={flow.id}
                 href={`/flows-list/${flow.id}`}
-                className="block bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-lg transition-all rounded-xl p-6"
+                className="block bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-lg transition-all rounded-xl p-4 md:p-6"
               >
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-3 md:gap-4">
                   {/* Channel Icon */}
-                  <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${flow.channelColor} flex items-center justify-center text-2xl flex-shrink-0 shadow-lg`}>
+                  <div className={`w-10 h-10 md:w-14 md:h-14 rounded-xl bg-gradient-to-br ${flow.channelColor} flex items-center justify-center text-lg md:text-2xl flex-shrink-0 shadow-lg`}>
                     {flow.channelIcon}
                   </div>
 
                   {/* Flow Info */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-start justify-between mb-1 md:mb-2">
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-bold text-black dark:text-white mb-1 truncate">
+                        <h3 className="text-sm md:text-lg font-bold text-black dark:text-white mb-0.5 md:mb-1 truncate pr-2">
                           {flow.name}
                         </h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">
+                        <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 line-clamp-1 hidden md:block">
                           {flow.description}
                         </p>
                       </div>
-                      <div className="flex items-center gap-2 ml-4">
+                      <div className="flex items-center gap-2 flex-shrink-0">
                         {flow.status === 'active' && (
-                          <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-semibold rounded-full">
+                          <span className="px-2 md:px-3 py-0.5 md:py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-semibold rounded-full">
                             Active
                           </span>
                         )}
                         {flow.status === 'paused' && (
-                          <span className="px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 text-xs font-semibold rounded-full">
+                          <span className="px-2 md:px-3 py-0.5 md:py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 text-xs font-semibold rounded-full">
                             Paused
                           </span>
                         )}
                         {flow.status === 'draft' && (
-                          <span className="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-semibold rounded-full">
+                          <span className="px-2 md:px-3 py-0.5 md:py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-semibold rounded-full">
                             Draft
                           </span>
                         )}
@@ -445,45 +445,45 @@ function FlowsListContent() {
                     </div>
 
                     {/* Flow Stats */}
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-4">
-                      <div>
+                    <div className="grid grid-cols-4 md:grid-cols-5 gap-2 md:gap-4 mt-2 md:mt-4">
+                      <div className="hidden md:block">
                         <div className="text-xs text-gray-500 dark:text-gray-500 mb-1">Channel</div>
                         <div className="text-sm font-semibold text-black dark:text-white">{flow.channel}</div>
                       </div>
                       <div>
-                        <div className="text-xs text-gray-500 dark:text-gray-500 mb-1">Nodes</div>
-                        <div className="text-sm font-semibold text-black dark:text-white">
+                        <div className="text-xs text-gray-500 dark:text-gray-500 mb-0.5 md:mb-1">Nodes</div>
+                        <div className="text-xs md:text-sm font-semibold text-black dark:text-white">
                           {flow.triggers + flow.actions}
                         </div>
                       </div>
                       <div>
-                        <div className="text-xs text-gray-500 dark:text-gray-500 mb-1">Triggered</div>
-                        <div className="text-sm font-semibold text-black dark:text-white">
+                        <div className="text-xs text-gray-500 dark:text-gray-500 mb-0.5 md:mb-1">Runs</div>
+                        <div className="text-xs md:text-sm font-semibold text-black dark:text-white">
                           {flow.analytics.triggered}
                         </div>
                       </div>
                       <div>
-                        <div className="text-xs text-gray-500 dark:text-gray-500 mb-1">Success Rate</div>
-                        <div className="text-sm font-semibold text-green-600 dark:text-green-400">
+                        <div className="text-xs text-gray-500 dark:text-gray-500 mb-0.5 md:mb-1">Success</div>
+                        <div className="text-xs md:text-sm font-semibold text-green-600 dark:text-green-400">
                           {flow.analytics.successRate}%
                         </div>
                       </div>
                       <div>
-                        <div className="text-xs text-gray-500 dark:text-gray-500 mb-1">Avg Time</div>
-                        <div className="text-sm font-semibold text-black dark:text-white">
+                        <div className="text-xs text-gray-500 dark:text-gray-500 mb-0.5 md:mb-1">Time</div>
+                        <div className="text-xs md:text-sm font-semibold text-black dark:text-white">
                           {flow.analytics.avgCompletionTime}
                         </div>
                       </div>
                     </div>
 
-                    {/* Last Modified */}
-                    <div className="mt-3 text-xs text-gray-500 dark:text-gray-500">
+                    {/* Last Modified - hidden on mobile */}
+                    <div className="hidden md:block mt-3 text-xs text-gray-500 dark:text-gray-500">
                       Last modified: {new Date(flow.lastModified).toLocaleDateString()}
                     </div>
                   </div>
 
-                  {/* Arrow */}
-                  <svg className="w-6 h-6 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  {/* Arrow - hidden on mobile */}
+                  <svg className="hidden md:block w-6 h-6 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </div>
@@ -494,44 +494,49 @@ function FlowsListContent() {
 
         {/* Create Flow Modal */}
         {showCreateModal && (
-          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={() => setShowCreateModal(false)}>
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full mx-4 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+          <div className="fixed inset-0 bg-black/60 flex items-end md:items-center justify-center z-50" onClick={() => setShowCreateModal(false)}>
+            <div className="bg-white dark:bg-gray-800 rounded-t-2xl md:rounded-xl shadow-2xl max-w-2xl w-full md:mx-4 overflow-hidden safe-area-bottom" onClick={(e) => e.stopPropagation()}>
+              {/* Mobile drag handle */}
+              <div className="md:hidden flex justify-center pt-3 pb-2">
+                <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+              </div>
+
               {/* Modal Header */}
-              <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-white">Create New Flow</h2>
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-4 md:px-6 py-3 md:py-4 flex items-center justify-between">
+                <h2 className="text-base md:text-xl font-bold text-white">Create New Flow</h2>
                 <button
                   onClick={() => setShowCreateModal(false)}
-                  className="text-white hover:text-gray-200 text-2xl font-light"
+                  className="text-white hover:text-gray-200 text-xl md:text-2xl font-light touch-target"
                 >
                   ✕
                 </button>
               </div>
 
               {/* Modal Body */}
-              <div className="p-6">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+              <div className="p-4 md:p-6">
+                <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 mb-4 md:mb-6">
                   Choose how you want to create your automation flow
                 </p>
 
-                <div className="space-y-3">
+                <div className="space-y-2 md:space-y-3">
                   {/* Choose Template Option */}
                   <button
                     onClick={() => handleCreateOption('template')}
-                    className="w-full bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 rounded-lg p-5 text-left transition-all hover:shadow-md group"
+                    className="w-full bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 rounded-lg p-3 md:p-5 text-left transition-all hover:shadow-md group touch-target"
                   >
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-2xl flex-shrink-0">
+                    <div className="flex items-start gap-3 md:gap-4">
+                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xl md:text-2xl flex-shrink-0">
                         🎨
                       </div>
-                      <div className="flex-1">
-                        <h3 className="text-lg font-bold text-black dark:text-white mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm md:text-lg font-bold text-black dark:text-white mb-0.5 md:mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400">
                           Choose Template
                         </h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Start with a pre-built template and customize it to your needs
+                        <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                          Start with a pre-built template
                         </p>
                       </div>
-                      <svg className="w-6 h-6 text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="w-5 h-5 md:w-6 md:h-6 text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
                     </div>
@@ -540,21 +545,21 @@ function FlowsListContent() {
                   {/* Start from Scratch Option */}
                   <button
                     onClick={() => handleCreateOption('scratch')}
-                    className="w-full bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 hover:border-green-500 dark:hover:border-green-500 rounded-lg p-5 text-left transition-all hover:shadow-md group"
+                    className="w-full bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 hover:border-green-500 dark:hover:border-green-500 rounded-lg p-3 md:p-5 text-left transition-all hover:shadow-md group touch-target"
                   >
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-2xl flex-shrink-0">
+                    <div className="flex items-start gap-3 md:gap-4">
+                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-xl md:text-2xl flex-shrink-0">
                         ✏️
                       </div>
-                      <div className="flex-1">
-                        <h3 className="text-lg font-bold text-black dark:text-white mb-1 group-hover:text-green-600 dark:group-hover:text-green-400">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm md:text-lg font-bold text-black dark:text-white mb-0.5 md:mb-1 group-hover:text-green-600 dark:group-hover:text-green-400">
                           Start from Scratch
                         </h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Build your automation flow from the ground up with full control
+                        <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                          Build from the ground up
                         </p>
                       </div>
-                      <svg className="w-6 h-6 text-gray-400 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="w-5 h-5 md:w-6 md:h-6 text-gray-400 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
                     </div>
@@ -563,24 +568,24 @@ function FlowsListContent() {
                   {/* Build with AI Option */}
                   <button
                     onClick={() => handleCreateOption('ai')}
-                    className="w-full bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 hover:border-purple-500 dark:hover:border-purple-500 rounded-lg p-5 text-left transition-all hover:shadow-md group"
+                    className="w-full bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 hover:border-purple-500 dark:hover:border-purple-500 rounded-lg p-3 md:p-5 text-left transition-all hover:shadow-md group touch-target"
                   >
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-2xl flex-shrink-0">
+                    <div className="flex items-start gap-3 md:gap-4">
+                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-xl md:text-2xl flex-shrink-0">
                         🤖
                       </div>
-                      <div className="flex-1">
-                        <h3 className="text-lg font-bold text-black dark:text-white mb-1 group-hover:text-purple-600 dark:group-hover:text-purple-400">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm md:text-lg font-bold text-black dark:text-white mb-0.5 md:mb-1 group-hover:text-purple-600 dark:group-hover:text-purple-400">
                           Build with AI
                         </h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Describe what you want and let AI generate the flow for you
+                        <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                          Let AI generate the flow
                         </p>
-                        <span className="inline-block mt-2 px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs font-semibold rounded-full">
+                        <span className="inline-block mt-1 md:mt-2 px-2 py-0.5 md:py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs font-semibold rounded-full">
                           Coming Soon
                         </span>
                       </div>
-                      <svg className="w-6 h-6 text-gray-400 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg className="w-5 h-5 md:w-6 md:h-6 text-gray-400 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
                     </div>

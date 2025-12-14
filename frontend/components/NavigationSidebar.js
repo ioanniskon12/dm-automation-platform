@@ -372,9 +372,10 @@ export default function NavigationSidebar() {
         </button>
       </div>
 
-      {/* Onboarding Modal */}
-      <OnboardingModal isOpen={showOnboarding} onClose={handleCloseOnboarding} />
     </aside>
+
+      {/* Onboarding Modal - rendered outside sidebar so it covers full screen */}
+      <OnboardingModal isOpen={showOnboarding} onClose={handleCloseOnboarding} />
     </>
   );
 }

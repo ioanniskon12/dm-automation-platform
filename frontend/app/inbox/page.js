@@ -601,15 +601,21 @@ export default function Inbox() {
 
   const unreadCount = messages.filter(m => !m.isRead).length;
   const automatedCount = messages.filter(m => m.automated).length;
+  const [showMobileConversations, setShowMobileConversations] = useState(true);
 
   return (
     <ProtectedRoute>
       <div className="h-screen w-screen flex flex-col bg-white dark:bg-gray-900">
         <NavigationSidebar />
 
-      <div className={`flex-1 flex overflow-hidden transition-all duration-300 ${isCollapsed ? 'ml-20' : 'ml-64'}`}>
+      <div className={`flex-1 flex overflow-hidden transition-all duration-300 ${isCollapsed ? 'md:ml-20' : 'md:ml-64'}`}>
+
         {/* Sidebar - Conversations List */}
-        <div className="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
+        <div className={`${showMobileConversations && !selectedConversation ? 'flex' : 'hidden'} md:flex w-full md:w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex-col pt-14 md:pt-0`}>
+          {/* Mobile Header */}
+          <div className="md:hidden p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">Inbox</h1>
+          </div>
           {/* Filters */}
           <div className="p-3 border-b border-gray-200 dark:border-gray-700">
             <div className="flex gap-2">
@@ -668,6 +674,7 @@ export default function Inbox() {
                   key={msg.id}
                   onClick={() => {
                     setSelectedConversation(msg);
+                    setShowMobileConversations(false);
                     if (!msg.isRead) markAsRead(msg);
                   }}
                   className={`w-full p-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left ${
@@ -728,23 +735,37 @@ export default function Inbox() {
         </div>
 
         {/* Main Content - Conversation */}
-        <div className="flex-1 flex flex-col bg-white dark:bg-gray-900">
+        <div className={`${selectedConversation ? 'flex' : 'hidden md:flex'} flex-1 flex-col bg-white dark:bg-gray-900 pt-14 md:pt-0`}>
           {selectedConversation ? (
             <>
               {/* Conversation Header */}
-              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+              <div className="p-3 md:p-4 border-b border-gray-200 dark:border-gray-700">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-lg font-bold text-gray-900 dark:text-white">{selectedConversation.senderName}</h2>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{selectedConversation.platform} • {selectedConversation.senderUsername}</p>
+                  <div className="flex items-center gap-3">
+                    {/* Mobile Back Button */}
+                    <button
+                      onClick={() => {
+                        setSelectedConversation(null);
+                        setShowMobileConversations(true);
+                      }}
+                      className="md:hidden p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <svg className="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                    <div>
+                      <h2 className="text-base md:text-lg font-bold text-gray-900 dark:text-white">{selectedConversation.senderName}</h2>
+                      <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">{selectedConversation.platform} • {selectedConversation.senderUsername}</p>
+                    </div>
                   </div>
                   <div className="flex gap-2">
                     {selectedConversation.automated ? (
-                      <span className="px-3 py-1.5 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 border border-green-300 dark:border-green-700 text-green-700 dark:text-green-300 text-xs font-semibold rounded-lg">
-                        Automated
+                      <span className="px-2 md:px-3 py-1 md:py-1.5 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 border border-green-300 dark:border-green-700 text-green-700 dark:text-green-300 text-xs font-semibold rounded-lg">
+                        Auto
                       </span>
                     ) : (
-                      <span className="px-3 py-1.5 bg-gradient-to-r from-orange-100 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30 border border-orange-300 dark:border-orange-700 text-orange-700 dark:text-orange-300 text-xs font-semibold rounded-lg">
+                      <span className="px-2 md:px-3 py-1 md:py-1.5 bg-gradient-to-r from-orange-100 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30 border border-orange-300 dark:border-orange-700 text-orange-700 dark:text-orange-300 text-xs font-semibold rounded-lg">
                         Manual
                       </span>
                     )}
@@ -831,21 +852,21 @@ export default function Inbox() {
               </div>
 
               {/* Reply Box */}
-              <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="p-2 md:p-4 border-t border-gray-200 dark:border-gray-700 safe-area-bottom">
                 {selectedFile && (
                   <div className="mb-2 p-2 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-between">
-                    <span className="text-sm text-gray-700 dark:text-gray-300">{selectedFile.name}</span>
+                    <span className="text-xs md:text-sm text-gray-700 dark:text-gray-300 truncate">{selectedFile.name}</span>
                     <button
                       onClick={() => setSelectedFile(null)}
-                      className="text-red-500 hover:text-red-700 text-sm"
+                      className="text-red-500 hover:text-red-700 text-sm ml-2 flex-shrink-0"
                     >
-                      Remove
+                      ✕
                     </button>
                   </div>
                 )}
-                <div className="flex gap-2 relative">
+                <div className="flex gap-1 md:gap-2 relative">
                   {/* File Upload Button */}
-                  <label className="flex items-center justify-center w-10 h-10 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                  <label className="flex items-center justify-center w-9 h-9 md:w-10 md:h-10 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors touch-target flex-shrink-0">
                     <input
                       type="file"
                       accept="image/*,video/*"
@@ -857,8 +878,8 @@ export default function Inbox() {
                     </svg>
                   </label>
 
-                  {/* Emoji Picker Container */}
-                  <div className="relative">
+                  {/* Emoji Picker Container - Hidden on mobile */}
+                  <div className="relative hidden md:block">
                     {/* Emoji Button */}
                     <button
                       onClick={() => setShowEmojiPicker(!showEmojiPicker)}
@@ -904,20 +925,20 @@ export default function Inbox() {
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && (replyText || selectedFile) && sendReply(replyText)}
-                    placeholder="Type your message..."
-                    className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none"
+                    placeholder="Type a message..."
+                    className="flex-1 min-w-0 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white rounded-lg focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none"
                   />
 
                   {/* Send Button */}
                   <button
                     onClick={() => sendReply(replyText)}
                     disabled={!replyText && !selectedFile}
-                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-sm hover:shadow-md flex items-center gap-2"
+                    className="px-3 md:px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-sm hover:shadow-md flex items-center justify-center touch-target flex-shrink-0"
                   >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-5 h-5 md:w-4 md:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                     </svg>
-                    Send
+                    <span className="hidden md:inline ml-2">Send</span>
                   </button>
                 </div>
               </div>

@@ -288,10 +288,10 @@ export default function KnowledgeBase() {
         <NavigationSidebar />
 
       {/* Main Content - with left padding for sidebar */}
-      <main className={`transition-all duration-300 ${isCollapsed ? 'ml-20' : 'ml-64'} max-w-7xl mx-auto px-6 py-12`}>
+      <main className={`transition-all duration-300 ${isCollapsed ? 'md:ml-20' : 'md:ml-64'} px-4 md:px-6 py-6 md:py-12`}>
         {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-black dark:text-white mb-2">Knowledge Base</h1>
+        <div className="mb-6 md:mb-8">
+          <h1 className="text-xl md:text-2xl font-bold text-black dark:text-white mb-2">Knowledge Base</h1>
           <p className="text-sm text-gray-600 dark:text-gray-400 max-w-3xl">
             Train your AI assistant with your FAQs, documentation, and knowledge. The more context you provide, the better it can respond to questions.
           </p>
@@ -304,28 +304,29 @@ export default function KnowledgeBase() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
           {/* Left Column - Input Methods */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 order-last lg:order-first">
             {/* Tabs */}
             <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
-              <div className="flex border-b border-gray-200 dark:border-gray-700">
+              <div className="flex overflow-x-auto border-b border-gray-200 dark:border-gray-700 scrollbar-hide">
                 {tabs.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex-1 px-4 py-3 font-semibold text-xs transition-all ${
+                    className={`flex-1 min-w-[70px] px-2 md:px-4 py-3 font-semibold text-xs transition-all whitespace-nowrap ${
                       activeTab === tab.id
                         ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
                         : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
                     }`}
                   >
-                    {tab.icon} {tab.name}
+                    <span className="md:hidden">{tab.icon}</span>
+                    <span className="hidden md:inline">{tab.icon} {tab.name}</span>
                   </button>
                 ))}
               </div>
 
-              <div className="p-6">
+              <div className="p-4 md:p-6">
                 {/* Upload Files Tab */}
                 {activeTab === 'upload' && (
                   <form onSubmit={handleFileUpload}>
@@ -532,8 +533,8 @@ export default function KnowledgeBase() {
           </div>
 
           {/* Right Column - Documents List */}
-          <div>
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6 rounded-xl">
+          <div className="order-first lg:order-last">
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 md:p-6 rounded-xl">
               <h3 className="text-base font-bold text-black dark:text-white mb-4">Your Documents</h3>
 
               {documents.length === 0 ? (
@@ -613,14 +614,18 @@ export default function KnowledgeBase() {
 
         {/* Delete Confirmation Modal */}
         {deleteModalOpen && docToDelete && (
-          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={() => setDeleteModalOpen(false)}>
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+          <div className="fixed inset-0 bg-black/60 flex items-end md:items-center justify-center z-50" onClick={() => setDeleteModalOpen(false)}>
+            <div className="bg-white dark:bg-gray-800 rounded-t-2xl md:rounded-xl shadow-2xl max-w-md w-full md:mx-4 safe-area-bottom" onClick={(e) => e.stopPropagation()}>
+              {/* Mobile drag handle */}
+              <div className="md:hidden flex justify-center pt-3">
+                <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+              </div>
               {/* Modal Header */}
-              <div className="bg-gradient-to-r from-red-600 to-red-700 px-6 py-4 flex items-center justify-between rounded-t-xl">
-                <h2 className="text-xl font-bold text-white">Delete Document</h2>
+              <div className="bg-gradient-to-r from-red-600 to-red-700 px-4 md:px-6 py-4 flex items-center justify-between md:rounded-t-xl">
+                <h2 className="text-lg md:text-xl font-bold text-white">Delete Document</h2>
                 <button
                   onClick={() => setDeleteModalOpen(false)}
-                  className="text-white hover:text-gray-200 text-2xl font-light"
+                  className="text-white hover:text-gray-200 text-2xl font-light touch-target flex items-center justify-center"
                 >
                   ✕
                 </button>
@@ -669,14 +674,18 @@ export default function KnowledgeBase() {
 
         {/* View/Edit Document Modal */}
         {viewModalOpen && selectedDoc && (
-          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4" onClick={() => setViewModalOpen(false)}>
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+          <div className="fixed inset-0 bg-black/60 flex items-end md:items-center justify-center z-50" onClick={() => setViewModalOpen(false)}>
+            <div className="bg-white dark:bg-gray-800 rounded-t-2xl md:rounded-xl shadow-2xl max-w-3xl w-full md:mx-4 max-h-[90vh] overflow-hidden safe-area-bottom" onClick={(e) => e.stopPropagation()}>
+              {/* Mobile drag handle */}
+              <div className="md:hidden flex justify-center pt-3 bg-gradient-to-r from-blue-600 to-purple-600">
+                <div className="w-10 h-1 bg-white/30 rounded-full"></div>
+              </div>
               {/* Modal Header */}
-              <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 flex items-center justify-between">
-                <h2 className="text-xl font-bold text-white">
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-4 md:px-6 py-4 flex items-center justify-between">
+                <h2 className="text-lg md:text-xl font-bold text-white">
                   {isEditing ? 'Edit Document' : 'View Document'}
                 </h2>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 md:gap-3">
                   {!isEditing && selectedDoc.source !== 'upload' && (
                     <button
                       onClick={handleEdit}
@@ -685,7 +694,7 @@ export default function KnowledgeBase() {
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                       </svg>
-                      Edit
+                      <span className="hidden md:inline">Edit</span>
                     </button>
                   )}
                   <button
@@ -693,7 +702,7 @@ export default function KnowledgeBase() {
                       setViewModalOpen(false);
                       setIsEditing(false);
                     }}
-                    className="text-white hover:text-gray-200 text-2xl font-light"
+                    className="text-white hover:text-gray-200 text-2xl font-light touch-target flex items-center justify-center"
                   >
                     ✕
                   </button>
@@ -701,7 +710,7 @@ export default function KnowledgeBase() {
               </div>
 
               {/* Modal Body */}
-              <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
+              <div className="p-4 md:p-6 overflow-y-auto max-h-[calc(85vh-180px)]">
                 {/* Title */}
                 <div className="mb-4">
                   <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Title</label>

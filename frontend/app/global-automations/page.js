@@ -249,8 +249,12 @@ function GlobalAutomationsContent() {
     };
 
     return (
-      <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={() => setShowChannelSelectorModal(false)}>
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+      <div className="fixed inset-0 bg-black/60 flex items-end md:items-center justify-center z-50" onClick={() => setShowChannelSelectorModal(false)}>
+        <div className="bg-white dark:bg-gray-800 rounded-t-2xl md:rounded-xl shadow-2xl max-w-md w-full md:mx-4 overflow-hidden safe-area-bottom" onClick={(e) => e.stopPropagation()}>
+          {/* Mobile drag handle */}
+          <div className="md:hidden flex justify-center pt-3">
+            <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+          </div>
           {/* Modal Header */}
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 flex items-center justify-between">
             <div>
@@ -344,7 +348,7 @@ function GlobalAutomationsContent() {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-900">
         <NavigationSidebar />
-        <main className={`px-6 py-8 min-h-screen max-w-7xl mx-auto transition-all duration-300 ${isCollapsed ? 'ml-20' : 'ml-64'}`}>
+        <main className={`px-4 md:px-6 py-6 md:py-8 min-h-screen max-w-7xl mx-auto transition-all duration-300 ${isCollapsed ? 'md:ml-20' : 'md:ml-64'}`}>
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <div className="text-5xl mb-4">⚠️</div>
@@ -370,7 +374,7 @@ function GlobalAutomationsContent() {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-900">
         <NavigationSidebar />
-        <main className={`px-6 py-8 min-h-screen max-w-7xl mx-auto transition-all duration-300 ${isCollapsed ? 'ml-20' : 'ml-64'}`}>
+        <main className={`px-4 md:px-6 py-6 md:py-8 min-h-screen max-w-7xl mx-auto transition-all duration-300 ${isCollapsed ? 'md:ml-20' : 'md:ml-64'}`}>
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <div className="text-5xl mb-4">📱</div>
@@ -398,12 +402,12 @@ function GlobalAutomationsContent() {
     <div className="min-h-screen bg-white dark:bg-gray-900">
       <NavigationSidebar />
 
-      <main className={`px-6 py-8 min-h-screen max-w-5xl mx-auto transition-all duration-300 ${isCollapsed ? 'ml-20' : 'ml-64'}`}>
+      <main className={`px-4 md:px-6 py-6 md:py-8 min-h-screen transition-all duration-300 ${isCollapsed ? 'md:ml-20' : 'md:ml-64'}`}>
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-3xl font-bold text-black dark:text-white">Global Automations</h1>
-            <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-semibold rounded-full">
+        <div className="mb-6 md:mb-8">
+          <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 mb-2">
+            <h1 className="text-2xl md:text-3xl font-bold text-black dark:text-white">Global Automations</h1>
+            <span className="self-start px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-semibold rounded-full">
               {currentBrand.name} · {currentChannel.type}
             </span>
           </div>
@@ -413,56 +417,69 @@ function GlobalAutomationsContent() {
         </div>
 
         {/* Automations List */}
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {currentAutomations.map((automation) => (
             <div
               key={automation.id}
-              className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 hover:border-gray-300 dark:hover:border-gray-600 transition-all"
+              className={`bg-white dark:bg-gray-800 border rounded-xl p-4 md:p-5 hover:border-gray-300 dark:hover:border-gray-600 transition-all flex flex-col ${
+                automation.status === 'active'
+                  ? 'border-green-300 dark:border-green-700'
+                  : 'border-gray-200 dark:border-gray-700'
+              }`}
             >
-              <div className="flex items-start justify-between gap-4">
-                {/* Left: Name and Description */}
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    {/* Status Indicator */}
-                    <div className={`w-2 h-2 rounded-full ${
+              {/* Top: Name, Description and Toggle */}
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-base md:text-lg font-bold text-black dark:text-white">
+                    {automation.name}
+                  </h3>
+                  {/* Status Toggle (non-interactive) */}
+                  <div
+                    className={`relative w-11 h-6 rounded-full transition-colors ${
                       automation.status === 'active'
                         ? 'bg-green-500'
-                        : 'bg-yellow-500'
-                    }`} />
-                    <h3 className="text-lg font-bold text-black dark:text-white">
-                      {automation.name}
-                    </h3>
-                  </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 ml-5">
-                    {automation.description}
-                  </p>
-                  {automation.status === 'inactive' && (
-                    <span className="inline-block ml-5 mt-2 text-xs text-yellow-600 dark:text-yellow-400">
-                      Not active
-                    </span>
-                  )}
-                </div>
-
-                {/* Right: Action Buttons */}
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {automation.actions.map((action, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => handleAction(automation, action.type)}
-                      className={`px-4 py-2 font-medium text-sm rounded-lg transition-all ${
-                        action.type === 'ai'
-                          ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white'
-                          : action.type === 'create' || action.type === 'setup'
-                          ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white'
-                          : action.type === 'existing'
-                          ? 'bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-500 text-gray-700 dark:text-gray-300'
-                          : 'bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 text-gray-700 dark:text-gray-300'
+                        : 'bg-gray-300 dark:bg-gray-600'
+                    }`}
+                    title={automation.status === 'active' ? 'Active' : 'Not configured'}
+                  >
+                    <div
+                      className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                        automation.status === 'active'
+                          ? 'translate-x-6'
+                          : 'translate-x-1'
                       }`}
-                    >
-                      {action.label}
-                    </button>
-                  ))}
+                    />
+                  </div>
                 </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {automation.description}
+                </p>
+                {automation.status === 'inactive' && (
+                  <span className="inline-block mt-2 text-xs text-yellow-600 dark:text-yellow-400">
+                    ⚠️ Not configured yet
+                  </span>
+                )}
+              </div>
+
+              {/* Bottom: Action Buttons */}
+              <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                {automation.actions.map((action, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleAction(automation, action.type)}
+                    className={`w-full px-4 py-2 font-medium text-sm rounded-lg transition-all touch-target ${
+                      action.type === 'ai'
+                        ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white'
+                        : action.type === 'create' || action.type === 'setup'
+                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white'
+                        : action.type === 'existing'
+                        ? 'bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 hover:border-blue-500 dark:hover:border-blue-500 text-gray-700 dark:text-gray-300'
+                        : 'bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 text-gray-700 dark:text-gray-300'
+                    }`}
+                  >
+                    {action.label}
+                  </button>
+                ))}
               </div>
             </div>
           ))}
@@ -477,24 +494,28 @@ function GlobalAutomationsContent() {
 
         {/* Select Existing Flow Modal */}
         {showExistingFlowsModal && (
-          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={() => setShowExistingFlowsModal(false)}>
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full mx-4 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+          <div className="fixed inset-0 bg-black/60 flex items-end md:items-center justify-center z-50" onClick={() => setShowExistingFlowsModal(false)}>
+            <div className="bg-white dark:bg-gray-800 rounded-t-2xl md:rounded-xl shadow-2xl max-w-2xl w-full md:mx-4 max-h-[85vh] overflow-hidden safe-area-bottom" onClick={(e) => e.stopPropagation()}>
+              {/* Mobile drag handle */}
+              <div className="md:hidden flex justify-center pt-3">
+                <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+              </div>
               {/* Modal Header */}
-              <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 flex items-center justify-between">
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-4 md:px-6 py-4 flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-bold text-white">Select Existing Flow</h2>
-                  <p className="text-sm text-blue-100 mt-1">Choose a flow to use for "{selectedAutomation?.name}"</p>
+                  <h2 className="text-lg md:text-xl font-bold text-white">Select Existing Flow</h2>
+                  <p className="text-sm text-blue-100 mt-1">Choose a flow for "{selectedAutomation?.name}"</p>
                 </div>
                 <button
                   onClick={() => setShowExistingFlowsModal(false)}
-                  className="text-white hover:text-gray-200 text-2xl font-light"
+                  className="text-white hover:text-gray-200 text-2xl font-light touch-target flex items-center justify-center"
                 >
                   ✕
                 </button>
               </div>
 
               {/* Modal Body */}
-              <div className="p-6">
+              <div className="p-4 md:p-6 overflow-y-auto">
                 <div className="space-y-3">
                   {existingFlows.map((flow) => (
                     <button

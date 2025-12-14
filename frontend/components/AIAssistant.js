@@ -100,7 +100,7 @@ export default function AIAssistant({ nodes, edges, onUpdateFlow }) {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full shadow-lg flex items-center justify-center text-white text-3xl hover:shadow-xl transition-all hover:scale-110 z-50"
+          className="fixed bottom-6 right-4 md:right-6 w-14 h-14 md:w-16 md:h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full shadow-lg flex items-center justify-center text-white text-2xl md:text-3xl hover:shadow-xl transition-all hover:scale-110 z-[55]"
           title="AI Assistant"
         >
           🤖
@@ -109,7 +109,7 @@ export default function AIAssistant({ nodes, edges, onUpdateFlow }) {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 w-96 h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col z-50 border-2 border-gray-200">
+        <div className="fixed inset-4 md:inset-auto md:bottom-6 md:right-6 md:w-96 md:h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col z-[100] border-2 border-gray-200">
           {/* Header */}
           <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-blue-600 to-purple-600 rounded-t-2xl">
             <div className="flex items-center gap-3">
