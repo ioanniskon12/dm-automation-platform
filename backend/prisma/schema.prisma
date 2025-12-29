@@ -29,6 +29,7 @@ model Workspace {
   whatsappTemplates WhatsAppTemplate[]
   inboxThreads InboxThread[]
   members     WorkspaceMember[]
+  campaigns   Campaign[]
 
   @@map("workspaces")
 }
@@ -96,6 +97,7 @@ model Channel {
   triggers  Trigger[]
   events    Event[]
   threads   InboxThread[]
+  campaigns Campaign[]
 
   @@unique([workspaceId, type, externalId])
   @@map("channels")
@@ -126,6 +128,7 @@ model UserContact {
   channel   Channel       @relation(fields: [channelId], references: [id], onDelete: Cascade)
   events    Event[]
   threads   InboxThread[]
+  campaignSubscriptions CampaignSubscriber[]
 
   @@unique([channelId, externalId])
   @@index([workspaceId, channelId])
@@ -344,4 +347,71 @@ model Tag {
 
   @@unique([workspaceId, name])
   @@map("tags")
+}
+
+// ============================================
+// CAMPAIGNS
+// ============================================
+model Campaign {
+  id            String    @id @default(uuid())
+  workspaceId   String
+  channelId     String?
+  name          String
+  description   String?
+  type          String    // 'evergreen' | 'broadcast'
+  status        String    @default("draft") // draft, active, paused, completed, scheduled
+  scheduledAt   DateTime?
+  editorType    String    @default("simple") // 'simple' | 'flow'
+  flowId        String?
+  settings      String    @default("{}")
+  totalSent     Int       @default(0)
+  totalDelivered Int      @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  workspace     Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  channel       Channel?  @relation(fields: [channelId], references: [id], onDelete: SetNull)
+  messages      CampaignMessage[]
+  subscribers   CampaignSubscriber[]
+
+  @@index([workspaceId, status])
+  @@index([workspaceId, type])
+  @@map("campaigns")
+}
+
+model CampaignMessage {
+  id            String    @id @default(uuid())
+  campaignId    String
+  stepIndex     Int       @default(0)
+  delayMinutes  Int       @default(0)
+  content       String
+  mediaUrl      String?
+  mediaType     String?
+  buttons       String    @default("[]")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  campaign      Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId, stepIndex])
+  @@map("campaign_messages")
+}
+
+model CampaignSubscriber {
+  id            String    @id @default(uuid())
+  campaignId    String
+  contactId     String
+  status        String    @default("active") // active, paused, completed, unsubscribed
+  currentStep   Int       @default(0)
+  nextSendAt    DateTime?
+  subscribedAt  DateTime  @default(now())
+  completedAt   DateTime?
+
+  campaign      Campaign    @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  contact       UserContact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, contactId])
+  @@index([campaignId, status])
+  @@index([nextSendAt])
+  @@map("campaign_subscribers")
 }

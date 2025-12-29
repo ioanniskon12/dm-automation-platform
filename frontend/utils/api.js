@@ -5,7 +5,7 @@
  * It reads from localStorage where the BrandChannelContext stores the active context.
  */
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3003';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
 
 /**
  * Get current brand/channel context from localStorage
