@@ -1,5 +1,10 @@
 import { FastifyPluginAsync } from 'fastify';
 import prisma from '../../lib/prisma.js';
+import CHANNEL_CAMPAIGN_RULES, {
+  getChannelRules,
+  isCampaignTypeSupported,
+  validateMessageForChannel,
+} from '../../config/campaign-rules.js';
 
 const campaignsModule: FastifyPluginAsync = async (fastify) => {
   // ============================================
@@ -40,6 +45,51 @@ const campaignsModule: FastifyPluginAsync = async (fastify) => {
       types: Object.values(CAMPAIGN_TYPES),
       statuses: CAMPAIGN_STATUSES
     };
+  });
+
+  // ============================================
+  // CHANNEL RULES
+  // ============================================
+
+  // Get all channel rules
+  fastify.get('/channel-rules', async () => {
+    return {
+      success: true,
+      rules: CHANNEL_CAMPAIGN_RULES,
+    };
+  });
+
+  // Get rules for a specific channel type
+  fastify.get('/channel-rules/:channelType', async (request, reply) => {
+    const { channelType } = request.params as { channelType: string };
+    const rules = getChannelRules(channelType);
+
+    if (!rules) {
+      return reply.status(404).send({
+        success: false,
+        error: `No rules found for channel type: ${channelType}`,
+      });
+    }
+
+    return { success: true, rules };
+  });
+
+  // Validate a message against channel constraints
+  fastify.post('/validate-message', async (request, reply) => {
+    const { channelType, message } = request.body as {
+      channelType: string;
+      message: { content: string; mediaUrl?: string; mediaType?: string; buttons?: any[] };
+    };
+
+    if (!channelType || !message) {
+      return reply.status(400).send({
+        success: false,
+        error: 'channelType and message are required',
+      });
+    }
+
+    const validation = validateMessageForChannel(channelType, message);
+    return { success: true, validation };
   });
 
   // ============================================
@@ -114,12 +164,18 @@ const campaignsModule: FastifyPluginAsync = async (fastify) => {
         return reply.status(404).send({ success: false, error: 'Campaign not found' });
       }
 
+      // Get channel rules if channel is set
+      const channelRules = campaign.channel
+        ? getChannelRules(campaign.channel.type)
+        : null;
+
       return {
         success: true,
         campaign: {
           ...campaign,
           typeInfo: CAMPAIGN_TYPES[campaign.type as keyof typeof CAMPAIGN_TYPES],
           statusInfo: CAMPAIGN_STATUSES[campaign.status as keyof typeof CAMPAIGN_STATUSES],
+          channelRules: channelRules,
         },
       };
     } catch (error: any) {
@@ -141,7 +197,7 @@ const campaignsModule: FastifyPluginAsync = async (fastify) => {
       settings,
     } = request.body as {
       workspaceId: string;
-      channelId?: string;
+      channelId: string;
       name: string;
       description?: string;
       type: 'evergreen' | 'broadcast';
@@ -154,6 +210,13 @@ const campaignsModule: FastifyPluginAsync = async (fastify) => {
       return reply.status(400).send({
         success: false,
         error: 'workspaceId, name, and type are required',
+      });
+    }
+
+    if (!channelId) {
+      return reply.status(400).send({
+        success: false,
+        error: 'channelId is required. Please select a channel for this campaign.',
       });
     }
 
@@ -175,10 +238,31 @@ const campaignsModule: FastifyPluginAsync = async (fastify) => {
         },
       });
 
+      // Get the channel to validate against its rules
+      const channel = await prisma.channel.findUnique({
+        where: { id: channelId },
+      });
+
+      if (!channel) {
+        return reply.status(404).send({
+          success: false,
+          error: 'Channel not found',
+        });
+      }
+
+      // Validate campaign type against channel rules
+      const channelRules = getChannelRules(channel.type);
+      if (channelRules && !isCampaignTypeSupported(channel.type, type)) {
+        return reply.status(400).send({
+          success: false,
+          error: `${channelRules.name} does not support ${type} campaigns. Supported types: ${channelRules.supportedCampaignTypes.join(', ')}`,
+        });
+      }
+
       const campaign = await prisma.campaign.create({
         data: {
           workspaceId,
-          channelId: channelId || null,
+          channelId,
           name,
           description: description || null,
           type,
@@ -197,6 +281,7 @@ const campaignsModule: FastifyPluginAsync = async (fastify) => {
           ...campaign,
           typeInfo: CAMPAIGN_TYPES[campaign.type as keyof typeof CAMPAIGN_TYPES],
           statusInfo: CAMPAIGN_STATUSES[campaign.status as keyof typeof CAMPAIGN_STATUSES],
+          channelRules: channelRules,
         },
       };
     } catch (error: any) {
@@ -542,6 +627,34 @@ const campaignsModule: FastifyPluginAsync = async (fastify) => {
     }
 
     try {
+      // Get campaign with channel to validate message
+      const campaign = await prisma.campaign.findUnique({
+        where: { id },
+        include: { channel: true },
+      });
+
+      if (!campaign) {
+        return reply.status(404).send({ success: false, error: 'Campaign not found' });
+      }
+
+      // Validate message against channel constraints
+      if (campaign.channel) {
+        const validation = validateMessageForChannel(campaign.channel.type, {
+          content,
+          mediaUrl,
+          mediaType,
+          buttons,
+        });
+
+        if (!validation.valid) {
+          return reply.status(400).send({
+            success: false,
+            error: 'Message validation failed',
+            validationErrors: validation.errors,
+          });
+        }
+      }
+
       // Get the next step index
       const lastMessage = await prisma.campaignMessage.findFirst({
         where: { campaignId: id },
