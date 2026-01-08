@@ -1,5 +1,7 @@
-// Channels Module - Mock Implementation for Demo
-// In-memory storage for connected channels
+// Channels Module
+import prisma from '../../lib/prisma.js';
+
+// In-memory storage for mock connected channels (fallback)
 const connectedChannels: Record<string, any> = {};
 
 // Mock account data for each platform
@@ -11,17 +13,76 @@ const mockAccounts = {
 };
 
 export default async function (fastify: any) {
-  // Get all connected channels
-  fastify.get('/', async () => {
-    return {
-      success: true,
-      channels: connectedChannels,
-    };
+  // Get all connected channels - from database first, then fallback to mock
+  fastify.get('/', async (request: any) => {
+    const { workspaceId } = request.query;
+
+    try {
+      // Try to get channels from database
+      const where: any = {};
+      if (workspaceId) {
+        where.workspaceId = workspaceId;
+      }
+
+      const dbChannels = await prisma.channel.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+      });
+
+      if (dbChannels.length > 0) {
+        // Format channels with parsed meta and name field
+        const formattedChannels = dbChannels.map(channel => {
+          let meta = {};
+          try {
+            meta = JSON.parse(channel.meta || '{}');
+          } catch (e) {
+            // Ignore JSON parse errors
+          }
+          return {
+            ...channel,
+            meta,
+            name: (meta as any).username || (meta as any).businessName || (meta as any).pageName || channel.type,
+          };
+        });
+        return {
+          success: true,
+          channels: formattedChannels,
+        };
+      }
+
+      // Fallback to in-memory mock channels (converted to array format)
+      const mockChannelsList = Object.entries(connectedChannels).map(([type, data]) => ({
+        id: type,
+        type,
+        name: data.businessName || data.username || data.pageName || type,
+        status: 'connected',
+        ...data,
+      }));
+
+      return {
+        success: true,
+        channels: mockChannelsList,
+      };
+    } catch (error: any) {
+      fastify.log.error('Error fetching channels:', error);
+      // Fallback to mock on error
+      const mockChannelsList = Object.entries(connectedChannels).map(([type, data]) => ({
+        id: type,
+        type,
+        name: data.businessName || data.username || data.pageName || type,
+        status: 'connected',
+        ...data,
+      }));
+      return {
+        success: true,
+        channels: mockChannelsList,
+      };
+    }
   });
 
   // Connect a channel (mock OAuth flow)
   fastify.post('/connect', async (request: any) => {
-    const { platform } = request.body;
+    const { platform, workspaceId } = request.body;
 
     if (!platform || !mockAccounts[platform as keyof typeof mockAccounts]) {
       return {
@@ -30,45 +91,111 @@ export default async function (fastify: any) {
       };
     }
 
+    const wsId = workspaceId || 'brand-1';
+
     // Simulate OAuth flow with a delay
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // Store connected channel
-    connectedChannels[platform] = {
-      connected: true,
-      connectedAt: new Date().toISOString(),
-      ...mockAccounts[platform as keyof typeof mockAccounts],
-    };
+    const mockData = mockAccounts[platform as keyof typeof mockAccounts];
+    const externalId = (mockData as any).username || (mockData as any).phoneNumber || (mockData as any).pageId || `mock_${platform}`;
 
-    // Generate mock inbox data for this platform
     try {
-      await fetch('http://localhost:3001/api/inbox/generate-mock-data', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ platform }),
+      // Check if channel already exists
+      const existingChannel = await prisma.channel.findFirst({
+        where: {
+          workspaceId: wsId,
+          type: platform,
+        },
       });
-      fastify.log.info(`Generated mock inbox data for ${platform}`);
-    } catch (error) {
-      fastify.log.error(`Failed to generate mock inbox data: ${error}`);
+
+      let channel;
+      if (existingChannel) {
+        // Update existing channel to connected
+        channel = await prisma.channel.update({
+          where: { id: existingChannel.id },
+          data: {
+            status: 'connected',
+            meta: JSON.stringify(mockData),
+            updatedAt: new Date(),
+          },
+        });
+      } else {
+        // Create new channel in database
+        channel = await prisma.channel.create({
+          data: {
+            workspaceId: wsId,
+            type: platform,
+            externalId: externalId,
+            status: 'connected',
+            meta: JSON.stringify(mockData),
+          },
+        });
+      }
+
+      // Also store in memory for backwards compatibility
+      connectedChannels[platform] = {
+        connected: true,
+        connectedAt: new Date().toISOString(),
+        ...mockData,
+      };
+
+      fastify.log.info(`Channel connected and saved to database: ${platform}`);
+
+      return {
+        success: true,
+        platform,
+        channel: {
+          id: channel.id,
+          type: channel.type,
+          status: channel.status,
+          name: (mockData as any).username || (mockData as any).businessName || (mockData as any).pageName || platform,
+          ...mockData,
+        },
+        message: `Successfully connected ${platform}`,
+      };
+    } catch (error: any) {
+      fastify.log.error(`Error saving channel to database: ${error}`);
+
+      // Fallback to in-memory storage
+      connectedChannels[platform] = {
+        connected: true,
+        connectedAt: new Date().toISOString(),
+        ...mockData,
+      };
+
+      return {
+        success: true,
+        platform,
+        channel: connectedChannels[platform],
+        message: `Successfully connected ${platform} (in-memory only)`,
+      };
     }
-
-    fastify.log.info(`Mock channel connected: ${platform}`);
-
-    return {
-      success: true,
-      platform,
-      channel: connectedChannels[platform],
-      message: `Successfully connected ${platform}`,
-    };
   });
 
   // Disconnect a channel
   fastify.post('/disconnect', async (request: any) => {
-    const { platform } = request.body;
+    const { platform, workspaceId } = request.body;
+    const wsId = workspaceId || 'brand-1';
 
+    // Remove from in-memory storage
     if (connectedChannels[platform]) {
       delete connectedChannels[platform];
-      fastify.log.info(`Channel disconnected: ${platform}`);
+    }
+
+    // Update database status
+    try {
+      await prisma.channel.updateMany({
+        where: {
+          workspaceId: wsId,
+          type: platform,
+        },
+        data: {
+          status: 'disconnected',
+        },
+      });
+      fastify.log.info(`Channel disconnected in database: ${platform}`);
+    } catch (error: any) {
+      fastify.log.error(`Error disconnecting channel in database: ${error}`);
     }
 
     return {

@@ -146,7 +146,16 @@ function NewCampaignContent() {
         const rulesData = await rulesRes.json();
 
         if (channelsData.success) {
-          setChannels(channelsData.channels || []);
+          // Handle both array and object formats from the API
+          const channelsList = Array.isArray(channelsData.channels)
+            ? channelsData.channels
+            : Object.entries(channelsData.channels || {}).map(([type, data]) => ({
+                id: type,
+                type,
+                name: data.businessName || data.username || data.pageName || type,
+                ...data,
+              }));
+          setChannels(channelsList);
         }
         if (rulesData.success) {
           setChannelRules(rulesData.rules || {});
