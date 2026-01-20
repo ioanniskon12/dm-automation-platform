@@ -30,6 +30,7 @@ model Workspace {
   inboxThreads InboxThread[]
   members     WorkspaceMember[]
   campaigns   Campaign[]
+  broadcasts  Broadcast[]
 
   @@map("workspaces")
 }
@@ -107,22 +108,24 @@ model Channel {
 // USERS & CONTACTS
 // ============================================
 model UserContact {
-  id          String   @id @default(uuid())
-  workspaceId String
-  channelId   String
-  externalId  String   // IG user ID, phone, etc.
-  name        String?
-  handle      String?
-  phone       String?
-  email       String?
-  locale      String?
-  fields      String   @default("{}")
-  tags        String   @default("[]")
-  isFollower  Boolean  @default(false)
-  lastInAt    DateTime?
-  lastOutAt   DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String   @id @default(uuid())
+  workspaceId     String
+  channelId       String
+  externalId      String   // IG user ID, phone, etc.
+  name            String?
+  handle          String?
+  phone           String?
+  email           String?
+  locale          String?
+  fields          String   @default("{}")
+  tags            String   @default("[]")
+  isFollower      Boolean  @default(false)
+  broadcastOptOut Boolean  @default(false) // User opted out of broadcasts via "Stop"
+  optOutAt        DateTime? // When they opted out
+  lastInAt        DateTime?
+  lastOutAt       DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   workspace Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   channel   Channel       @relation(fields: [channelId], references: [id], onDelete: Cascade)
@@ -414,4 +417,81 @@ model CampaignSubscriber {
   @@index([campaignId, status])
   @@index([nextSendAt])
   @@map("campaign_subscribers")
+}
+
+// ============================================
+// BROADCASTS (One-time mass messaging)
+// ============================================
+model Broadcast {
+  id                String    @id @default(uuid())
+  workspaceId       String
+  name              String
+  channel           String    // messenger, instagram, whatsapp, telegram, email, sms
+  status            String    @default("draft") // draft, scheduled, sending, sent, failed, cancelled
+  contentJson       String    @default("[]") // Array of content blocks
+  audienceFilterJson String   @default("{}") // Filter conditions
+  scheduleAt        DateTime?
+  timezone          String    @default("UTC")
+  createdBy         String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Stats (denormalized for quick access)
+  audienceEstimate  Int       @default(0)
+  totalTargeted     Int       @default(0)
+  totalSent         Int       @default(0)
+  totalDelivered    Int       @default(0)
+  totalRead         Int       @default(0)
+  totalClicked      Int       @default(0)
+  totalFailed       Int       @default(0)
+
+  workspace         Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  jobs              BroadcastJob[]
+  recipientLogs     BroadcastRecipientLog[]
+
+  @@index([workspaceId, status])
+  @@index([workspaceId, channel])
+  @@index([scheduleAt])
+  @@map("broadcasts")
+}
+
+model BroadcastJob {
+  id            String    @id @default(uuid())
+  broadcastId   String
+  status        String    @default("pending") // pending, processing, completed, failed
+  startedAt     DateTime?
+  finishedAt    DateTime?
+  totalTargeted Int       @default(0)
+  totalAttempted Int      @default(0)
+  totalSent     Int       @default(0)
+  totalDelivered Int      @default(0)
+  totalFailed   Int       @default(0)
+  errorSummary  String?
+  createdAt     DateTime  @default(now())
+
+  broadcast     Broadcast @relation(fields: [broadcastId], references: [id], onDelete: Cascade)
+
+  @@index([broadcastId, status])
+  @@map("broadcast_jobs")
+}
+
+model BroadcastRecipientLog {
+  id                  String    @id @default(uuid())
+  broadcastId         String
+  userId              String    // UserContact ID
+  channelIdentifier   String    // ig_user_id, telegram_chat_id, email, phone
+  status              String    @default("queued") // queued, sent, delivered, read, clicked, failed, skipped
+  skipReason          String?   // not_eligible, unsubscribed, rate_limit, invalid_identifier, etc.
+  errorMessage        String?
+  sentAt              DateTime?
+  deliveredAt         DateTime?
+  readAt              DateTime?
+  clickedAt           DateTime?
+  createdAt           DateTime  @default(now())
+
+  broadcast           Broadcast @relation(fields: [broadcastId], references: [id], onDelete: Cascade)
+
+  @@index([broadcastId, status])
+  @@index([userId])
+  @@map("broadcast_recipient_logs")
 }

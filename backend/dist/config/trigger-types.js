@@ -783,12 +783,111 @@ export const TELEGRAM_TRIGGERS = [
     }
 ];
 // ============================================
+// WHATSAPP TRIGGERS
+// ============================================
+export const WHATSAPP_TRIGGERS = [
+    {
+        id: 'whatsapp_message',
+        name: 'WhatsApp Message',
+        description: 'User sends a message',
+        channel: 'whatsapp',
+        icon: '💬',
+        category: 'messaging',
+        configSchema: [
+            {
+                field: 'triggerType',
+                label: 'Trigger On',
+                type: 'select',
+                options: [
+                    { value: 'any', label: 'Any Message' },
+                    { value: 'keywords', label: 'Specific Keywords' }
+                ],
+                defaultValue: 'any',
+                required: true
+            },
+            {
+                field: 'keywords',
+                label: 'Keywords',
+                type: 'keywords',
+                placeholder: 'Enter keywords (e.g., "help", "support", "info")',
+                required: false,
+                helpText: 'Only trigger when message contains these keywords (case-insensitive)'
+            }
+        ],
+        webhookEvents: ['message'],
+        examples: [
+            'Auto-respond to WhatsApp messages',
+            'Trigger flows based on keywords',
+            'Provide customer support via WhatsApp'
+        ],
+        matches: (event, config) => {
+            const messageText = event.message?.text?.toLowerCase() || '';
+            switch (config.triggerType) {
+                case 'any':
+                    return true;
+                case 'keywords':
+                    if (config.keywords && config.keywords.length > 0) {
+                        return config.keywords.some((keyword) => messageText.includes(keyword.toLowerCase()));
+                    }
+                    return false;
+                default:
+                    return true;
+            }
+        }
+    },
+    {
+        id: 'whatsapp_ref_url',
+        name: 'WhatsApp Ref URL',
+        description: 'User clicks a referral link',
+        channel: 'whatsapp',
+        icon: '🔗',
+        category: 'messaging',
+        configSchema: [
+            {
+                field: 'refParameter',
+                label: 'Ref Parameter',
+                type: 'text',
+                placeholder: 'e.g., "promo_code" or "campaign_id"',
+                required: true,
+                helpText: 'The ref parameter in your WhatsApp link'
+            },
+            {
+                field: 'linkUrl',
+                label: 'Full Link (for reference)',
+                type: 'text',
+                placeholder: 'https://wa.me/1234567890?text=promo_code',
+                required: false,
+                helpText: 'Generated link for your reference'
+            }
+        ],
+        webhookEvents: ['message'],
+        requiresSetup: [
+            'Create WhatsApp link with text parameter',
+            'Share link in campaigns, ads, or website'
+        ],
+        examples: [
+            'Track different traffic sources',
+            'Segment users by campaign origin',
+            'Trigger different flows for different campaigns'
+        ],
+        matches: (event, config) => {
+            // Check if the first message contains the ref parameter
+            const messageText = event.message?.text || '';
+            if (messageText.includes(config.refParameter)) {
+                return true;
+            }
+            return false;
+        }
+    }
+];
+// ============================================
 // HELPER FUNCTIONS
 // ============================================
 export const ALL_TRIGGERS = [
     ...MESSENGER_TRIGGERS,
     ...INSTAGRAM_TRIGGERS,
-    ...TELEGRAM_TRIGGERS
+    ...TELEGRAM_TRIGGERS,
+    ...WHATSAPP_TRIGGERS
 ];
 export function getTriggerType(id) {
     return ALL_TRIGGERS.find(trigger => trigger.id === id);

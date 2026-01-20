@@ -26,6 +26,7 @@ export interface TriggerTypeConfig {
 export declare const MESSENGER_TRIGGERS: TriggerTypeConfig[];
 export declare const INSTAGRAM_TRIGGERS: TriggerTypeConfig[];
 export declare const TELEGRAM_TRIGGERS: TriggerTypeConfig[];
+export declare const WHATSAPP_TRIGGERS: TriggerTypeConfig[];
 export declare const ALL_TRIGGERS: TriggerTypeConfig[];
 export declare function getTriggerType(id: string): TriggerTypeConfig | undefined;
 export declare function getTriggersByChannel(channel: string): TriggerTypeConfig[];

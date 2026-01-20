@@ -23,7 +23,10 @@ import complianceModule from './modules/compliance/index.js';
 import templatesModule from './modules/templates/index.js';
 import facebookModule from './modules/facebook/index.js';
 import facebookSyncService from './services/facebook-sync.service.js';
-const PORT = parseInt(process.env.PORT || '3001', 10);
+import authModule from './modules/auth/index.js';
+import tagsModule from './modules/tags/index.js';
+import campaignsModule from './modules/campaigns/index.js';
+const PORT = parseInt(process.env.PORT || '3000', 10);
 const HOST = process.env.HOST || '0.0.0.0';
 // In-memory store for typing indicators
 // Format: { 'threadId': { userId: 'externalId', timestamp: Date } }
@@ -45,8 +48,11 @@ const fastify = Fastify({
 // Attach typing indicators to fastify instance for access in modules
 fastify.typingIndicators = typingIndicators;
 // Register plugins
+const corsOrigins = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
+    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002'];
 await fastify.register(cors, {
-    origin: process.env.CORS_ORIGIN || ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002'],
+    origin: corsOrigins,
     credentials: true,
 });
 await fastify.register(jwt, {
@@ -81,6 +87,9 @@ await fastify.register(whatsappModule, { prefix: '/api/whatsapp' });
 await fastify.register(complianceModule, { prefix: '/api/compliance' });
 await fastify.register(templatesModule, { prefix: '/api/templates' });
 await fastify.register(facebookModule, { prefix: '/api' });
+await fastify.register(authModule, { prefix: '/api/auth' });
+await fastify.register(tagsModule, { prefix: '/api/tags' });
+await fastify.register(campaignsModule, { prefix: '/api/campaigns' });
 // Webhook endpoints (public, no auth)
 // Meta webhook verification (GET request for webhook setup)
 fastify.get('/api/webhooks/meta', async (request, reply) => {
