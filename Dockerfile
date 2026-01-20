@@ -12,6 +12,9 @@ RUN npm ci
 # Generate Prisma client
 RUN npx prisma generate
 
+# Copy shared types
+COPY shared/ ../shared/
+
 # Copy backend source code
 COPY backend/ ./
 
