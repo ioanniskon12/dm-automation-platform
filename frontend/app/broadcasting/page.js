@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import NavigationSidebar from '../../components/NavigationSidebar';
 import { useSidebar } from '../../contexts/SidebarContext';
@@ -654,7 +654,9 @@ function BroadcastingContent() {
 export default function BroadcastingPage() {
   return (
     <ProtectedRoute>
-      <BroadcastingContent />
+      <Suspense fallback={<div className="h-screen flex items-center justify-center"><div className="animate-spin w-8 h-8 border-2 border-black border-t-transparent rounded-full"></div></div>}>
+        <BroadcastingContent />
+      </Suspense>
     </ProtectedRoute>
   );
 }
