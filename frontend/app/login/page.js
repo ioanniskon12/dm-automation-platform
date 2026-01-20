@@ -8,8 +8,6 @@ import axios from 'axios';
 import MarketingNavbar from '../../components/MarketingNavbar';
 import MarketingFooter from '../../components/MarketingFooter';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3003';
-
 export default function Login() {
   const router = useRouter();
   const { login } = useAuth();
@@ -28,7 +26,8 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API_URL}/api/auth/login`, {
+      // Use local Next.js API route for authentication
+      const response = await axios.post(`/api/auth/login`, {
         ...formData,
         rememberMe,
       });
