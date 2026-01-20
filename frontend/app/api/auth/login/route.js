@@ -2,6 +2,22 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 import { users } from '../dataStore';
 
+// Hardcoded admin users for serverless environments where globalThis doesn't persist
+const ADMIN_USERS = {
+  'gianniskon12@gmail.com': {
+    id: 'admin-1',
+    name: 'Giannis',
+    email: 'gianniskon12@gmail.com',
+    password: 'admin123',
+  },
+  'sotiris040197@gmail.com': {
+    id: 'admin-2',
+    name: 'Sotiris',
+    email: 'sotiris040197@gmail.com',
+    password: 'admin123',
+  },
+};
+
 export async function POST(request) {
   try {
     const { email, password } = await request.json();
@@ -14,8 +30,13 @@ export async function POST(request) {
       );
     }
 
-    // Check if user exists
-    const user = users.get(email);
+    // Check hardcoded admin users first (for serverless compatibility)
+    let user = ADMIN_USERS[email];
+
+    // Then check dynamic users from dataStore
+    if (!user) {
+      user = users.get(email);
+    }
 
     if (!user) {
       return NextResponse.json(
