@@ -6,8 +6,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002';
 
 export async function GET(request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const channel = searchParams.get('channel');
+    const channel = request.nextUrl.searchParams.get('channel');
 
     const url = channel
       ? `${API_URL}/api/triggers/types?channel=${channel}`
