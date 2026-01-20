@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+export const dynamic = 'force-dynamic';
 import { brands } from '../../auth/dataStore';
 
 export async function GET(request, context) {
