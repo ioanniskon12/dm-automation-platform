@@ -157,8 +157,26 @@ export default function Signup() {
                   onChange={handleChange}
                   required
                   placeholder="you@company.com"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
+                  className={`w-full px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-all ${
+                    formData.email
+                      ? isValidEmail(formData.email)
+                        ? 'border-green-500 focus:border-green-500 focus:ring-green-100'
+                        : 'border-red-300 focus:border-red-500 focus:ring-red-100'
+                      : 'border-gray-300 focus:border-blue-500 focus:ring-blue-100'
+                  }`}
                 />
+                {formData.email && !isValidEmail(formData.email) && (
+                  <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                    Please enter a valid email address
+                  </p>
+                )}
+                {formData.email && isValidEmail(formData.email) && (
+                  <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                    Valid email
+                  </p>
+                )}
               </div>
 
               {/* Password Field */}
@@ -194,7 +212,54 @@ export default function Signup() {
                     )}
                   </button>
                 </div>
-                <p className="mt-1 text-xs text-gray-500">Min 8 chars, uppercase, lowercase, number, and special character</p>
+                {/* Live Password Validation */}
+                {formData.password && (
+                  <div className="mt-2 space-y-1">
+                    <div className={`flex items-center gap-2 text-xs ${isValidPassword(formData.password).hasMinLength ? 'text-green-600' : 'text-gray-400'}`}>
+                      {isValidPassword(formData.password).hasMinLength ? (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                      )}
+                      <span>At least 8 characters</span>
+                    </div>
+                    <div className={`flex items-center gap-2 text-xs ${isValidPassword(formData.password).hasUpperCase ? 'text-green-600' : 'text-gray-400'}`}>
+                      {isValidPassword(formData.password).hasUpperCase ? (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                      )}
+                      <span>One uppercase letter</span>
+                    </div>
+                    <div className={`flex items-center gap-2 text-xs ${isValidPassword(formData.password).hasLowerCase ? 'text-green-600' : 'text-gray-400'}`}>
+                      {isValidPassword(formData.password).hasLowerCase ? (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                      )}
+                      <span>One lowercase letter</span>
+                    </div>
+                    <div className={`flex items-center gap-2 text-xs ${isValidPassword(formData.password).hasNumber ? 'text-green-600' : 'text-gray-400'}`}>
+                      {isValidPassword(formData.password).hasNumber ? (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                      )}
+                      <span>One number</span>
+                    </div>
+                    <div className={`flex items-center gap-2 text-xs ${isValidPassword(formData.password).hasSpecialChar ? 'text-green-600' : 'text-gray-400'}`}>
+                      {isValidPassword(formData.password).hasSpecialChar ? (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                      )}
+                      <span>One special character (!@#$%^&*...)</span>
+                    </div>
+                  </div>
+                )}
+                {!formData.password && (
+                  <p className="mt-1 text-xs text-gray-500">Min 8 chars, uppercase, lowercase, number, and special character</p>
+                )}
               </div>
 
               {/* Confirm Password Field */}
@@ -211,7 +276,13 @@ export default function Signup() {
                     onChange={handleChange}
                     required
                     placeholder="••••••••"
-                    className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
+                    className={`w-full px-4 py-2 pr-10 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-all ${
+                      formData.confirmPassword
+                        ? formData.password === formData.confirmPassword
+                          ? 'border-green-500 focus:border-green-500 focus:ring-green-100'
+                          : 'border-red-300 focus:border-red-500 focus:ring-red-100'
+                        : 'border-gray-300 focus:border-blue-500 focus:ring-blue-100'
+                    }`}
                   />
                   <button
                     type="button"
@@ -230,6 +301,18 @@ export default function Signup() {
                     )}
                   </button>
                 </div>
+                {formData.confirmPassword && formData.password !== formData.confirmPassword && (
+                  <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                    Passwords do not match
+                  </p>
+                )}
+                {formData.confirmPassword && formData.password === formData.confirmPassword && (
+                  <p className="mt-1 text-xs text-green-600 flex items-center gap-1">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                    Passwords match
+                  </p>
+                )}
               </div>
 
               {/* Terms & Conditions */}
