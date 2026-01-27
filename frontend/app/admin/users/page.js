@@ -129,6 +129,7 @@ export default function UsersPage() {
             className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           >
             <option value="all">All Status</option>
+            <option value="admin">Admin</option>
             <option value="active">Active</option>
             <option value="blocked">Blocked</option>
             <option value="suspended">Suspended</option>
@@ -205,7 +206,9 @@ export default function UsersPage() {
                   <td className="px-6 py-4">
                     <span
                       className={`text-xs font-medium px-2.5 py-1 rounded-full ${
-                        user.status === 'active'
+                        user.status === 'admin'
+                          ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                          : user.status === 'active'
                           ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
                           : user.status === 'blocked'
                           ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300'
@@ -214,7 +217,7 @@ export default function UsersPage() {
                           : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                       }`}
                     >
-                      {user.status || 'active'}
+                      {user.status === 'admin' ? 'Admin' : (user.status || 'active')}
                     </span>
                   </td>
                   <td className="px-6 py-4">

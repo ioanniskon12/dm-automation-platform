@@ -71,11 +71,13 @@ const adminModule: FastifyPluginAsync = async (fastify) => {
       });
 
       // Transform data for frontend
+      const adminEmails = getAdminEmails();
       const transformedUsers = users.map((user) => ({
         id: user.id,
         email: user.email,
         name: user.name,
-        status: user.status || 'active',
+        status: adminEmails.includes(user.email.toLowerCase()) ? 'admin' : (user.status || 'active'),
+        isAdmin: adminEmails.includes(user.email.toLowerCase()),
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
         workspace: user.workspaces[0]?.workspace?.name || 'No workspace',
