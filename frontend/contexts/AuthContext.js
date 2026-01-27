@@ -4,8 +4,6 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3003';
-
 const AuthContext = createContext({});
 
 // Cookie helper functions
@@ -16,6 +14,7 @@ const setCookie = (name, value, days) => {
 };
 
 const getCookie = (name) => {
+  if (typeof document === 'undefined') return null;
   const nameEQ = name + "=";
   const ca = document.cookie.split(';');
   for (let i = 0; i < ca.length; i++) {
@@ -35,87 +34,69 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  // Clear auth data
+  const clearAuth = () => {
+    deleteCookie('authToken');
+    deleteCookie('user');
+    deleteCookie('rememberMe');
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('user');
+      localStorage.removeItem('workspaceId');
+    }
+    delete axios.defaults.headers.common['Authorization'];
+    setUser(null);
+  };
+
   useEffect(() => {
+    // Check auth on mount
+    const checkAuth = () => {
+      try {
+        // Check for token in cookies first, then localStorage
+        let token = getCookie('authToken');
+        let storedUser = getCookie('user');
+
+        // Fallback to localStorage
+        if (!token && typeof localStorage !== 'undefined') {
+          token = localStorage.getItem('authToken');
+          storedUser = localStorage.getItem('user');
+        }
+
+        if (token && storedUser) {
+          try {
+            const userData = JSON.parse(storedUser);
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            setUser(userData);
+          } catch (e) {
+            console.error('Error parsing user data:', e);
+            clearAuth();
+          }
+        }
+      } catch (error) {
+        console.error('Error checking auth:', error);
+      }
+
+      // Always set loading to false
+      setLoading(false);
+    };
+
     checkAuth();
   }, []);
 
-  const checkAuth = async () => {
-    // Skip on server-side
-    if (typeof window === 'undefined') {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      // Check for token in cookies first, then localStorage
-      let token = getCookie('authToken');
-      let storedUser = getCookie('user');
-
-      // Fallback to localStorage for backward compatibility
-      if (!token) {
-        token = localStorage.getItem('authToken');
-        storedUser = localStorage.getItem('user');
-      }
-
-      if (token && storedUser) {
-        const userData = JSON.parse(storedUser);
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-
-        // Verify token is still valid
-        try {
-          const response = await axios.get(`${API_URL}/api/auth/me`);
-          if (response.data.success) {
-            setUser(response.data.user);
-          } else {
-            // Token invalid, clear auth
-            clearAuth();
-          }
-        } catch {
-          // Token verification failed, but keep user logged in if we have local data
-          // This handles offline scenarios
-          setUser(userData);
-        }
-      }
-    } catch (error) {
-      console.error('Error checking auth:', error);
-      clearAuth();
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const login = (userData, token, rememberMe = false, expiresIn = null) => {
-    // Calculate expiry days (default 7 days if remember me, 1 day otherwise)
+  const login = (userData, token, rememberMe = false) => {
     const expiryDays = rememberMe ? 7 : 1;
 
     if (rememberMe) {
-      // Store in cookies for persistence across browser sessions
       setCookie('authToken', token, expiryDays);
       setCookie('user', JSON.stringify(userData), expiryDays);
       setCookie('rememberMe', 'true', expiryDays);
     } else {
-      // Store in localStorage for session-only persistence
       localStorage.setItem('authToken', token);
       localStorage.setItem('user', JSON.stringify(userData));
     }
 
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     setUser(userData);
-  };
-
-  const clearAuth = () => {
-    // Clear cookies
-    deleteCookie('authToken');
-    deleteCookie('user');
-    deleteCookie('rememberMe');
-
-    // Clear localStorage
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
-    localStorage.removeItem('workspaceId');
-
-    delete axios.defaults.headers.common['Authorization'];
-    setUser(null);
   };
 
   const logout = () => {
