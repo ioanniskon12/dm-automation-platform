@@ -1,30 +1,37 @@
 import { FastifyPluginAsync } from 'fastify';
 import prisma from '../../lib/prisma.js';
 
-// Admin emails that can access admin routes
-const ADMIN_EMAILS = [
-  'gianniskon12@gmail.com',
-  'sotiris040197@gmail.com',
-];
+// Admin emails from environment variable or fallback to hardcoded list
+// Format: ADMIN_EMAILS=email1@example.com,email2@example.com
+const getAdminEmails = (): string[] => {
+  const envEmails = process.env.ADMIN_EMAILS;
+  if (envEmails) {
+    return envEmails.split(',').map((e) => e.trim().toLowerCase());
+  }
+  // Fallback to hardcoded admins
+  return [
+    'gianniskon12@gmail.com',
+    'sotiris040197@gmail.com',
+  ];
+};
 
 const adminModule: FastifyPluginAsync = async (fastify) => {
-  // Middleware to check if user is admin
+  // Middleware to check if user is admin - ALWAYS requires authentication
   const requireAdmin = async (request: any, reply: any) => {
-    // Allow access in development mode for testing
-    if (process.env.NODE_ENV !== 'production') {
-      return; // Skip auth in development
-    }
-
     try {
       await request.jwtVerify();
       const { email } = request.user as { email: string };
+      const adminEmails = getAdminEmails();
 
-      if (!ADMIN_EMAILS.includes(email)) {
+      if (!adminEmails.includes(email.toLowerCase())) {
+        fastify.log.warn(`Admin access denied for: ${email}`);
         return reply.status(403).send({
           success: false,
           error: 'Admin access required',
         });
       }
+
+      fastify.log.info(`Admin access granted for: ${email}`);
     } catch (error) {
       return reply.status(401).send({
         success: false,
@@ -211,7 +218,8 @@ const adminModule: FastifyPluginAsync = async (fastify) => {
       }
 
       // Don't allow deleting admin users
-      if (ADMIN_EMAILS.includes(user.email)) {
+      const adminEmails = getAdminEmails();
+      if (adminEmails.includes(user.email.toLowerCase())) {
         return reply.status(403).send({
           success: false,
           error: 'Cannot delete admin users',

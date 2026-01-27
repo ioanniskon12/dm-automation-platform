@@ -5,9 +5,12 @@ config();
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
+import helmet from '@fastify/helmet';
+import rateLimit from '@fastify/rate-limit';
 import multipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
 import path from 'path';
+import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -67,6 +70,30 @@ await fastify.register(cors, {
   credentials: true,
 });
 
+// Security headers
+await fastify.register(helmet, {
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", 'data:', 'https:'],
+    },
+  },
+  crossOriginEmbedderPolicy: false, // Allow embedding for webhooks
+});
+
+// Global rate limiting (100 requests per minute per IP)
+await fastify.register(rateLimit, {
+  max: 100,
+  timeWindow: '1 minute',
+  errorResponseBuilder: () => ({
+    success: false,
+    error: 'Too many requests, please try again later.',
+    statusCode: 429,
+  }),
+});
+
 await fastify.register(jwt, {
   secret: process.env.JWT_SECRET || 'super-secret-jwt-key-change-in-production',
 });
@@ -122,16 +149,48 @@ fastify.get('/api/webhooks/meta', async (request, reply) => {
   return reply.status(403).send('Forbidden');
 });
 
+// Verify Meta webhook signature
+const verifyMetaSignature = (payload: string, signature: string | undefined): boolean => {
+  if (!signature) {
+    return false;
+  }
+
+  const appSecret = process.env.META_APP_SECRET;
+  if (!appSecret) {
+    // If no app secret configured, log warning but allow (for development)
+    console.warn('META_APP_SECRET not configured - webhook signature verification skipped');
+    return true;
+  }
+
+  const expectedSignature = 'sha256=' + crypto
+    .createHmac('sha256', appSecret)
+    .update(payload)
+    .digest('hex');
+
+  return crypto.timingSafeEqual(
+    Buffer.from(signature),
+    Buffer.from(expectedSignature)
+  );
+};
+
 // Meta webhook handler (POST - receives messages from Instagram and Messenger)
-fastify.post('/api/webhooks/meta', async (request, reply) => {
+fastify.post('/api/webhooks/meta', {
+  config: {
+    rawBody: true, // Need raw body for signature verification
+  },
+}, async (request, reply) => {
   try {
     const body = request.body as any;
+    const rawBody = JSON.stringify(body);
 
     // Verify webhook signature
     const signature = request.headers['x-hub-signature-256'] as string;
-    // TODO: Implement signature verification using FacebookService
+    if (!verifyMetaSignature(rawBody, signature)) {
+      fastify.log.warn('Invalid Meta webhook signature');
+      return reply.status(401).send({ error: 'Invalid signature' });
+    }
 
-    fastify.log.info('Meta webhook received:', JSON.stringify(body, null, 2));
+    fastify.log.info('Meta webhook received (signature verified)');
 
     // Process webhook events
     if (body.object === 'page' || body.object === 'instagram') {

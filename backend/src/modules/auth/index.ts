@@ -4,11 +4,26 @@ import crypto from 'crypto';
 import prisma from '../../lib/prisma.js';
 import { sendEmail, emailTemplates } from '../../lib/email.js';
 
+// Rate limit config for auth endpoints
+const authRateLimit = {
+  max: 5, // 5 attempts
+  timeWindow: '15 minutes', // per 15 minutes
+  errorResponseBuilder: () => ({
+    success: false,
+    error: 'Too many attempts. Please try again in 15 minutes.',
+    statusCode: 429,
+  }),
+};
+
 const authModule: FastifyPluginAsync = async (fastify) => {
   // ============================================
-  // SIGNUP
+  // SIGNUP (5 attempts per 15 minutes)
   // ============================================
-  fastify.post('/signup', async (request, reply) => {
+  fastify.post('/signup', {
+    config: {
+      rateLimit: authRateLimit,
+    },
+  }, async (request, reply) => {
     const { name, email, password } = request.body as {
       name: string;
       email: string;
@@ -110,9 +125,13 @@ const authModule: FastifyPluginAsync = async (fastify) => {
   });
 
   // ============================================
-  // LOGIN
+  // LOGIN (5 attempts per 15 minutes)
   // ============================================
-  fastify.post('/login', async (request, reply) => {
+  fastify.post('/login', {
+    config: {
+      rateLimit: authRateLimit,
+    },
+  }, async (request, reply) => {
     const { email, password, rememberMe } = request.body as {
       email: string;
       password: string;
@@ -144,6 +163,21 @@ const authModule: FastifyPluginAsync = async (fastify) => {
         return reply.status(401).send({
           success: false,
           error: 'Invalid email or password',
+        });
+      }
+
+      // Check if user is blocked or suspended
+      if (user.status === 'blocked') {
+        return reply.status(403).send({
+          success: false,
+          error: 'Your account has been blocked. Please contact support.',
+        });
+      }
+
+      if (user.status === 'suspended') {
+        return reply.status(403).send({
+          success: false,
+          error: 'Your account has been suspended. Please contact support.',
         });
       }
 
@@ -210,9 +244,21 @@ const authModule: FastifyPluginAsync = async (fastify) => {
   });
 
   // ============================================
-  // FORGOT PASSWORD
+  // FORGOT PASSWORD (3 attempts per 15 minutes - stricter)
   // ============================================
-  fastify.post('/forgot-password', async (request, reply) => {
+  fastify.post('/forgot-password', {
+    config: {
+      rateLimit: {
+        max: 3,
+        timeWindow: '15 minutes',
+        errorResponseBuilder: () => ({
+          success: false,
+          error: 'Too many password reset attempts. Please try again later.',
+          statusCode: 429,
+        }),
+      },
+    },
+  }, async (request, reply) => {
     const { email } = request.body as { email: string };
 
     if (!email) {
