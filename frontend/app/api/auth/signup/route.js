@@ -1,63 +1,28 @@
 import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
-import { users } from '../dataStore';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3003';
 
 export async function POST(request) {
   try {
-    const { name, email, password } = await request.json();
+    const body = await request.json();
 
-    // Validation
-    if (!name || !email || !password) {
-      return NextResponse.json(
-        { success: false, error: 'All fields are required' },
-        { status: 400 }
-      );
-    }
-
-    if (password.length < 8) {
-      return NextResponse.json(
-        { success: false, error: 'Password must be at least 8 characters long' },
-        { status: 400 }
-      );
-    }
-
-    // Check if user already exists
-    if (users.has(email)) {
-      return NextResponse.json(
-        { success: false, error: 'User with this email already exists' },
-        { status: 409 }
-      );
-    }
-
-    // Create user (in production, hash the password!)
-    const user = {
-      id: Date.now().toString(),
-      name,
-      email,
-      createdAt: new Date().toISOString(),
-    };
-
-    users.set(email, { ...user, password });
-
-    // Generate a simple token (in production, use JWT)
-    const token = Buffer.from(`${email}:${Date.now()}`).toString('base64');
-
-    return NextResponse.json(
-      {
-        success: true,
-        token,
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-        },
+    // Forward request to real backend
+    const response = await fetch(`${API_URL}/api/auth/signup`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-      { status: 201 }
-    );
+      body: JSON.stringify(body),
+    });
+
+    const data = await response.json();
+
+    return NextResponse.json(data, { status: response.status });
   } catch (error) {
     console.error('Signup error:', error);
     return NextResponse.json(
-      { success: false, error: 'Internal server error' },
+      { success: false, error: 'Failed to connect to server. Please try again.' },
       { status: 500 }
     );
   }
