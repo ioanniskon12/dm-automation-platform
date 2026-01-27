@@ -52,7 +52,7 @@ export default function LogsPage() {
   const fetchLogs = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
 
       // Build query params
       const params = new URLSearchParams();
@@ -89,7 +89,7 @@ export default function LogsPage() {
   // Fetch stats from backend API
   const fetchStats = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
       const response = await fetch(`${API_URL}/api/admin/logs/stats`, {
         headers: {
           'Authorization': `Bearer ${token}`,
