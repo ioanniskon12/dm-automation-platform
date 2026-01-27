@@ -23,7 +23,7 @@ export default function ConditionNode({ data, isConnectable }) {
         type="target"
         position={Position.Left}
         isConnectable={isConnectable}
-        className="w-2.5 h-2.5 !bg-blue-500"
+        className="!w-3 !h-3 !border-2 !border-white !bg-blue-500"
       />
 
       {/* Main Content */}
@@ -83,7 +83,7 @@ export default function ConditionNode({ data, isConnectable }) {
             position={Position.Right}
             id="yes"
             isConnectable={isConnectable}
-            className="!absolute !right-[-5px] !top-1/2 !-translate-y-1/2 w-2.5 h-2.5 !bg-green-500"
+            className="!absolute !right-[-6px] !top-1/2 !-translate-y-1/2 !w-3 !h-3 !border-2 !border-white !bg-green-500"
           />
         </div>
         {/* NO Branch */}
@@ -96,7 +96,7 @@ export default function ConditionNode({ data, isConnectable }) {
             position={Position.Right}
             id="no"
             isConnectable={isConnectable}
-            className="!absolute !right-[-5px] !top-1/2 !-translate-y-1/2 w-2.5 h-2.5 !bg-red-500"
+            className="!absolute !right-[-6px] !top-1/2 !-translate-y-1/2 !w-3 !h-3 !border-2 !border-white !bg-red-500"
           />
         </div>
       </div>

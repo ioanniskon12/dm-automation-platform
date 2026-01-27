@@ -8,7 +8,27 @@ import InstagramMessageWizard from './InstagramMessageWizard'
 import CommentTriggerWizard from './CommentTriggerWizard'
 import TagSelector from './TagSelector'
 
-export default function NodeConfigPanel({ node, onUpdate, onDelete, onClose, onAddConnectedNode, workspaceId }) {
+// Video size limits by channel (in MB)
+const VIDEO_LIMITS = {
+  instagram: { maxSize: 15, maxDuration: 60, label: 'Instagram DM' },
+  messenger: { maxSize: 25, maxDuration: 120, label: 'Messenger' },
+  facebook: { maxSize: 25, maxDuration: 120, label: 'Messenger' },
+  whatsapp: { maxSize: 16, maxDuration: 180, label: 'WhatsApp' },
+  telegram: { maxSize: 2000, maxDuration: null, label: 'Telegram' }, // 2GB, no duration limit
+};
+
+// Audio/Voice size limits by channel (in MB)
+const AUDIO_LIMITS = {
+  instagram: { maxSize: 25, maxDuration: 60, label: 'Instagram DM' },
+  messenger: { maxSize: 25, maxDuration: null, label: 'Messenger' },
+  facebook: { maxSize: 25, maxDuration: null, label: 'Messenger' },
+  whatsapp: { maxSize: 16, maxDuration: null, label: 'WhatsApp' },
+  telegram: { maxSize: 2000, maxDuration: null, label: 'Telegram' }, // 2GB
+};
+
+export default function NodeConfigPanel({ node, onUpdate, onDelete, onClose, onAddConnectedNode, workspaceId, channelType = 'instagram' }) {
+  const videoLimit = VIDEO_LIMITS[channelType] || VIDEO_LIMITS.instagram;
+  const audioLimit = AUDIO_LIMITS[channelType] || AUDIO_LIMITS.instagram;
   const [showPostSelector, setShowPostSelector] = useState(false)
   const [postSelectorTab, setPostSelectorTab] = useState('posts')
   const [showDmActionSelector, setShowDmActionSelector] = useState(false)
@@ -1541,15 +1561,242 @@ export default function NodeConfigPanel({ node, onUpdate, onDelete, onClose, onA
           {node.data.mediaType === 'send_video' && (
             <>
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">Video URL</label>
-                <input
-                  type="text"
-                  value={node.data.videoUrl || ''}
-                  onChange={(e) => handleUpdate('videoUrl', e.target.value)}
-                  placeholder="https://example.com/video.mp4 or /path/to/video.mp4"
-                  className="w-full p-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent"
-                />
+                <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">Video</label>
+
+                {/* Mode Toggle: Upload vs Record */}
+                {!node.data.videoUrl && (
+                  <div className="flex gap-2 mb-3">
+                    <button
+                      onClick={() => handleUpdate('videoInputMode', 'upload')}
+                      className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                        (node.data.videoInputMode || 'upload') === 'upload'
+                          ? 'bg-orange-500 text-white'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      Upload
+                    </button>
+                    <button
+                      onClick={() => handleUpdate('videoInputMode', 'record')}
+                      className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                        node.data.videoInputMode === 'record'
+                          ? 'bg-red-500 text-white'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="6" />
+                      </svg>
+                      Record
+                    </button>
+                  </div>
+                )}
+
+                {/* Upload Area */}
+                {!node.data.videoUrl && (node.data.videoInputMode || 'upload') === 'upload' && (
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-orange-300 dark:border-orange-700 rounded-lg cursor-pointer bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <svg className="w-8 h-8 mb-2 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      <p className="text-sm text-orange-600 dark:text-orange-400 font-medium">Click to upload video</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">MP4, MOV (max {videoLimit.maxSize}MB)</p>
+                    </div>
+                    <input
+                      type="file"
+                      accept="video/mp4,video/quicktime,video/x-msvideo,.mp4,.mov,.avi"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0]
+                        if (!file) return
+
+                        // Check file size
+                        const fileSizeMB = file.size / (1024 * 1024)
+                        if (fileSizeMB > videoLimit.maxSize) {
+                          alert(`Video is too large (${fileSizeMB.toFixed(1)}MB). Maximum for ${videoLimit.label} is ${videoLimit.maxSize}MB.`)
+                          return
+                        }
+
+                        // Create local preview URL
+                        const localUrl = URL.createObjectURL(file)
+                        handleUpdate('videoUrl', localUrl)
+                        handleUpdate('videoFileName', file.name)
+                        handleUpdate('videoFileSize', fileSizeMB.toFixed(1))
+                        handleUpdate('videoSource', 'upload')
+                      }}
+                    />
+                  </label>
+                )}
+
+                {/* Record Area */}
+                {!node.data.videoUrl && node.data.videoInputMode === 'record' && (
+                  <div className="border-2 border-red-300 dark:border-red-700 rounded-lg overflow-hidden bg-black">
+                    <div className="relative">
+                      {/* Camera Preview / Recording */}
+                      <video
+                        id={`video-preview-${node.id}`}
+                        className="w-full h-40 object-cover"
+                        autoPlay
+                        muted
+                        playsInline
+                      />
+
+                      {/* Recording indicator */}
+                      {node.data.isRecording && (
+                        <div className="absolute top-2 left-2 flex items-center gap-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
+                          <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+                          REC
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Record Controls */}
+                    <div className="p-3 bg-gray-900 flex items-center justify-center gap-3">
+                      {!node.data.isRecording ? (
+                        <button
+                          onClick={async () => {
+                            try {
+                              const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+                              const videoEl = document.getElementById(`video-preview-${node.id}`)
+                              if (videoEl) videoEl.srcObject = stream
+
+                              const mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' })
+                              const chunks = []
+
+                              mediaRecorder.ondataavailable = (e) => chunks.push(e.data)
+                              mediaRecorder.onstop = () => {
+                                const blob = new Blob(chunks, { type: 'video/webm' })
+                                const url = URL.createObjectURL(blob)
+                                const fileSizeMB = blob.size / (1024 * 1024)
+
+                                handleUpdate('videoUrl', url)
+                                handleUpdate('videoFileName', 'recorded-video.webm')
+                                handleUpdate('videoFileSize', fileSizeMB.toFixed(1))
+                                handleUpdate('videoSource', 'recorded')
+                                handleUpdate('isRecording', false)
+
+                                stream.getTracks().forEach(track => track.stop())
+                              }
+
+                              mediaRecorder.start()
+                              handleUpdate('isRecording', true)
+                              window[`mediaRecorder_${node.id}`] = mediaRecorder
+                              window[`stream_${node.id}`] = stream
+                            } catch (err) {
+                              alert('Could not access camera. Please allow camera permissions.')
+                            }
+                          }}
+                          className="w-14 h-14 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center transition-colors"
+                        >
+                          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="6" />
+                          </svg>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            const mediaRecorder = window[`mediaRecorder_${node.id}`]
+                            if (mediaRecorder) {
+                              mediaRecorder.stop()
+                            }
+                          }}
+                          className="w-14 h-14 bg-gray-700 hover:bg-gray-600 rounded-full flex items-center justify-center transition-colors"
+                        >
+                          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <rect x="6" y="6" width="12" height="12" rx="2" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+
+                    <p className="text-xs text-gray-400 text-center py-2 bg-gray-900">
+                      {node.data.isRecording ? 'Recording... Click stop when done' : 'Click the red button to start recording'}
+                    </p>
+                  </div>
+                )}
+
+                {/* Video Preview with Remove Option */}
+                {node.data.videoUrl && (
+                  <div className="relative rounded-lg overflow-hidden bg-black">
+                    <video
+                      src={node.data.videoUrl}
+                      className="w-full h-40 object-contain"
+                      controls
+                      preload="metadata"
+                    />
+                    {/* File info overlay */}
+                    <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
+                      {node.data.videoSource === 'recorded' && (
+                        <svg className="w-3 h-3 text-red-400" fill="currentColor" viewBox="0 0 24 24">
+                          <circle cx="12" cy="12" r="6" />
+                        </svg>
+                      )}
+                      {node.data.videoFileName || 'video.mp4'} • {node.data.videoFileSize || '?'}MB
+                    </div>
+                    {/* Remove button */}
+                    <button
+                      onClick={() => {
+                        handleUpdate('videoUrl', '')
+                        handleUpdate('videoFileName', '')
+                        handleUpdate('videoFileSize', '')
+                        handleUpdate('videoSource', '')
+                        handleUpdate('videoInputMode', 'upload')
+                      }}
+                      className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-full transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+
+                {/* Channel-specific size limits */}
+                <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg">📱</span>
+                    <p className="text-xs font-semibold text-blue-800 dark:text-blue-300">
+                      {videoLimit.label} Limits
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="bg-blue-100 dark:bg-blue-800/30 rounded p-2">
+                      <p className="text-blue-600 dark:text-blue-400 font-medium">Max Size</p>
+                      <p className="text-blue-900 dark:text-blue-200 font-bold">{videoLimit.maxSize >= 1000 ? `${videoLimit.maxSize / 1000}GB` : `${videoLimit.maxSize}MB`}</p>
+                    </div>
+                    <div className="bg-blue-100 dark:bg-blue-800/30 rounded p-2">
+                      <p className="text-blue-600 dark:text-blue-400 font-medium">Max Duration</p>
+                      <p className="text-blue-900 dark:text-blue-200 font-bold">{videoLimit.maxDuration ? `${videoLimit.maxDuration}s` : 'No limit'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Video format guidelines */}
+                <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
+                  <p className="text-xs font-medium text-amber-800 dark:text-amber-300 mb-2">Supported Formats:</p>
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    <span className="bg-green-100 dark:bg-green-800/50 text-green-700 dark:text-green-300 px-2 py-0.5 rounded">MP4</span>
+                    <span className="bg-green-100 dark:bg-green-800/50 text-green-700 dark:text-green-300 px-2 py-0.5 rounded">MOV</span>
+                    <span className="bg-green-100 dark:bg-green-800/50 text-green-700 dark:text-green-300 px-2 py-0.5 rounded">AVI</span>
+                  </div>
+                  <p className="text-xs text-amber-600 dark:text-amber-500 mt-2">
+                    Recommended: 720p-1080p, 30 FPS, H.264 codec
+                  </p>
+                </div>
+
+                {/* Cross-platform tip */}
+                {channelType !== 'telegram' && (
+                  <div className="mt-3 p-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                      💡 Keep under <strong>15MB</strong> & <strong>60s</strong> to work on all channels.
+                    </p>
+                  </div>
+                )}
               </div>
+
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">Caption (Optional)</label>
                 <textarea
@@ -1566,24 +1813,284 @@ export default function NodeConfigPanel({ node, onUpdate, onDelete, onClose, onA
           {node.data.mediaType === 'send_voice' && (
             <>
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">Voice File URL</label>
-                <input
-                  type="text"
-                  value={node.data.voiceUrl || ''}
-                  onChange={(e) => handleUpdate('voiceUrl', e.target.value)}
-                  placeholder="https://example.com/audio.mp3 or /path/to/audio.mp3"
-                  className="w-full p-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent"
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">Duration</label>
-                <input
-                  type="text"
-                  value={node.data.duration || ''}
-                  onChange={(e) => handleUpdate('duration', e.target.value)}
-                  placeholder="e.g., 0:15"
-                  className="w-full p-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent"
-                />
+                <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">Voice Note</label>
+
+                {/* Mode Toggle: Upload vs Record */}
+                {!node.data.voiceUrl && (
+                  <div className="flex gap-2 mb-3">
+                    <button
+                      onClick={() => handleUpdate('voiceInputMode', 'upload')}
+                      className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                        (node.data.voiceInputMode || 'upload') === 'upload'
+                          ? 'bg-orange-500 text-white'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      Upload
+                    </button>
+                    <button
+                      onClick={() => handleUpdate('voiceInputMode', 'record')}
+                      className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                        node.data.voiceInputMode === 'record'
+                          ? 'bg-red-500 text-white'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="6" />
+                      </svg>
+                      Record
+                    </button>
+                  </div>
+                )}
+
+                {/* Upload Area */}
+                {!node.data.voiceUrl && (node.data.voiceInputMode || 'upload') === 'upload' && (
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-orange-300 dark:border-orange-700 rounded-lg cursor-pointer bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <svg className="w-8 h-8 mb-2 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                      </svg>
+                      <p className="text-sm text-orange-600 dark:text-orange-400 font-medium">Click to upload audio</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">MP3, M4A, OGG, WAV (max {audioLimit.maxSize}MB)</p>
+                    </div>
+                    <input
+                      type="file"
+                      accept="audio/mpeg,audio/mp4,audio/ogg,audio/wav,audio/x-m4a,.mp3,.m4a,.ogg,.wav"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0]
+                        if (!file) return
+
+                        // Check file size
+                        const fileSizeMB = file.size / (1024 * 1024)
+                        if (fileSizeMB > audioLimit.maxSize) {
+                          alert(`Audio is too large (${fileSizeMB.toFixed(1)}MB). Maximum for ${audioLimit.label} is ${audioLimit.maxSize}MB.`)
+                          return
+                        }
+
+                        // Create local preview URL
+                        const localUrl = URL.createObjectURL(file)
+
+                        // Get audio duration
+                        const audio = new Audio(localUrl)
+                        audio.addEventListener('loadedmetadata', () => {
+                          const duration = audio.duration
+                          const minutes = Math.floor(duration / 60)
+                          const seconds = Math.floor(duration % 60)
+                          const formattedDuration = `${minutes}:${seconds.toString().padStart(2, '0')}`
+
+                          handleUpdate('voiceUrl', localUrl)
+                          handleUpdate('voiceFileName', file.name)
+                          handleUpdate('voiceFileSize', fileSizeMB.toFixed(1))
+                          handleUpdate('duration', formattedDuration)
+                          handleUpdate('durationSeconds', Math.floor(duration))
+                          handleUpdate('voiceSource', 'upload')
+                        })
+                      }}
+                    />
+                  </label>
+                )}
+
+                {/* Record Area */}
+                {!node.data.voiceUrl && node.data.voiceInputMode === 'record' && (
+                  <div className="border-2 border-red-300 dark:border-red-700 rounded-lg overflow-hidden bg-gray-900">
+                    {/* Microphone visualization */}
+                    <div className="relative h-32 flex items-center justify-center">
+                      {/* Animated rings when recording */}
+                      {node.data.isRecordingVoice && (
+                        <>
+                          <div className="absolute w-24 h-24 rounded-full bg-red-500/20 animate-ping" />
+                          <div className="absolute w-20 h-20 rounded-full bg-red-500/30 animate-pulse" />
+                        </>
+                      )}
+                      {/* Microphone icon */}
+                      <div className={`relative w-16 h-16 rounded-full flex items-center justify-center ${node.data.isRecordingVoice ? 'bg-red-500' : 'bg-gray-700'}`}>
+                        <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                        </svg>
+                      </div>
+                      {/* Recording indicator */}
+                      {node.data.isRecordingVoice && (
+                        <div className="absolute top-2 left-2 flex items-center gap-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
+                          <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+                          REC
+                        </div>
+                      )}
+                      {/* Recording timer */}
+                      {node.data.isRecordingVoice && (
+                        <div className="absolute bottom-2 text-white text-sm font-mono">
+                          {node.data.recordingTime || '0:00'}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Record Controls */}
+                    <div className="p-3 bg-gray-800 flex items-center justify-center gap-3">
+                      {!node.data.isRecordingVoice ? (
+                        <button
+                          onClick={async () => {
+                            try {
+                              const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+
+                              const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' })
+                              const chunks = []
+                              let startTime = Date.now()
+
+                              // Timer update interval
+                              const timerInterval = setInterval(() => {
+                                const elapsed = Math.floor((Date.now() - startTime) / 1000)
+                                const minutes = Math.floor(elapsed / 60)
+                                const seconds = elapsed % 60
+                                handleUpdate('recordingTime', `${minutes}:${seconds.toString().padStart(2, '0')}`)
+                              }, 1000)
+
+                              mediaRecorder.ondataavailable = (e) => chunks.push(e.data)
+                              mediaRecorder.onstop = () => {
+                                clearInterval(timerInterval)
+                                const blob = new Blob(chunks, { type: 'audio/webm' })
+                                const url = URL.createObjectURL(blob)
+                                const fileSizeMB = blob.size / (1024 * 1024)
+                                const elapsed = Math.floor((Date.now() - startTime) / 1000)
+                                const minutes = Math.floor(elapsed / 60)
+                                const seconds = elapsed % 60
+
+                                handleUpdate('voiceUrl', url)
+                                handleUpdate('voiceFileName', 'recorded-voice.webm')
+                                handleUpdate('voiceFileSize', fileSizeMB.toFixed(1))
+                                handleUpdate('duration', `${minutes}:${seconds.toString().padStart(2, '0')}`)
+                                handleUpdate('durationSeconds', elapsed)
+                                handleUpdate('voiceSource', 'recorded')
+                                handleUpdate('isRecordingVoice', false)
+                                handleUpdate('recordingTime', '')
+
+                                stream.getTracks().forEach(track => track.stop())
+                              }
+
+                              mediaRecorder.start()
+                              handleUpdate('isRecordingVoice', true)
+                              handleUpdate('recordingTime', '0:00')
+                              window[`voiceRecorder_${node.id}`] = mediaRecorder
+                              window[`voiceStream_${node.id}`] = stream
+                            } catch (err) {
+                              alert('Could not access microphone. Please allow microphone permissions.')
+                            }
+                          }}
+                          className="w-14 h-14 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center transition-colors"
+                        >
+                          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="6" />
+                          </svg>
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            const mediaRecorder = window[`voiceRecorder_${node.id}`]
+                            if (mediaRecorder) {
+                              mediaRecorder.stop()
+                            }
+                          }}
+                          className="w-14 h-14 bg-gray-700 hover:bg-gray-600 rounded-full flex items-center justify-center transition-colors"
+                        >
+                          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <rect x="6" y="6" width="12" height="12" rx="2" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+
+                    <p className="text-xs text-gray-400 text-center py-2 bg-gray-800">
+                      {node.data.isRecordingVoice ? 'Recording... Click stop when done' : 'Click the red button to start recording'}
+                    </p>
+                  </div>
+                )}
+
+                {/* Audio Preview with Remove Option */}
+                {node.data.voiceUrl && (
+                  <div className="relative rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 p-4">
+                    {/* Audio info */}
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${node.data.voiceSource === 'recorded' ? 'bg-red-500' : 'bg-orange-500'}`}>
+                        <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate flex items-center gap-2">
+                          {node.data.voiceSource === 'recorded' && (
+                            <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                          )}
+                          {node.data.voiceFileName || 'audio.mp3'}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {node.data.voiceFileSize || '?'}MB • {node.data.duration || '0:00'}
+                        </p>
+                      </div>
+                      {/* Remove button */}
+                      <button
+                        onClick={() => {
+                          handleUpdate('voiceUrl', '')
+                          handleUpdate('voiceFileName', '')
+                          handleUpdate('voiceFileSize', '')
+                          handleUpdate('duration', '')
+                          handleUpdate('durationSeconds', '')
+                          handleUpdate('voiceSource', '')
+                          handleUpdate('voiceInputMode', 'upload')
+                        }}
+                        className="bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-full transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+
+                    {/* Audio player */}
+                    <audio
+                      src={node.data.voiceUrl}
+                      controls
+                      className="w-full h-10"
+                      preload="metadata"
+                    />
+                  </div>
+                )}
+
+                {/* Channel-specific size limits */}
+                <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg">🎤</span>
+                    <p className="text-xs font-semibold text-blue-800 dark:text-blue-300">
+                      {audioLimit.label} Limits
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="bg-blue-100 dark:bg-blue-800/30 rounded p-2">
+                      <p className="text-blue-600 dark:text-blue-400 font-medium">Max Size</p>
+                      <p className="text-blue-900 dark:text-blue-200 font-bold">{audioLimit.maxSize >= 1000 ? `${audioLimit.maxSize / 1000}GB` : `${audioLimit.maxSize}MB`}</p>
+                    </div>
+                    <div className="bg-blue-100 dark:bg-blue-800/30 rounded p-2">
+                      <p className="text-blue-600 dark:text-blue-400 font-medium">Max Duration</p>
+                      <p className="text-blue-900 dark:text-blue-200 font-bold">{audioLimit.maxDuration ? `${audioLimit.maxDuration}s` : 'No limit'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Audio format guidelines */}
+                <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
+                  <p className="text-xs font-medium text-amber-800 dark:text-amber-300 mb-2">Supported Formats:</p>
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    <span className="bg-green-100 dark:bg-green-800/50 text-green-700 dark:text-green-300 px-2 py-0.5 rounded">MP3</span>
+                    <span className="bg-green-100 dark:bg-green-800/50 text-green-700 dark:text-green-300 px-2 py-0.5 rounded">M4A</span>
+                    <span className="bg-green-100 dark:bg-green-800/50 text-green-700 dark:text-green-300 px-2 py-0.5 rounded">OGG</span>
+                    <span className="bg-green-100 dark:bg-green-800/50 text-green-700 dark:text-green-300 px-2 py-0.5 rounded">WAV</span>
+                  </div>
+                  <p className="text-xs text-amber-600 dark:text-amber-500 mt-2">
+                    Voice notes are sent as audio messages in chat
+                  </p>
+                </div>
               </div>
             </>
           )}
@@ -1624,61 +2131,801 @@ export default function NodeConfigPanel({ node, onUpdate, onDelete, onClose, onA
           )}
 
           {node.data.mediaType === 'send_carousel' && (
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">Carousel Cards</label>
-              <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded border border-orange-200 dark:border-orange-700">
-                <p className="text-sm text-orange-800 dark:text-orange-300">
-                  Carousel contains {node.data.cards?.length || 0} card(s)
-                </p>
-                <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
-                  Configure individual cards in the carousel
-                </p>
+            <>
+              {/* Carousel Preview - Scrollable */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">Preview</label>
+                <div className="bg-gray-100 dark:bg-gray-900 rounded-lg p-4">
+                  <div className="flex gap-3 overflow-x-auto pb-2">
+                    {(!node.data.carouselCards || node.data.carouselCards.length === 0) ? (
+                      <div className="flex-shrink-0 w-[200px] h-[180px] border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl flex flex-col items-center justify-center">
+                        <span className="text-3xl mb-2">🎠</span>
+                        <span className="text-xs text-gray-400">No cards yet</span>
+                      </div>
+                    ) : (
+                      node.data.carouselCards.map((card, idx) => (
+                        <div
+                          key={card.id}
+                          onClick={() => handleUpdate('selectedCarouselCard', idx)}
+                          className={`flex-shrink-0 w-[180px] bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg border-2 cursor-pointer transition-all ${
+                            node.data.selectedCarouselCard === idx
+                              ? 'border-orange-500 scale-[1.02]'
+                              : 'border-gray-200 dark:border-gray-700 hover:border-orange-300'
+                          }`}
+                        >
+                          {/* Card Image */}
+                          {card.imageUrl ? (
+                            <img src={card.imageUrl} alt="" className="w-full h-24 object-cover" />
+                          ) : (
+                            <div className="w-full h-24 bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30 flex items-center justify-center">
+                              <svg className="w-8 h-8 text-orange-300 dark:text-orange-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                            </div>
+                          )}
+                          {/* Card Content */}
+                          <div className="p-2">
+                            <h4 className="font-bold text-gray-900 dark:text-white text-xs truncate">
+                              {card.title || `Card ${idx + 1}`}
+                            </h4>
+                            <p className="text-[10px] text-gray-600 dark:text-gray-400 mt-0.5 truncate">
+                              {card.subtitle || 'No subtitle'}
+                            </p>
+                          </div>
+                          {/* Preview Buttons */}
+                          {card.buttons && card.buttons.length > 0 && (
+                            <div className="border-t border-gray-200 dark:border-gray-700">
+                              {card.buttons.slice(0, 2).map((btn, btnIdx) => (
+                                <div
+                                  key={btnIdx}
+                                  className="px-2 py-1.5 text-center text-[10px] font-medium text-blue-600 dark:text-blue-400 border-b border-gray-100 dark:border-gray-700 last:border-b-0"
+                                >
+                                  {btn.label || `Button ${btnIdx + 1}`}
+                                </div>
+                              ))}
+                              {card.buttons.length > 2 && (
+                                <div className="px-2 py-1 text-center text-[9px] text-gray-400">
+                                  +{card.buttons.length - 2} more
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  {node.data.carouselCards && node.data.carouselCards.length > 0 && (
+                    <p className="text-[10px] text-gray-500 dark:text-gray-400 text-center mt-2">
+                      ← Scroll to see all cards • Click to edit →
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
+
+              {/* Card Tabs */}
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-3 overflow-x-auto pb-1">
+                  {node.data.carouselCards && node.data.carouselCards.map((card, idx) => (
+                    <button
+                      key={card.id}
+                      onClick={() => handleUpdate('selectedCarouselCard', idx)}
+                      className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                        node.data.selectedCarouselCard === idx
+                          ? 'bg-orange-500 text-white shadow-md'
+                          : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      Card {idx + 1}
+                    </button>
+                  ))}
+                  {(!node.data.carouselCards || node.data.carouselCards.length < 10) && (
+                    <button
+                      onClick={() => {
+                        const currentCards = node.data.carouselCards || []
+                        const newCard = {
+                          id: Date.now(),
+                          imageUrl: '',
+                          title: '',
+                          subtitle: '',
+                          buttons: []
+                        }
+                        handleUpdate('carouselCards', [...currentCards, newCard])
+                        handleUpdate('selectedCarouselCard', currentCards.length)
+                      }}
+                      className="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-all"
+                    >
+                      + Add Card
+                    </button>
+                  )}
+                </div>
+
+                {/* Card Count */}
+                {node.data.carouselCards && node.data.carouselCards.length > 0 && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                    {node.data.carouselCards.length} of 10 cards
+                  </p>
+                )}
+              </div>
+
+              {/* Empty State */}
+              {(!node.data.carouselCards || node.data.carouselCards.length === 0) && (
+                <div className="text-center py-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg mb-4">
+                  <div className="text-4xl mb-2">🎠</div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">No cards in carousel</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Add at least 2 cards to create a carousel</p>
+                </div>
+              )}
+
+              {/* Card Editor - Same layout as send_card */}
+              {node.data.carouselCards && node.data.carouselCards.length > 0 && node.data.selectedCarouselCard !== undefined && node.data.carouselCards[node.data.selectedCarouselCard] && (
+                <>
+                  {/* Card Actions Bar */}
+                  <div className="flex items-center justify-between mb-4 p-2 bg-gray-100 dark:bg-gray-700/50 rounded-lg">
+                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      Editing Card {(node.data.selectedCarouselCard || 0) + 1}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => {
+                          const idx = node.data.selectedCarouselCard
+                          if (idx > 0) {
+                            const cards = [...node.data.carouselCards]
+                            const temp = cards[idx]
+                            cards[idx] = cards[idx - 1]
+                            cards[idx - 1] = temp
+                            handleUpdate('carouselCards', cards)
+                            handleUpdate('selectedCarouselCard', idx - 1)
+                          }
+                        }}
+                        disabled={node.data.selectedCarouselCard === 0}
+                        className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-30"
+                        title="Move left"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => {
+                          const idx = node.data.selectedCarouselCard
+                          if (idx < node.data.carouselCards.length - 1) {
+                            const cards = [...node.data.carouselCards]
+                            const temp = cards[idx]
+                            cards[idx] = cards[idx + 1]
+                            cards[idx + 1] = temp
+                            handleUpdate('carouselCards', cards)
+                            handleUpdate('selectedCarouselCard', idx + 1)
+                          }
+                        }}
+                        disabled={node.data.selectedCarouselCard === node.data.carouselCards.length - 1}
+                        className="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-30"
+                        title="Move right"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => {
+                          const idx = node.data.selectedCarouselCard
+                          const cards = node.data.carouselCards.filter((_, i) => i !== idx)
+                          handleUpdate('carouselCards', cards)
+                          if (cards.length > 0) {
+                            handleUpdate('selectedCarouselCard', Math.max(0, idx - 1))
+                          }
+                        }}
+                        className="p-1.5 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500"
+                        title="Delete card"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Card Image Upload - Same as send_card */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">Card Image</label>
+                    {!node.data.carouselCards[node.data.selectedCarouselCard]?.imageUrl ? (
+                      <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-orange-300 dark:border-orange-700 rounded-lg cursor-pointer bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors">
+                        <div className="flex flex-col items-center justify-center py-4">
+                          <svg className="w-8 h-8 mb-2 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <p className="text-sm text-orange-600 dark:text-orange-400 font-medium">Upload image</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">JPG, PNG (1.91:1 ratio recommended)</p>
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0]
+                            if (!file) return
+                            const localUrl = URL.createObjectURL(file)
+                            const cards = [...node.data.carouselCards]
+                            cards[node.data.selectedCarouselCard].imageUrl = localUrl
+                            handleUpdate('carouselCards', cards)
+                          }}
+                        />
+                      </label>
+                    ) : (
+                      <div className="relative rounded-lg overflow-hidden">
+                        <img
+                          src={node.data.carouselCards[node.data.selectedCarouselCard].imageUrl}
+                          alt=""
+                          className="w-full h-28 object-cover"
+                        />
+                        <button
+                          onClick={() => {
+                            const cards = [...node.data.carouselCards]
+                            cards[node.data.selectedCarouselCard].imageUrl = ''
+                            handleUpdate('carouselCards', cards)
+                          }}
+                          className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-full transition-colors"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Card Title - Same as send_card */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
+                      Title <span className="text-gray-400 font-normal">({(node.data.carouselCards[node.data.selectedCarouselCard]?.title || '').length}/80)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={node.data.carouselCards[node.data.selectedCarouselCard]?.title || ''}
+                      onChange={(e) => {
+                        if (e.target.value.length <= 80) {
+                          const cards = [...node.data.carouselCards]
+                          cards[node.data.selectedCarouselCard].title = e.target.value
+                          handleUpdate('carouselCards', cards)
+                        }
+                      }}
+                      placeholder="e.g., Check out our new product!"
+                      className="w-full p-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent"
+                    />
+                  </div>
+
+                  {/* Card Subtitle - Same as send_card */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
+                      Subtitle <span className="text-gray-400 font-normal">({(node.data.carouselCards[node.data.selectedCarouselCard]?.subtitle || '').length}/80)</span>
+                    </label>
+                    <textarea
+                      value={node.data.carouselCards[node.data.selectedCarouselCard]?.subtitle || ''}
+                      onChange={(e) => {
+                        if (e.target.value.length <= 80) {
+                          const cards = [...node.data.carouselCards]
+                          cards[node.data.selectedCarouselCard].subtitle = e.target.value
+                          handleUpdate('carouselCards', cards)
+                        }
+                      }}
+                      placeholder="Add a short description..."
+                      rows={2}
+                      className="w-full p-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent resize-none"
+                    />
+                  </div>
+
+                  {/* Card Buttons - Same as send_card */}
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-sm font-medium text-gray-900 dark:text-white">
+                        Buttons <span className="text-gray-400 font-normal">(max 3)</span>
+                      </label>
+                      {(!node.data.carouselCards[node.data.selectedCarouselCard]?.buttons ||
+                        node.data.carouselCards[node.data.selectedCarouselCard].buttons.length < 3) && (
+                        <button
+                          onClick={() => {
+                            const cards = [...node.data.carouselCards]
+                            const cardButtons = cards[node.data.selectedCarouselCard].buttons || []
+                            cards[node.data.selectedCarouselCard].buttons = [
+                              ...cardButtons,
+                              { id: Date.now(), label: '', actionType: 'openUrl', actionValue: '' }
+                            ]
+                            handleUpdate('carouselCards', cards)
+                          }}
+                          className="text-xs px-3 py-1 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium"
+                        >
+                          + Add Button
+                        </button>
+                      )}
+                    </div>
+
+                    {(!node.data.carouselCards[node.data.selectedCarouselCard]?.buttons ||
+                      node.data.carouselCards[node.data.selectedCarouselCard].buttons.length === 0) ? (
+                      <div className="text-center py-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
+                        <div className="text-3xl mb-2">🔘</div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">No buttons yet</p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Add buttons to make your card interactive</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {node.data.carouselCards[node.data.selectedCarouselCard].buttons.map((button, index) => (
+                          <div key={button.id} className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-xs font-semibold text-gray-600 dark:text-gray-300 flex items-center gap-2">
+                                <span className="w-5 h-5 rounded-full bg-orange-500 text-white flex items-center justify-center text-xs">
+                                  {index + 1}
+                                </span>
+                                Button {index + 1}
+                              </span>
+                              <button
+                                onClick={() => {
+                                  const cards = [...node.data.carouselCards]
+                                  cards[node.data.selectedCarouselCard].buttons = cards[node.data.selectedCarouselCard].buttons.filter((_, i) => i !== index)
+                                  handleUpdate('carouselCards', cards)
+                                }}
+                                className="text-red-500 hover:text-red-700 text-xs font-medium"
+                              >
+                                Remove
+                              </button>
+                            </div>
+
+                            {/* Button Label */}
+                            <input
+                              type="text"
+                              value={button.label}
+                              onChange={(e) => {
+                                if (e.target.value.length <= 20) {
+                                  const cards = [...node.data.carouselCards]
+                                  cards[node.data.selectedCarouselCard].buttons[index].label = e.target.value
+                                  handleUpdate('carouselCards', cards)
+                                }
+                              }}
+                              placeholder="Button label (max 20 chars)"
+                              className="w-full p-2 mb-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                            />
+
+                            {/* Action Type */}
+                            <select
+                              value={button.actionType}
+                              onChange={(e) => {
+                                const cards = [...node.data.carouselCards]
+                                cards[node.data.selectedCarouselCard].buttons[index].actionType = e.target.value
+                                cards[node.data.selectedCarouselCard].buttons[index].actionValue = ''
+                                handleUpdate('carouselCards', cards)
+                              }}
+                              className="w-full p-2 mb-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                            >
+                              <option value="openUrl">Open URL</option>
+                              <option value="goToNode">Go to Next Step</option>
+                              <option value="triggerFlow">Trigger Flow</option>
+                              <option value="callPhone">Call Phone Number</option>
+                            </select>
+
+                            {/* Action Value */}
+                            {button.actionType === 'openUrl' && (
+                              <input
+                                type="url"
+                                value={button.actionValue}
+                                onChange={(e) => {
+                                  const cards = [...node.data.carouselCards]
+                                  cards[node.data.selectedCarouselCard].buttons[index].actionValue = e.target.value
+                                  handleUpdate('carouselCards', cards)
+                                }}
+                                placeholder="https://example.com"
+                                className="w-full p-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                              />
+                            )}
+
+                            {button.actionType === 'callPhone' && (
+                              <input
+                                type="tel"
+                                value={button.actionValue}
+                                onChange={(e) => {
+                                  const cards = [...node.data.carouselCards]
+                                  cards[node.data.selectedCarouselCard].buttons[index].actionValue = e.target.value
+                                  handleUpdate('carouselCards', cards)
+                                }}
+                                placeholder="+1 234 567 8900"
+                                className="w-full p-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                              />
+                            )}
+
+                            {button.actionType === 'goToNode' && (
+                              <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-700">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-blue-500">●→</span>
+                                  <p className="text-xs text-blue-700 dark:text-blue-300">
+                                    Drag from the button's handle on the canvas to connect
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+
+                            {button.actionType === 'triggerFlow' && (
+                              <input
+                                type="text"
+                                value={button.actionValue}
+                                onChange={(e) => {
+                                  const cards = [...node.data.carouselCards]
+                                  cards[node.data.selectedCarouselCard].buttons[index].actionValue = e.target.value
+                                  handleUpdate('carouselCards', cards)
+                                }}
+                                placeholder="Flow name"
+                                className="w-full p-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                              />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {/* Validation Warning */}
+              {node.data.carouselCards && node.data.carouselCards.length === 1 && (
+                <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">⚠️</span>
+                    <p className="text-xs text-yellow-800 dark:text-yellow-300">
+                      Carousels need at least 2 cards. Add one more card!
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Platform Info */}
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-lg">📱</span>
+                  <p className="text-xs font-semibold text-blue-800 dark:text-blue-300">Platform Support</p>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                    <span className="text-gray-600 dark:text-gray-400">Messenger (10 cards)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                    <span className="text-gray-600 dark:text-gray-400">Instagram (10 cards)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
+                    <span className="text-gray-600 dark:text-gray-400">WhatsApp (limited)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                    <span className="text-gray-600 dark:text-gray-400">Telegram (10 cards)</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tips */}
+              <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
+                <p className="text-xs font-medium text-amber-800 dark:text-amber-300 mb-1">Tips:</p>
+                <ul className="text-xs text-amber-700 dark:text-amber-400 space-y-1">
+                  <li>• Image ratio: 1.91:1 works best (e.g., 1200x628)</li>
+                  <li>• First card is most visible - make it count!</li>
+                  <li>• Keep 2-5 cards for best engagement</li>
+                </ul>
+              </div>
+            </>
           )}
 
           {node.data.mediaType === 'send_card' && (
             <>
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">Card Title</label>
-                <input
-                  type="text"
-                  value={node.data.title || ''}
-                  onChange={(e) => handleUpdate('title', e.target.value)}
-                  placeholder="Card title"
-                  className="w-full p-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent"
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">Subtitle</label>
-                <input
-                  type="text"
-                  value={node.data.subtitle || ''}
-                  onChange={(e) => handleUpdate('subtitle', e.target.value)}
-                  placeholder="Card subtitle"
-                  className="w-full p-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent"
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">Image URL (Optional)</label>
-                <input
-                  type="text"
-                  value={node.data.imageUrl || ''}
-                  onChange={(e) => handleUpdate('imageUrl', e.target.value)}
-                  placeholder="https://example.com/image.jpg"
-                  className="w-full p-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent"
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">Buttons</label>
-                <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded border border-orange-200 dark:border-orange-700">
-                  <p className="text-sm text-orange-800 dark:text-orange-300">
-                    {node.data.buttons?.length || 0} button(s) configured
-                  </p>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
-                    Add action buttons to this card
-                  </p>
+              {/* Live Preview */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">Preview</label>
+                <div className="bg-gray-100 dark:bg-gray-900 rounded-lg p-4">
+                  <div className="max-w-[280px] mx-auto bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-lg border border-gray-200 dark:border-gray-700">
+                    {/* Card Image */}
+                    {node.data.cardImageUrl ? (
+                      <img
+                        src={node.data.cardImageUrl}
+                        alt="Card preview"
+                        className="w-full h-36 object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-36 bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30 flex items-center justify-center">
+                        <svg className="w-12 h-12 text-orange-300 dark:text-orange-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                    )}
+                    {/* Card Content */}
+                    <div className="p-3">
+                      <h4 className="font-bold text-gray-900 dark:text-white text-sm truncate">
+                        {node.data.cardTitle || 'Card Title'}
+                      </h4>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
+                        {node.data.cardSubtitle || 'Add a subtitle or description for your card'}
+                      </p>
+                    </div>
+                    {/* Preview Buttons */}
+                    {node.data.cardButtons && node.data.cardButtons.length > 0 && (
+                      <div className="border-t border-gray-200 dark:border-gray-700">
+                        {node.data.cardButtons.map((btn, idx) => (
+                          <div
+                            key={idx}
+                            className="px-3 py-2 text-center text-xs font-medium text-blue-600 dark:text-blue-400 border-b border-gray-200 dark:border-gray-700 last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                          >
+                            {btn.label || `Button ${idx + 1}`}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
+              </div>
+
+              {/* Card Image Upload */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">Card Image</label>
+                {!node.data.cardImageUrl ? (
+                  <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-orange-300 dark:border-orange-700 rounded-lg cursor-pointer bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-colors">
+                    <div className="flex flex-col items-center justify-center py-4">
+                      <svg className="w-8 h-8 mb-2 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <p className="text-sm text-orange-600 dark:text-orange-400 font-medium">Upload image</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">JPG, PNG (1.91:1 ratio recommended)</p>
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (!file) return
+                        const fileSizeMB = file.size / (1024 * 1024)
+                        if (fileSizeMB > 8) {
+                          alert('Image is too large. Maximum size is 8MB.')
+                          return
+                        }
+                        const localUrl = URL.createObjectURL(file)
+                        handleUpdate('cardImageUrl', localUrl)
+                        handleUpdate('cardImageFileName', file.name)
+                      }}
+                    />
+                  </label>
+                ) : (
+                  <div className="relative rounded-lg overflow-hidden">
+                    <img
+                      src={node.data.cardImageUrl}
+                      alt="Card"
+                      className="w-full h-28 object-cover"
+                    />
+                    <button
+                      onClick={() => {
+                        handleUpdate('cardImageUrl', '')
+                        handleUpdate('cardImageFileName', '')
+                      }}
+                      className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-full transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                    <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                      {node.data.cardImageFileName || 'image.jpg'}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Card Title */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
+                  Title <span className="text-gray-400 font-normal">({(node.data.cardTitle || '').length}/80)</span>
+                </label>
+                <input
+                  type="text"
+                  value={node.data.cardTitle || ''}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 80) {
+                      handleUpdate('cardTitle', e.target.value)
+                    }
+                  }}
+                  placeholder="e.g., Check out our new product!"
+                  className="w-full p-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent"
+                />
+              </div>
+
+              {/* Card Subtitle */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2 text-gray-900 dark:text-white">
+                  Subtitle <span className="text-gray-400 font-normal">({(node.data.cardSubtitle || '').length}/80)</span>
+                </label>
+                <textarea
+                  value={node.data.cardSubtitle || ''}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 80) {
+                      handleUpdate('cardSubtitle', e.target.value)
+                    }
+                  }}
+                  placeholder="Add a short description..."
+                  rows={2}
+                  className="w-full p-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent resize-none"
+                />
+              </div>
+
+              {/* Card Buttons */}
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-900 dark:text-white">
+                    Buttons <span className="text-gray-400 font-normal">(max 3)</span>
+                  </label>
+                  {(!node.data.cardButtons || node.data.cardButtons.length < 3) && (
+                    <button
+                      onClick={() => {
+                        const currentButtons = node.data.cardButtons || []
+                        if (currentButtons.length < 3) {
+                          handleUpdate('cardButtons', [
+                            ...currentButtons,
+                            { id: Date.now(), label: '', actionType: 'openUrl', actionValue: '' }
+                          ])
+                        }
+                      }}
+                      className="text-xs px-3 py-1 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium"
+                    >
+                      + Add Button
+                    </button>
+                  )}
+                </div>
+
+                {(!node.data.cardButtons || node.data.cardButtons.length === 0) ? (
+                  <div className="text-center py-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
+                    <div className="text-3xl mb-2">🔘</div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">No buttons yet</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Add buttons to make your card interactive</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {node.data.cardButtons.map((button, index) => (
+                      <div key={button.id} className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-semibold text-gray-600 dark:text-gray-300 flex items-center gap-2">
+                            <span className="w-5 h-5 rounded-full bg-orange-500 text-white flex items-center justify-center text-xs">
+                              {index + 1}
+                            </span>
+                            Button {index + 1}
+                          </span>
+                          <button
+                            onClick={() => {
+                              const newButtons = node.data.cardButtons.filter((_, i) => i !== index)
+                              handleUpdate('cardButtons', newButtons)
+                            }}
+                            className="text-red-500 hover:text-red-700 text-xs font-medium"
+                          >
+                            Remove
+                          </button>
+                        </div>
+
+                        {/* Button Label */}
+                        <input
+                          type="text"
+                          value={button.label}
+                          onChange={(e) => {
+                            if (e.target.value.length <= 20) {
+                              const newButtons = [...node.data.cardButtons]
+                              newButtons[index].label = e.target.value
+                              handleUpdate('cardButtons', newButtons)
+                            }
+                          }}
+                          placeholder="Button label (max 20 chars)"
+                          className="w-full p-2 mb-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        />
+
+                        {/* Action Type */}
+                        <select
+                          value={button.actionType}
+                          onChange={(e) => {
+                            const newButtons = [...node.data.cardButtons]
+                            newButtons[index].actionType = e.target.value
+                            newButtons[index].actionValue = ''
+                            handleUpdate('cardButtons', newButtons)
+                          }}
+                          className="w-full p-2 mb-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                        >
+                          <option value="openUrl">Open URL</option>
+                          <option value="goToNode">Go to Next Step</option>
+                          <option value="triggerFlow">Trigger Flow</option>
+                          <option value="callPhone">Call Phone Number</option>
+                        </select>
+
+                        {/* Action Value */}
+                        {button.actionType === 'openUrl' && (
+                          <input
+                            type="url"
+                            value={button.actionValue}
+                            onChange={(e) => {
+                              const newButtons = [...node.data.cardButtons]
+                              newButtons[index].actionValue = e.target.value
+                              handleUpdate('cardButtons', newButtons)
+                            }}
+                            placeholder="https://example.com"
+                            className="w-full p-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          />
+                        )}
+
+                        {button.actionType === 'callPhone' && (
+                          <input
+                            type="tel"
+                            value={button.actionValue}
+                            onChange={(e) => {
+                              const newButtons = [...node.data.cardButtons]
+                              newButtons[index].actionValue = e.target.value
+                              handleUpdate('cardButtons', newButtons)
+                            }}
+                            placeholder="+1 234 567 8900"
+                            className="w-full p-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          />
+                        )}
+
+                        {button.actionType === 'goToNode' && (
+                          <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-700">
+                            <div className="flex items-center gap-2">
+                              <span className="text-blue-500">●→</span>
+                              <p className="text-xs text-blue-700 dark:text-blue-300">
+                                Drag from the button's handle on the canvas to connect
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        {button.actionType === 'triggerFlow' && (
+                          <input
+                            type="text"
+                            value={button.actionValue}
+                            onChange={(e) => {
+                              const newButtons = [...node.data.cardButtons]
+                              newButtons[index].actionValue = e.target.value
+                              handleUpdate('cardButtons', newButtons)
+                            }}
+                            placeholder="Flow name"
+                            className="w-full p-2 border rounded bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Platform Info */}
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-lg">📱</span>
+                  <p className="text-xs font-semibold text-blue-800 dark:text-blue-300">Platform Support</p>
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                    <span className="text-gray-600 dark:text-gray-400">Messenger</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                    <span className="text-gray-600 dark:text-gray-400">Instagram</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
+                    <span className="text-gray-600 dark:text-gray-400">WhatsApp (limited)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                    <span className="text-gray-600 dark:text-gray-400">Telegram</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tips */}
+              <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
+                <p className="text-xs font-medium text-amber-800 dark:text-amber-300 mb-1">Tips:</p>
+                <ul className="text-xs text-amber-700 dark:text-amber-400 space-y-1">
+                  <li>• Image ratio: 1.91:1 works best (e.g., 1200x628)</li>
+                  <li>• Keep titles short and compelling</li>
+                  <li>• Use action-oriented button labels</li>
+                </ul>
               </div>
             </>
           )}

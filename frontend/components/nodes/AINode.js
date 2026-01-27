@@ -21,7 +21,7 @@ export default function AINode({ data, isConnectable }) {
         type="target"
         position={Position.Left}
         isConnectable={isConnectable}
-        className="w-2.5 h-2.5 !bg-violet-500"
+        className="!w-3 !h-3 !border-2 !border-white !bg-violet-500"
       />
 
       {/* Main Content */}
@@ -122,7 +122,7 @@ export default function AINode({ data, isConnectable }) {
           type="source"
           position={Position.Right}
           isConnectable={isConnectable}
-          className="w-2.5 h-2.5 !bg-violet-500"
+          className="!w-3 !h-3 !border-2 !border-white !bg-violet-500"
         />
       )}
     </div>

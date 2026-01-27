@@ -4,11 +4,11 @@ import { useState } from 'react'
 
 export default function TextMessageNodeConfig({ node, onUpdate }) {
   const [message, setMessage] = useState(node.data.message || '')
-  const [interactionType, setInteractionType] = useState(node.data.interactionType || 'none') // 'none', 'buttons', 'quickReplies'
+  // Independent toggles for buttons and quick replies
+  const [showButtons, setShowButtons] = useState(node.data.showButtons || (node.data.buttons?.length > 0) || false)
+  const [showQuickReplies, setShowQuickReplies] = useState(node.data.showQuickReplies || (node.data.quickReplies?.length > 0) || false)
   const [buttons, setButtons] = useState(node.data.buttons || [])
   const [quickReplies, setQuickReplies] = useState(node.data.quickReplies || [])
-  const [showSwitchWarning, setShowSwitchWarning] = useState(false)
-  const [pendingType, setPendingType] = useState(null)
 
   // Mock CTR data - in real app, this would come from analytics API
   const getButtonCTR = (buttonIndex) => {
@@ -21,44 +21,24 @@ export default function TextMessageNodeConfig({ node, onUpdate }) {
     onUpdate(node.id, { message: value })
   }
 
-  const handleInteractionTypeChange = (newType) => {
-    // If switching from one type to another (not from 'none')
-    if (interactionType !== 'none' && interactionType !== newType && newType !== 'none') {
-      const hasContent = (interactionType === 'buttons' && buttons.length > 0) ||
-                         (interactionType === 'quickReplies' && quickReplies.length > 0)
-
-      if (hasContent) {
-        setPendingType(newType)
-        setShowSwitchWarning(true)
-        return
-      }
-    }
-
-    applyInteractionTypeChange(newType)
-  }
-
-  const applyInteractionTypeChange = (newType) => {
-    setInteractionType(newType)
-    if (newType === 'buttons') {
-      setQuickReplies([])
-      onUpdate(node.id, { interactionType: newType, buttons, quickReplies: [] })
-    } else if (newType === 'quickReplies') {
+  const handleToggleButtons = (enabled) => {
+    setShowButtons(enabled)
+    if (!enabled) {
       setButtons([])
-      onUpdate(node.id, { interactionType: newType, quickReplies, buttons: [] })
+      onUpdate(node.id, { showButtons: enabled, buttons: [] })
     } else {
-      onUpdate(node.id, { interactionType: newType })
+      onUpdate(node.id, { showButtons: enabled })
     }
   }
 
-  const confirmSwitch = () => {
-    applyInteractionTypeChange(pendingType)
-    setShowSwitchWarning(false)
-    setPendingType(null)
-  }
-
-  const cancelSwitch = () => {
-    setShowSwitchWarning(false)
-    setPendingType(null)
+  const handleToggleQuickReplies = (enabled) => {
+    setShowQuickReplies(enabled)
+    if (!enabled) {
+      setQuickReplies([])
+      onUpdate(node.id, { showQuickReplies: enabled, quickReplies: [] })
+    } else {
+      onUpdate(node.id, { showQuickReplies: enabled })
+    }
   }
 
   const addButton = () => {
@@ -120,47 +100,57 @@ export default function TextMessageNodeConfig({ node, onUpdate }) {
         </p>
       </div>
 
-      {/* Interaction Type Toggle */}
-      <div>
-        <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
-          Add Interaction (Optional)
+      {/* Interaction Toggles - Independent toggles for both */}
+      <div className="space-y-3">
+        <label className="block text-sm font-semibold text-gray-900 dark:text-white">
+          Add Interactions (Optional)
         </label>
-        <div className="grid grid-cols-3 gap-2 p-1 bg-gray-100 dark:bg-gray-800 rounded-lg">
-          <button
-            onClick={() => handleInteractionTypeChange('none')}
-            className={`py-2 px-4 rounded-md font-medium text-sm transition-all ${
-              interactionType === 'none'
-                ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-            }`}
-          >
-            None
-          </button>
-          <button
-            onClick={() => handleInteractionTypeChange('buttons')}
-            className={`py-2 px-4 rounded-md font-medium text-sm transition-all ${
-              interactionType === 'buttons'
-                ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-            }`}
-          >
-            🔘 Buttons
-          </button>
-          <button
-            onClick={() => handleInteractionTypeChange('quickReplies')}
-            className={`py-2 px-4 rounded-md font-medium text-sm transition-all ${
-              interactionType === 'quickReplies'
-                ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-            }`}
-          >
-            💬 Quick Replies
-          </button>
+
+        {/* Buttons Toggle */}
+        <div
+          onClick={() => handleToggleButtons(!showButtons)}
+          className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-all ${
+            showButtons
+              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+              : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🔘</span>
+            <div>
+              <p className="font-medium text-gray-900 dark:text-white text-sm">Buttons</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Large action buttons below message (max 3)</p>
+            </div>
+          </div>
+          <div className={`w-11 h-6 rounded-full transition-colors ${showButtons ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'}`}>
+            <div className={`w-5 h-5 rounded-full bg-white shadow-sm transform transition-transform mt-0.5 ${showButtons ? 'translate-x-5 ml-0.5' : 'translate-x-0.5'}`} />
+          </div>
+        </div>
+
+        {/* Quick Replies Toggle */}
+        <div
+          onClick={() => handleToggleQuickReplies(!showQuickReplies)}
+          className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-all ${
+            showQuickReplies
+              ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+              : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">💬</span>
+            <div>
+              <p className="font-medium text-gray-900 dark:text-white text-sm">Quick Replies</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Small bubble replies above keyboard</p>
+            </div>
+          </div>
+          <div className={`w-11 h-6 rounded-full transition-colors ${showQuickReplies ? 'bg-purple-500' : 'bg-gray-300 dark:bg-gray-600'}`}>
+            <div className={`w-5 h-5 rounded-full bg-white shadow-sm transform transition-transform mt-0.5 ${showQuickReplies ? 'translate-x-5 ml-0.5' : 'translate-x-0.5'}`} />
+          </div>
         </div>
       </div>
 
       {/* Buttons Section */}
-      {interactionType === 'buttons' && (
+      {showButtons && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
@@ -252,17 +242,13 @@ export default function TextMessageNodeConfig({ node, onUpdate }) {
               )}
 
               {button.actionType === 'goToNode' && (
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Target Node
-                  </label>
-                  <input
-                    type="text"
-                    value={button.actionValue}
-                    onChange={(e) => updateButton(index, 'actionValue', e.target.value)}
-                    placeholder="Select or create a node"
-                    className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
-                  />
+                <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-200 dark:border-blue-700">
+                  <div className="flex items-center gap-2">
+                    <span className="text-blue-500">●→</span>
+                    <p className="text-xs text-blue-700 dark:text-blue-300">
+                      Drag from the button's handle on the canvas to connect to another node
+                    </p>
+                  </div>
                 </div>
               )}
 
@@ -286,7 +272,7 @@ export default function TextMessageNodeConfig({ node, onUpdate }) {
       )}
 
       {/* Quick Replies Section */}
-      {interactionType === 'quickReplies' && (
+      {showQuickReplies && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
@@ -346,37 +332,6 @@ export default function TextMessageNodeConfig({ node, onUpdate }) {
         </div>
       )}
 
-      {/* Switch Warning Modal */}
-      {showSwitchWarning && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4">
-            <div className="text-center">
-              <div className="text-5xl mb-3">⚠️</div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                Switch Interaction Type?
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                Switching will remove your existing {interactionType === 'buttons' ? 'buttons' : 'quick replies'}.
-                This action cannot be undone.
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={cancelSwitch}
-                className="flex-1 px-4 py-3 rounded-lg font-semibold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmSwitch}
-                className="flex-1 px-4 py-3 rounded-lg font-semibold text-white bg-red-500 hover:bg-red-600 transition-colors"
-              >
-                Continue
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

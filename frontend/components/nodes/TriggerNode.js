@@ -153,7 +153,7 @@ export default function TriggerNode({ data, isConnectable }) {
         type="source"
         position={Position.Right}
         isConnectable={isConnectable}
-        className="w-2.5 h-2.5 !bg-purple-500"
+        className="!w-3 !h-3 !border-2 !border-white !bg-purple-500"
       />
     </div>
   )

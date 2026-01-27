@@ -36,6 +36,7 @@ import ConditionNode from './nodes/ConditionNode'
 import ActionNode from './nodes/ActionNode'
 import AINode from './nodes/AINode'
 import MediaNode from './nodes/MediaNode'
+import DeletableEdge from './edges/DeletableEdge'
 import Sidebar from './Sidebar'
 import NodeConfigPanel from './NodeConfigPanel'
 import AIAssistant from './AIAssistant'
@@ -48,6 +49,10 @@ const nodeTypes = {
   action: ActionNode,
   ai: AINode,
   media: MediaNode,
+}
+
+const edgeTypes = {
+  deletable: DeletableEdge,
 }
 
 const defaultInitialNodes = []
@@ -132,8 +137,118 @@ function FlowBuilderInner({ automationType = null, selectedTemplate = null, preP
   const [notification, setNotification] = useState(null)
   const [availableCategories, setAvailableCategories] = useState(['My Flows', 'Sales', 'Support', 'E-commerce', 'Engagement'])
 
+  // Undo/Redo history
+  const [history, setHistory] = useState([])  // Past states
+  const [future, setFuture] = useState([])    // Future states (for redo)
+  const historyRef = useRef({ nodes: [], edges: [] })  // Track last saved state
+  const isUndoRedoAction = useRef(false)  // Prevent saving during undo/redo
+  const MAX_HISTORY = 50  // Limit history size
+
   // Get the current selected node from the nodes array to ensure we always have fresh data
   const selectedNode = selectedNodeId ? nodes.find(n => n.id === selectedNodeId) : null
+
+  // Save current state to history (call before making changes)
+  const saveToHistory = useCallback(() => {
+    if (isUndoRedoAction.current) return  // Don't save during undo/redo
+
+    const currentState = {
+      nodes: JSON.parse(JSON.stringify(historyRef.current.nodes)),
+      edges: JSON.parse(JSON.stringify(historyRef.current.edges))
+    }
+
+    setHistory(prev => {
+      const newHistory = [...prev, currentState]
+      // Limit history size
+      if (newHistory.length > MAX_HISTORY) {
+        return newHistory.slice(-MAX_HISTORY)
+      }
+      return newHistory
+    })
+    setFuture([])  // Clear redo stack when new action is taken
+  }, [])
+
+  // Track node/edge changes for history
+  useEffect(() => {
+    if (isUndoRedoAction.current) {
+      isUndoRedoAction.current = false
+      historyRef.current = { nodes, edges }
+      return
+    }
+
+    // Check if there's an actual change
+    const prevNodes = JSON.stringify(historyRef.current.nodes)
+    const prevEdges = JSON.stringify(historyRef.current.edges)
+    const currNodes = JSON.stringify(nodes)
+    const currEdges = JSON.stringify(edges)
+
+    if (prevNodes !== currNodes || prevEdges !== currEdges) {
+      // Save previous state to history before updating ref
+      if (historyRef.current.nodes.length > 0 || historyRef.current.edges.length > 0) {
+        saveToHistory()
+      }
+      historyRef.current = { nodes, edges }
+    }
+  }, [nodes, edges, saveToHistory])
+
+  // Undo - go back to previous state
+  const undo = useCallback(() => {
+    if (history.length === 0) return
+
+    const newHistory = [...history]
+    const previousState = newHistory.pop()
+
+    // Save current state to future for redo
+    setFuture(prev => [...prev, {
+      nodes: JSON.parse(JSON.stringify(nodes)),
+      edges: JSON.parse(JSON.stringify(edges))
+    }])
+
+    setHistory(newHistory)
+    isUndoRedoAction.current = true
+    setNodes(previousState.nodes)
+    setEdges(previousState.edges)
+  }, [history, nodes, edges, setNodes, setEdges])
+
+  // Redo - go forward to next state
+  const redo = useCallback(() => {
+    if (future.length === 0) return
+
+    const newFuture = [...future]
+    const nextState = newFuture.pop()
+
+    // Save current state to history
+    setHistory(prev => [...prev, {
+      nodes: JSON.parse(JSON.stringify(nodes)),
+      edges: JSON.parse(JSON.stringify(edges))
+    }])
+
+    setFuture(newFuture)
+    isUndoRedoAction.current = true
+    setNodes(nextState.nodes)
+    setEdges(nextState.edges)
+  }, [future, nodes, edges, setNodes, setEdges])
+
+  // Keyboard shortcuts for undo/redo
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Ignore if typing in an input
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
+
+      // Cmd/Ctrl + Z = Undo
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault()
+        undo()
+      }
+      // Cmd/Ctrl + Shift + Z OR Cmd/Ctrl + Y = Redo
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+        e.preventDefault()
+        redo()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [undo, redo])
 
   // Prevent body scrolling when modals are open
   useEffect(() => {
@@ -483,107 +598,216 @@ function FlowBuilderInner({ automationType = null, selectedTemplate = null, preP
     setEdges((eds) => [...eds, newEdge])
   }, [nodes, setNodes, setEdges])
 
-  // Auto-arrange nodes in a clean horizontal layout
+  // Auto-arrange nodes: Step 1 → Step 2 → Step 3 → etc.
+  // Multiple nodes in the same step stack vertically, then flow continues right
   const rearrangeNodes = useCallback(() => {
     if (nodes.length === 0) return
 
-    // Build adjacency map from edges
-    const childrenMap = {} // nodeId -> [childNodeIds]
-    const parentMap = {} // nodeId -> parentNodeId
+    const nodeWidth = 280
+    const nodeHeight = 180
+    const horizontalGap = 120  // Gap between steps (columns)
+    const verticalGap = 40     // Gap between stacked nodes in same step
+    const startX = 50
+    const startY = 50
+
+    // Build adjacency maps
+    const children = {}  // parentId -> [childIds]
+    const parents = {}   // childId -> [parentIds]
 
     edges.forEach(edge => {
-      if (!childrenMap[edge.source]) {
-        childrenMap[edge.source] = []
+      if (edge.source && edge.target) {
+        if (!children[edge.source]) children[edge.source] = []
+        if (!parents[edge.target]) parents[edge.target] = []
+        if (!children[edge.source].includes(edge.target)) {
+          children[edge.source].push(edge.target)
+        }
+        if (!parents[edge.target].includes(edge.source)) {
+          parents[edge.target].push(edge.source)
+        }
       }
-      childrenMap[edge.source].push(edge.target)
-      parentMap[edge.target] = edge.source
     })
 
-    // Find root nodes (nodes with no parent)
-    const rootNodes = nodes.filter(n => !parentMap[n.id])
+    // Step 1: Assign each node to a step (column) using BFS
+    const nodeStep = {}  // nodeId -> step number (0, 1, 2, ...)
+    const visited = new Set()
 
-    // Calculate positions using BFS
-    const positions = {}
-    const nodeWidth = 240
-    const nodeHeight = 120
-    const horizontalGap = 60
-    const verticalGap = 40
+    // Identify trigger nodes (these are LOCKED at step 0, never move)
+    const triggerIds = new Set(nodes.filter(n => n.type === 'trigger').map(n => n.id))
 
-    let currentX = 50
+    // Find root nodes (triggers first, then nodes with no parents)
+    const roots = []
+    triggerIds.forEach(id => roots.push(id))
 
-    // Process each root and its descendants
-    const processTree = (rootId, startY) => {
-      const queue = [{ id: rootId, depth: 0 }]
-      const depthNodes = {} // depth -> [nodeIds at this depth]
-      const visited = new Set()
-
-      // BFS to group nodes by depth
-      while (queue.length > 0) {
-        const { id, depth } = queue.shift()
-        if (visited.has(id)) continue
-        visited.add(id)
-
-        if (!depthNodes[depth]) depthNodes[depth] = []
-        depthNodes[depth].push(id)
-
-        const children = childrenMap[id] || []
-        children.forEach(childId => {
-          if (!visited.has(childId)) {
-            queue.push({ id: childId, depth: depth + 1 })
-          }
-        })
+    nodes.forEach(n => {
+      if (!triggerIds.has(n.id) && (!parents[n.id] || parents[n.id].length === 0)) {
+        if (!roots.includes(n.id)) roots.push(n.id)
       }
+    })
 
-      // Calculate max height needed for this tree
-      let maxNodesAtDepth = 0
-      Object.values(depthNodes).forEach(nodesAtDepth => {
-        maxNodesAtDepth = Math.max(maxNodesAtDepth, nodesAtDepth.length)
+    // BFS from roots - initial step assignment
+    const queue = []
+    roots.forEach(id => {
+      nodeStep[id] = 0
+      visited.add(id)
+      queue.push(id)
+    })
+
+    while (queue.length > 0) {
+      const currentId = queue.shift()
+      const currentStep = nodeStep[currentId]
+      const nodeChildren = children[currentId] || []
+
+      nodeChildren.forEach(childId => {
+        // BACK EDGE CHECK: Skip if already visited OR if it's a trigger
+        // Triggers are always at step 0, connections back to them are just visual
+        if (visited.has(childId) || triggerIds.has(childId)) return
+
+        nodeStep[childId] = currentStep + 1
+        visited.add(childId)
+        queue.push(childId)
       })
-
-      // Position nodes at each depth
-      Object.entries(depthNodes).forEach(([depth, nodeIds]) => {
-        const x = currentX + parseInt(depth) * (nodeWidth + horizontalGap)
-        const totalHeight = nodeIds.length * nodeHeight + (nodeIds.length - 1) * verticalGap
-        const startYForDepth = startY + (maxNodesAtDepth * (nodeHeight + verticalGap) - totalHeight) / 2
-
-        nodeIds.forEach((nodeId, index) => {
-          positions[nodeId] = {
-            x,
-            y: startYForDepth + index * (nodeHeight + verticalGap)
-          }
-        })
-      })
-
-      // Return the width of this tree
-      const maxDepth = Math.max(...Object.keys(depthNodes).map(Number))
-      return {
-        width: (maxDepth + 1) * (nodeWidth + horizontalGap),
-        height: maxNodesAtDepth * (nodeHeight + verticalGap)
-      }
     }
 
-    // Process all root nodes
-    let currentY = 50
-    rootNodes.forEach(root => {
-      const treeSize = processTree(root.id, currentY)
-      currentY += treeSize.height + verticalGap * 2
-    })
-
-    // Handle orphan nodes (no connections)
-    const positionedIds = new Set(Object.keys(positions))
-    const orphanNodes = nodes.filter(n => !positionedIds.has(n.id))
-
-    orphanNodes.forEach((node, index) => {
-      positions[node.id] = {
-        x: 50 + index * (nodeWidth + horizontalGap),
-        y: currentY
+    // Handle disconnected nodes
+    let maxStep = Math.max(0, ...Object.values(nodeStep).filter(s => s !== undefined))
+    nodes.forEach(n => {
+      if (nodeStep[n.id] === undefined) {
+        nodeStep[n.id] = maxStep + 1
       }
     })
 
-    // Update node positions
-    setNodes(nds => nds.map(node => ({
-      ...node,
-      position: positions[node.id] || node.position
+    // Second pass: ensure each node is after ALL its forward parents
+    // SKIP triggers - they are locked at step 0
+    // SKIP back edges - edges where parent step >= node step
+    let changed = true
+    let iterations = 0
+    const maxIterations = nodes.length + 1
+
+    while (changed && iterations < maxIterations) {
+      changed = false
+      iterations++
+
+      nodes.forEach(n => {
+        // Never move triggers
+        if (triggerIds.has(n.id)) return
+
+        const nodeParents = parents[n.id] || []
+        nodeParents.forEach(parentId => {
+          const parentStep = nodeStep[parentId]
+          // Only forward edges: parent must have SMALLER step
+          if (parentStep !== undefined && parentStep < nodeStep[n.id]) {
+            const minStep = parentStep + 1
+            if (nodeStep[n.id] < minStep) {
+              nodeStep[n.id] = minStep
+              changed = true
+            }
+          }
+        })
+      })
+    }
+
+    // Step 2: Group nodes by step
+    const steps = {}  // step -> [nodes]
+    nodes.forEach(n => {
+      const step = nodeStep[n.id]
+      if (!steps[step]) steps[step] = []
+      steps[step].push(n)
+    })
+
+    const sortedSteps = Object.keys(steps).map(Number).sort((a, b) => a - b)
+
+    // Step 3: Order nodes within each step
+    // - Group by parent so siblings stay together
+    // - Order groups by parent's vertical position
+    const nodeY = {}  // nodeId -> y index for ordering
+
+    // First step: triggers on top, then others
+    if (sortedSteps.length > 0) {
+      const firstStep = steps[sortedSteps[0]]
+      firstStep.sort((a, b) => {
+        if (a.type === 'trigger' && b.type !== 'trigger') return -1
+        if (b.type === 'trigger' && a.type !== 'trigger') return 1
+        return (a.position?.y || 0) - (b.position?.y || 0)
+      })
+      firstStep.forEach((n, i) => { nodeY[n.id] = i })
+    }
+
+    // Subsequent steps: group siblings, sort by parent position
+    for (let i = 1; i < sortedSteps.length; i++) {
+      const stepNum = sortedSteps[i]
+      const stepNodes = steps[stepNum]
+
+      // Group by parent (only consider FORWARD parents - earlier steps)
+      const groups = {}  // parentId -> { parentY, nodes }
+      const noParent = []
+
+      stepNodes.forEach(n => {
+        const nodeParents = parents[n.id] || []
+        // Find the best FORWARD parent (must be at earlier step)
+        let bestParent = null
+        let bestParentY = Infinity
+        nodeParents.forEach(pid => {
+          // Only consider forward edges: parent step must be < current step
+          const parentStep = nodeStep[pid]
+          if (parentStep === undefined || parentStep >= stepNum) return  // Skip back edges
+
+          if (nodeY[pid] !== undefined && nodeY[pid] < bestParentY) {
+            bestParent = pid
+            bestParentY = nodeY[pid]
+          }
+        })
+
+        if (bestParent !== null) {
+          if (!groups[bestParent]) {
+            groups[bestParent] = { parentY: bestParentY, nodes: [] }
+          }
+          groups[bestParent].nodes.push(n)
+        } else {
+          noParent.push(n)
+        }
+      })
+
+      // Sort groups by parent Y position
+      const sortedGroups = Object.values(groups).sort((a, b) => a.parentY - b.parentY)
+
+      // Sort nodes within each group by their current Y
+      sortedGroups.forEach(g => {
+        g.nodes.sort((a, b) => (a.position?.y || 0) - (b.position?.y || 0))
+      })
+
+      // Flatten into ordered list
+      const orderedNodes = []
+      sortedGroups.forEach(g => orderedNodes.push(...g.nodes))
+      orderedNodes.push(...noParent)
+
+      // Update step and Y indices
+      steps[stepNum] = orderedNodes
+      orderedNodes.forEach((n, idx) => { nodeY[n.id] = idx })
+    }
+
+    // Step 4: Calculate positions
+    const positions = {}
+
+    sortedSteps.forEach((stepNum, colIdx) => {
+      const stepNodes = steps[stepNum]
+      const x = startX + colIdx * (nodeWidth + horizontalGap)
+
+      // Calculate total height for this column
+      const colHeight = stepNodes.length * nodeHeight + (stepNodes.length - 1) * verticalGap
+
+      // Start Y position (can center later if needed)
+      let y = startY
+
+      stepNodes.forEach((n, rowIdx) => {
+        positions[n.id] = { x, y }
+        y += nodeHeight + verticalGap
+      })
+    })
+
+    // Apply positions
+    setNodes(nds => nds.map(n => ({
+      ...n,
+      position: positions[n.id] || n.position
     })))
   }, [nodes, edges, setNodes])
 
@@ -814,6 +1038,26 @@ function FlowBuilderInner({ automationType = null, selectedTemplate = null, preP
       <div className="flex-1 relative bg-white dark:bg-gray-900 h-full overflow-hidden">
         {/* Desktop Action Buttons */}
         <div className="hidden md:flex fixed top-20 right-4 z-[60] gap-2">
+          {/* Undo/Redo buttons */}
+          <button
+            onClick={undo}
+            disabled={history.length === 0}
+            className={`bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:border-black dark:hover:border-white text-black dark:text-white font-semibold py-2 px-3 text-sm transition-colors flex items-center gap-1 ${history.length === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
+            title="Undo (Ctrl+Z)"
+          >
+            <span>↩️</span>
+            <span>Undo</span>
+          </button>
+          <button
+            onClick={redo}
+            disabled={future.length === 0}
+            className={`bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:border-black dark:hover:border-white text-black dark:text-white font-semibold py-2 px-3 text-sm transition-colors flex items-center gap-1 ${future.length === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}
+            title="Redo (Ctrl+Shift+Z)"
+          >
+            <span>↪️</span>
+            <span>Redo</span>
+          </button>
+          <div className="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
           <button
             onClick={rearrangeNodes}
             className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:border-black dark:hover:border-white text-black dark:text-white font-semibold py-2 px-4 text-sm transition-colors flex items-center gap-2"
@@ -859,6 +1103,31 @@ function FlowBuilderInner({ automationType = null, selectedTemplate = null, preP
             {/* Mobile Actions Menu */}
             {showMobileActions && (
               <div className="fixed bottom-40 right-4 z-[60] flex flex-col gap-2 animate-slide-in-bottom">
+                {/* Undo/Redo row */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      undo()
+                      setShowMobileActions(false)
+                    }}
+                    disabled={history.length === 0}
+                    className={`flex-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-black dark:text-white font-semibold py-3 px-4 text-sm rounded-lg shadow-lg flex items-center justify-center gap-2 touch-target ${history.length === 0 ? 'opacity-40' : ''}`}
+                  >
+                    <span>↩️</span>
+                    <span>Undo</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      redo()
+                      setShowMobileActions(false)
+                    }}
+                    disabled={future.length === 0}
+                    className={`flex-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-black dark:text-white font-semibold py-3 px-4 text-sm rounded-lg shadow-lg flex items-center justify-center gap-2 touch-target ${future.length === 0 ? 'opacity-40' : ''}`}
+                  >
+                    <span>↪️</span>
+                    <span>Redo</span>
+                  </button>
+                </div>
                 <button
                   onClick={() => {
                     saveFlow()
@@ -896,7 +1165,11 @@ function FlowBuilderInner({ automationType = null, selectedTemplate = null, preP
 
         <ReactFlow
           nodes={nodes}
-          edges={edges}
+          edges={edges.map(edge => ({
+            ...edge,
+            type: 'deletable',
+            data: { ...edge.data, onDelete: (edgeId) => setEdges(eds => eds.filter(e => e.id !== edgeId)) }
+          }))}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
@@ -907,6 +1180,8 @@ function FlowBuilderInner({ automationType = null, selectedTemplate = null, preP
             handlePaneClickWithDoubleTap(event)
           }}
           nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          defaultEdgeOptions={{ type: 'deletable' }}
           fitView
           minZoom={0.2}
           maxZoom={2}
@@ -937,6 +1212,7 @@ function FlowBuilderInner({ automationType = null, selectedTemplate = null, preP
           onClose={() => setSelectedNodeId(null)}
           onAddConnectedNode={addConnectedNode}
           workspaceId={workspaceId}
+          channelType={channelType}
         />
       )}
 
