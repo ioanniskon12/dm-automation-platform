@@ -496,3 +496,23 @@ model BroadcastRecipientLog {
   @@index([userId])
   @@map("broadcast_recipient_logs")
 }
+
+// ============================================
+// ACTIVITY LOGS (Admin tracking)
+// ============================================
+model ActivityLog {
+  id          String   @id @default(uuid())
+  type        String   // login, login_failed, signup, logout, password_reset, admin_action
+  email       String   // User email who performed the action
+  severity    String   @default("info") // success, info, warning, error
+  message     String   // Human readable message
+  ip          String?  // IP address
+  userAgent   String?  // Browser/device info
+  details     String   @default("{}") // JSON with extra details
+  createdAt   DateTime @default(now())
+
+  @@index([type])
+  @@index([email])
+  @@index([createdAt])
+  @@map("activity_logs")
+}

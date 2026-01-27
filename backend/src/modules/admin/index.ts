@@ -284,6 +284,111 @@ const adminModule: FastifyPluginAsync = async (fastify) => {
       });
     }
   });
+
+  // ============================================
+  // GET ACTIVITY LOGS
+  // ============================================
+  fastify.get('/logs', { preHandler: requireAdmin }, async (request, reply) => {
+    const { type, email, limit = '100', offset = '0' } = request.query as {
+      type?: string;
+      email?: string;
+      limit?: string;
+      offset?: string;
+    };
+
+    try {
+      const where: any = {};
+
+      if (type && type !== 'all') {
+        where.type = type;
+      }
+
+      if (email) {
+        where.email = {
+          contains: email.toLowerCase(),
+          mode: 'insensitive',
+        };
+      }
+
+      const [logs, total] = await Promise.all([
+        prisma.activityLog.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          take: parseInt(limit),
+          skip: parseInt(offset),
+        }),
+        prisma.activityLog.count({ where }),
+      ]);
+
+      // Transform for frontend
+      const transformedLogs = logs.map((log) => ({
+        id: log.id,
+        type: log.type,
+        email: log.email,
+        severity: log.severity,
+        message: log.message,
+        ip: log.ip,
+        userAgent: log.userAgent,
+        details: JSON.parse(log.details || '{}'),
+        timestamp: log.createdAt.toISOString(),
+      }));
+
+      return reply.send({
+        success: true,
+        logs: transformedLogs,
+        total,
+        limit: parseInt(limit),
+        offset: parseInt(offset),
+      });
+    } catch (error: any) {
+      fastify.log.error('Error fetching logs:', error);
+      return reply.status(500).send({
+        success: false,
+        error: 'Failed to fetch activity logs',
+      });
+    }
+  });
+
+  // ============================================
+  // GET LOG STATS (for dashboard cards)
+  // ============================================
+  fastify.get('/logs/stats', { preHandler: requireAdmin }, async (request, reply) => {
+    try {
+      const [
+        totalLogs,
+        loginCount,
+        signupCount,
+        errorCount,
+        uniqueEmails,
+      ] = await Promise.all([
+        prisma.activityLog.count(),
+        prisma.activityLog.count({ where: { type: 'login' } }),
+        prisma.activityLog.count({ where: { type: 'signup' } }),
+        prisma.activityLog.count({ where: { severity: 'error' } }),
+        prisma.activityLog.groupBy({
+          by: ['email'],
+          _count: true,
+        }),
+      ]);
+
+      return reply.send({
+        success: true,
+        stats: {
+          totalLogs,
+          loginCount,
+          signupCount,
+          errorCount,
+          uniqueUsers: uniqueEmails.length,
+        },
+      });
+    } catch (error: any) {
+      fastify.log.error('Error fetching log stats:', error);
+      return reply.status(500).send({
+        success: false,
+        error: 'Failed to fetch log stats',
+      });
+    }
+  });
 };
 
 export default adminModule;

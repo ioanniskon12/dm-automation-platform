@@ -2,16 +2,18 @@
 
 import { useState, useEffect } from 'react';
 
-// Activity log types
-const LOG_TYPES = {
-  LOGIN: 'Login',
-  LOGOUT: 'Logout',
-  SIGNUP: 'Signup',
-  PASSWORD_RESET: 'Password Reset',
-  FLOW_CREATED: 'Flow Created',
-  FLOW_ACTIVATED: 'Flow Activated',
-  MESSAGE_SENT: 'Message Sent',
-  API_ERROR: 'API Error',
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3003';
+
+// Type labels for display
+const typeLabels = {
+  login: 'Login',
+  login_failed: 'Login Failed',
+  login_blocked: 'Login Blocked',
+  signup: 'Signup',
+  signup_failed: 'Signup Failed',
+  password_reset_request: 'Password Reset Request',
+  password_reset: 'Password Reset',
+  admin_action: 'Admin Action',
 };
 
 const severityColors = {
@@ -22,117 +24,99 @@ const severityColors = {
 };
 
 const typeColors = {
-  [LOG_TYPES.LOGIN]: 'bg-green-100 text-green-700',
-  [LOG_TYPES.LOGOUT]: 'bg-gray-100 text-gray-700',
-  [LOG_TYPES.SIGNUP]: 'bg-purple-100 text-purple-700',
-  [LOG_TYPES.PASSWORD_RESET]: 'bg-orange-100 text-orange-700',
-  [LOG_TYPES.FLOW_CREATED]: 'bg-blue-100 text-blue-700',
-  [LOG_TYPES.FLOW_ACTIVATED]: 'bg-cyan-100 text-cyan-700',
-  [LOG_TYPES.MESSAGE_SENT]: 'bg-indigo-100 text-indigo-700',
-  [LOG_TYPES.API_ERROR]: 'bg-red-100 text-red-700',
+  login: 'bg-green-100 text-green-700',
+  login_failed: 'bg-red-100 text-red-700',
+  login_blocked: 'bg-red-100 text-red-700',
+  signup: 'bg-purple-100 text-purple-700',
+  signup_failed: 'bg-red-100 text-red-700',
+  password_reset_request: 'bg-orange-100 text-orange-700',
+  password_reset: 'bg-orange-100 text-orange-700',
+  admin_action: 'bg-blue-100 text-blue-700',
 };
 
 export default function LogsPage() {
   const [logs, setLogs] = useState([]);
+  const [stats, setStats] = useState({
+    loginCount: 0,
+    signupCount: 0,
+    errorCount: 0,
+    uniqueUsers: 0,
+  });
   const [loading, setLoading] = useState(true);
-  const [filterType, setFilterType] = useState(LOG_TYPES.LOGIN);
+  const [error, setError] = useState(null);
+  const [filterType, setFilterType] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedLog, setExpandedLog] = useState(null);
 
-  // Fetch logs from API or localStorage
-  useEffect(() => {
-    const fetchLogs = async () => {
-      try {
-        // Try to get logs from localStorage (for demo purposes)
-        const storedLogs = localStorage.getItem('activityLogs');
-        if (storedLogs) {
-          setLogs(JSON.parse(storedLogs));
-        } else {
-          // Initialize with sample data
-          const sampleLogs = [
-            {
-              id: 1,
-              timestamp: new Date().toISOString(),
-              type: LOG_TYPES.LOGIN,
-              email: 'gianniskon12@gmail.com',
-              severity: 'success',
-              message: 'User logged in successfully',
-              ip: '192.168.1.1',
-              userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
-              details: { method: 'email/password' }
-            },
-            {
-              id: 2,
-              timestamp: new Date(Date.now() - 3600000).toISOString(),
-              type: LOG_TYPES.SIGNUP,
-              email: 'newuser@example.com',
-              severity: 'success',
-              message: 'New user registered',
-              ip: '10.0.0.50',
-              userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0)',
-              details: { source: 'organic' }
-            },
-            {
-              id: 3,
-              timestamp: new Date(Date.now() - 7200000).toISOString(),
-              type: LOG_TYPES.API_ERROR,
-              email: 'sotiris040197@gmail.com',
-              severity: 'error',
-              message: 'Instagram API rate limit exceeded',
-              ip: '192.168.1.2',
-              userAgent: 'Mozilla/5.0',
-              details: { error: 'Rate limit exceeded', endpoint: '/api/instagram/messages' }
-            },
-            {
-              id: 4,
-              timestamp: new Date(Date.now() - 10800000).toISOString(),
-              type: LOG_TYPES.FLOW_CREATED,
-              email: 'gianniskon12@gmail.com',
-              severity: 'info',
-              message: 'New automation flow created',
-              ip: '192.168.1.1',
-              userAgent: 'Mozilla/5.0',
-              details: { flowName: 'Welcome Message', channel: 'instagram' }
-            },
-            {
-              id: 5,
-              timestamp: new Date(Date.now() - 14400000).toISOString(),
-              type: LOG_TYPES.LOGIN,
-              email: 'sotiris040197@gmail.com',
-              severity: 'success',
-              message: 'User logged in successfully',
-              ip: '10.0.0.100',
-              userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-              details: { method: 'email/password' }
-            },
-          ];
-          setLogs(sampleLogs);
-          localStorage.setItem('activityLogs', JSON.stringify(sampleLogs));
-        }
-      } catch (error) {
-        console.error('Error fetching logs:', error);
-      } finally {
-        setLoading(false);
+  // Fetch logs from backend API
+  const fetchLogs = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+
+      // Build query params
+      const params = new URLSearchParams();
+      if (filterType && filterType !== 'all') {
+        params.append('type', filterType);
       }
-    };
+      if (searchQuery) {
+        params.append('email', searchQuery);
+      }
+      params.append('limit', '100');
 
+      const response = await fetch(`${API_URL}/api/admin/logs?${params}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch logs');
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        setLogs(data.logs);
+      }
+    } catch (err) {
+      console.error('Error fetching logs:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch stats from backend API
+  const fetchStats = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/admin/logs/stats`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setStats(data.stats);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching stats:', err);
+    }
+  };
+
+  useEffect(() => {
     fetchLogs();
-  }, []);
+    fetchStats();
+  }, [filterType, searchQuery]);
 
-  // Get unique emails
-  const uniqueEmails = [...new Set(logs.map(log => log.email))];
-
-  // Filter logs - only by email search
-  const filteredLogs = logs.filter((log) => {
-    if (!searchQuery) return filterType === 'all' || log.type === filterType;
-    return log.email.toLowerCase().includes(searchQuery.toLowerCase());
-  });
-
-  // Count by severity
-  const errorCount = logs.filter((l) => l.severity === 'error').length;
-  const warningCount = logs.filter((l) => l.severity === 'warning').length;
-  const loginCount = logs.filter((l) => l.type === LOG_TYPES.LOGIN).length;
-  const signupCount = logs.filter((l) => l.type === LOG_TYPES.SIGNUP).length;
+  // Refresh logs
+  const refreshLogs = () => {
+    fetchLogs();
+    fetchStats();
+  };
 
   // Format timestamp
   const formatTime = (timestamp) => {
@@ -140,27 +124,12 @@ export default function LogsPage() {
     return date.toLocaleString();
   };
 
-  // Add a new log entry (can be called from other parts of the app)
-  const addLog = (logEntry) => {
-    const newLog = {
-      id: Date.now(),
-      timestamp: new Date().toISOString(),
-      ...logEntry
-    };
-    const updatedLogs = [newLog, ...logs];
-    setLogs(updatedLogs);
-    localStorage.setItem('activityLogs', JSON.stringify(updatedLogs));
+  // Get type label
+  const getTypeLabel = (type) => {
+    return typeLabels[type] || type;
   };
 
-  // Clear all logs
-  const clearLogs = () => {
-    if (confirm('Are you sure you want to clear all logs?')) {
-      setLogs([]);
-      localStorage.removeItem('activityLogs');
-    }
-  };
-
-  if (loading) {
+  if (loading && logs.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
@@ -174,22 +143,31 @@ export default function LogsPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Activity Logs</h1>
-          <p className="text-gray-600 mt-1">Track user activity, logins, and system events by email.</p>
+          <p className="text-gray-600 mt-1">Track user activity, logins, and system events.</p>
         </div>
         <button
-          onClick={clearLogs}
-          className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+          onClick={refreshLogs}
+          className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors flex items-center gap-2"
         >
-          Clear Logs
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          Refresh
         </button>
       </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          {error}
+        </div>
+      )}
 
       {/* Summary Cards - Clickable Filters */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div
-          onClick={() => setFilterType(filterType === LOG_TYPES.LOGIN ? 'all' : LOG_TYPES.LOGIN)}
+          onClick={() => setFilterType(filterType === 'login' ? 'all' : 'login')}
           className={`bg-white rounded-xl border-2 p-4 cursor-pointer transition-all hover:shadow-md ${
-            filterType === LOG_TYPES.LOGIN ? 'border-green-500 ring-2 ring-green-200' : 'border-gray-200 hover:border-green-300'
+            filterType === 'login' ? 'border-green-500 ring-2 ring-green-200' : 'border-gray-200 hover:border-green-300'
           }`}
         >
           <div className="flex items-center gap-3">
@@ -200,14 +178,14 @@ export default function LogsPage() {
             </div>
             <div>
               <p className="text-sm text-gray-600">Logins</p>
-              <p className="text-xl font-bold text-green-600">{loginCount}</p>
+              <p className="text-xl font-bold text-green-600">{stats.loginCount}</p>
             </div>
           </div>
         </div>
         <div
-          onClick={() => setFilterType(filterType === LOG_TYPES.SIGNUP ? 'all' : LOG_TYPES.SIGNUP)}
+          onClick={() => setFilterType(filterType === 'signup' ? 'all' : 'signup')}
           className={`bg-white rounded-xl border-2 p-4 cursor-pointer transition-all hover:shadow-md ${
-            filterType === LOG_TYPES.SIGNUP ? 'border-purple-500 ring-2 ring-purple-200' : 'border-gray-200 hover:border-purple-300'
+            filterType === 'signup' ? 'border-purple-500 ring-2 ring-purple-200' : 'border-gray-200 hover:border-purple-300'
           }`}
         >
           <div className="flex items-center gap-3">
@@ -218,14 +196,14 @@ export default function LogsPage() {
             </div>
             <div>
               <p className="text-sm text-gray-600">Signups</p>
-              <p className="text-xl font-bold text-purple-600">{signupCount}</p>
+              <p className="text-xl font-bold text-purple-600">{stats.signupCount}</p>
             </div>
           </div>
         </div>
         <div
-          onClick={() => setFilterType(filterType === LOG_TYPES.API_ERROR ? 'all' : LOG_TYPES.API_ERROR)}
+          onClick={() => setFilterType(filterType === 'login_failed' ? 'all' : 'login_failed')}
           className={`bg-white rounded-xl border-2 p-4 cursor-pointer transition-all hover:shadow-md ${
-            filterType === LOG_TYPES.API_ERROR ? 'border-red-500 ring-2 ring-red-200' : 'border-gray-200 hover:border-red-300'
+            filterType === 'login_failed' ? 'border-red-500 ring-2 ring-red-200' : 'border-gray-200 hover:border-red-300'
           }`}
         >
           <div className="flex items-center gap-3">
@@ -235,8 +213,8 @@ export default function LogsPage() {
               </svg>
             </div>
             <div>
-              <p className="text-sm text-gray-600">Errors</p>
-              <p className="text-xl font-bold text-red-600">{errorCount}</p>
+              <p className="text-sm text-gray-600">Failed Logins</p>
+              <p className="text-xl font-bold text-red-600">{stats.errorCount}</p>
             </div>
           </div>
         </div>
@@ -254,7 +232,7 @@ export default function LogsPage() {
             </div>
             <div>
               <p className="text-sm text-gray-600">Unique Users</p>
-              <p className="text-xl font-bold text-blue-600">{uniqueEmails.length}</p>
+              <p className="text-xl font-bold text-blue-600">{stats.uniqueUsers}</p>
             </div>
           </div>
         </div>
@@ -290,12 +268,12 @@ export default function LogsPage() {
           <h3 className="text-lg font-semibold text-gray-900">
             Activity Log
             <span className="ml-2 text-sm font-normal text-gray-500">
-              ({filteredLogs.length} entries)
+              ({logs.length} entries)
             </span>
           </h3>
         </div>
         <div className="divide-y divide-gray-200">
-          {filteredLogs.map((log) => (
+          {logs.map((log) => (
             <div key={log.id} className="hover:bg-gray-50">
               <div
                 className="px-6 py-4 cursor-pointer"
@@ -304,11 +282,11 @@ export default function LogsPage() {
                 <div className="flex items-start gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${severityColors[log.severity]}`}>
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${severityColors[log.severity] || 'bg-gray-100 text-gray-700'}`}>
                         {log.severity}
                       </span>
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${typeColors[log.type]}`}>
-                        {log.type}
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${typeColors[log.type] || 'bg-gray-100 text-gray-700'}`}>
+                        {getTypeLabel(log.type)}
                       </span>
                       <span className="text-xs text-gray-500">{formatTime(log.timestamp)}</span>
                     </div>
@@ -332,13 +310,13 @@ export default function LogsPage() {
                   <div className="bg-gray-50 rounded-lg p-4 text-sm space-y-2">
                     <div className="flex gap-2">
                       <span className="text-gray-500 w-24">IP Address:</span>
-                      <span className="text-gray-900">{log.ip}</span>
+                      <span className="text-gray-900">{log.ip || 'unknown'}</span>
                     </div>
                     <div className="flex gap-2">
                       <span className="text-gray-500 w-24">User Agent:</span>
-                      <span className="text-gray-900 break-all">{log.userAgent}</span>
+                      <span className="text-gray-900 break-all">{log.userAgent || 'unknown'}</span>
                     </div>
-                    {log.details && (
+                    {log.details && Object.keys(log.details).length > 0 && (
                       <div className="flex gap-2">
                         <span className="text-gray-500 w-24">Details:</span>
                         <pre className="text-gray-900 text-xs bg-gray-100 p-2 rounded overflow-x-auto">
@@ -353,7 +331,7 @@ export default function LogsPage() {
           ))}
         </div>
 
-        {filteredLogs.length === 0 && (
+        {logs.length === 0 && !loading && (
           <div className="p-12 text-center">
             <svg
               className="w-12 h-12 text-gray-400 mx-auto mb-4"
@@ -368,7 +346,7 @@ export default function LogsPage() {
                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <p className="text-gray-500">No logs found matching your criteria.</p>
+            <p className="text-gray-500">No activity logs yet. Logs will appear when users login or signup.</p>
           </div>
         )}
       </div>

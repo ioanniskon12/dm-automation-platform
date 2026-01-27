@@ -1,8 +1,34 @@
-import { FastifyPluginAsync } from 'fastify';
+import { FastifyPluginAsync, FastifyRequest } from 'fastify';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import prisma from '../../lib/prisma.js';
 import { sendEmail, emailTemplates } from '../../lib/email.js';
+
+// Helper to log activity
+const logActivity = async (
+  type: string,
+  email: string,
+  message: string,
+  severity: 'success' | 'info' | 'warning' | 'error',
+  request: FastifyRequest,
+  details: Record<string, any> = {}
+) => {
+  try {
+    await prisma.activityLog.create({
+      data: {
+        type,
+        email: email.toLowerCase(),
+        message,
+        severity,
+        ip: (request.headers['x-forwarded-for'] as string)?.split(',')[0] || request.ip || 'unknown',
+        userAgent: request.headers['user-agent'] || 'unknown',
+        details: JSON.stringify(details),
+      },
+    });
+  } catch (error) {
+    console.error('Failed to log activity:', error);
+  }
+};
 
 // Rate limit config for auth endpoints
 const authRateLimit = {
@@ -102,6 +128,9 @@ const authModule: FastifyPluginAsync = async (fastify) => {
         { expiresIn: '7d' }
       );
 
+      // Log successful signup
+      await logActivity('signup', email, 'New user registered', 'success', request, { name });
+
       return reply.status(201).send({
         success: true,
         token,
@@ -117,6 +146,8 @@ const authModule: FastifyPluginAsync = async (fastify) => {
       });
     } catch (error: any) {
       fastify.log.error('Signup error:', error);
+      // Log failed signup
+      await logActivity('signup_failed', email, 'Signup failed: ' + error.message, 'error', request);
       return reply.status(500).send({
         success: false,
         error: 'Failed to create account. Please try again.',
@@ -160,6 +191,7 @@ const authModule: FastifyPluginAsync = async (fastify) => {
       });
 
       if (!user) {
+        await logActivity('login_failed', email, 'Login failed: user not found', 'warning', request);
         return reply.status(401).send({
           success: false,
           error: 'Invalid email or password',
@@ -168,6 +200,7 @@ const authModule: FastifyPluginAsync = async (fastify) => {
 
       // Check if user is blocked or suspended
       if (user.status === 'blocked') {
+        await logActivity('login_blocked', email, 'Blocked user attempted login', 'warning', request);
         return reply.status(403).send({
           success: false,
           error: 'Your account has been blocked. Please contact support.',
@@ -175,6 +208,7 @@ const authModule: FastifyPluginAsync = async (fastify) => {
       }
 
       if (user.status === 'suspended') {
+        await logActivity('login_blocked', email, 'Suspended user attempted login', 'warning', request);
         return reply.status(403).send({
           success: false,
           error: 'Your account has been suspended. Please contact support.',
@@ -185,6 +219,7 @@ const authModule: FastifyPluginAsync = async (fastify) => {
       const isValidPassword = await bcrypt.compare(password, user.password);
 
       if (!isValidPassword) {
+        await logActivity('login_failed', email, 'Login failed: wrong password', 'warning', request);
         return reply.status(401).send({
           success: false,
           error: 'Invalid email or password',
@@ -218,6 +253,11 @@ const authModule: FastifyPluginAsync = async (fastify) => {
         },
         { expiresIn: tokenExpiry }
       );
+
+      // Log successful login
+      await logActivity('login', user.email, 'User logged in successfully', 'success', request, {
+        rememberMe: !!rememberMe,
+      });
 
       return reply.send({
         success: true,
@@ -312,6 +352,9 @@ const authModule: FastifyPluginAsync = async (fastify) => {
         html: emailContent.html,
       });
 
+      // Log password reset request
+      await logActivity('password_reset_request', email, 'Password reset requested', 'info', request);
+
       return reply.send({
         success: true,
         message: 'If an account exists with this email, you will receive a password reset link.',
@@ -387,6 +430,9 @@ const authModule: FastifyPluginAsync = async (fastify) => {
         where: { id: resetToken.id },
         data: { used: true },
       });
+
+      // Log successful password reset
+      await logActivity('password_reset', resetToken.user.email, 'Password reset successfully', 'success', request);
 
       return reply.send({
         success: true,
