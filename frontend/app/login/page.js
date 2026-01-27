@@ -141,7 +141,7 @@ export default function Login() {
                     className="w-4 h-4 border-gray-300 rounded text-blue-600 focus:ring-blue-500"
                   />
                   <label htmlFor="remember" className="ml-2 text-gray-600 cursor-pointer">
-                    Remember me for 1 week
+                    Remember me
                   </label>
                 </div>
                 <Link href="/forgot-password" className="text-gray-600 hover:text-black transition-colors">

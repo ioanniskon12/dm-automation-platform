@@ -24,17 +24,54 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  // Validate email format
+  const isValidEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // Validate password strength
+  const isValidPassword = (password) => {
+    const hasMinLength = password.length >= 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+    return { hasMinLength, hasUpperCase, hasLowerCase, hasNumber, hasSpecialChar };
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+    // Email validation
+    if (!isValidEmail(formData.email)) {
+      setError('Please enter a valid email address');
       return;
     }
 
-    if (formData.password.length < 8) {
+    // Password validation
+    const passwordCheck = isValidPassword(formData.password);
+    if (!passwordCheck.hasMinLength) {
       setError('Password must be at least 8 characters long');
+      return;
+    }
+    if (!passwordCheck.hasUpperCase || !passwordCheck.hasLowerCase) {
+      setError('Password must contain both uppercase and lowercase letters');
+      return;
+    }
+    if (!passwordCheck.hasNumber) {
+      setError('Password must contain at least one number');
+      return;
+    }
+    if (!passwordCheck.hasSpecialChar) {
+      setError('Password must contain at least one special character (!@#$%^&*...)');
+      return;
+    }
+
+    // Confirm password
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
       return;
     }
 
@@ -157,7 +194,7 @@ export default function Signup() {
                     )}
                   </button>
                 </div>
-                <p className="mt-1 text-xs text-gray-500">Must be at least 8 characters</p>
+                <p className="mt-1 text-xs text-gray-500">Min 8 chars, uppercase, lowercase, number, and special character</p>
               </div>
 
               {/* Confirm Password Field */}

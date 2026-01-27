@@ -71,6 +71,33 @@ const authModule: FastifyPluginAsync = async (fastify) => {
       });
     }
 
+    // Password strength validation
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+
+    if (!hasUpperCase || !hasLowerCase) {
+      return reply.status(400).send({
+        success: false,
+        error: 'Password must contain both uppercase and lowercase letters',
+      });
+    }
+
+    if (!hasNumber) {
+      return reply.status(400).send({
+        success: false,
+        error: 'Password must contain at least one number',
+      });
+    }
+
+    if (!hasSpecialChar) {
+      return reply.status(400).send({
+        success: false,
+        error: 'Password must contain at least one special character',
+      });
+    }
+
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
