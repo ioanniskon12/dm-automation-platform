@@ -1,33 +1,77 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import axios from 'axios';
 
-// Mock data - replace with real API calls later
-const mockUsers = [
-  { id: '1', workspace: 'Kleima Home', email: 'hello@kleimahome.com', plan: 'Pro', status: 'Active', createdAt: '2024-01-15', messagesThisMonth: 12500 },
-  { id: '2', workspace: 'Perfect U Cosmetics', email: 'info@perfectu.com', plan: 'Starter', status: 'Active', createdAt: '2024-02-20', messagesThisMonth: 3200 },
-  { id: '3', workspace: 'TechFlow Agency', email: 'team@techflow.io', plan: 'Pro', status: 'Trial', createdAt: '2024-11-01', messagesThisMonth: 890 },
-  { id: '4', workspace: 'Green Garden Shop', email: 'support@greengarden.com', plan: 'Free', status: 'Active', createdAt: '2024-03-10', messagesThisMonth: 450 },
-  { id: '5', workspace: 'Digital Dreams', email: 'hello@digitaldreams.co', plan: 'Starter', status: 'Suspended', createdAt: '2024-04-05', messagesThisMonth: 0 },
-  { id: '6', workspace: 'Fashion Forward', email: 'contact@fashionforward.com', plan: 'Pro', status: 'Active', createdAt: '2024-05-12', messagesThisMonth: 8900 },
-  { id: '7', workspace: 'Healthy Bites', email: 'orders@healthybites.com', plan: 'Starter', status: 'Active', createdAt: '2024-06-18', messagesThisMonth: 2100 },
-  { id: '8', workspace: 'Auto Parts Plus', email: 'sales@autopartsplus.com', plan: 'Free', status: 'Trial', createdAt: '2024-11-20', messagesThisMonth: 150 },
-];
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3003';
 
 export default function UsersPage() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterPlan, setFilterPlan] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
 
-  const filteredUsers = mockUsers.filter((user) => {
+  // Fetch users from API
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/api/admin/users`);
+        if (response.data.success) {
+          setUsers(response.data.users);
+        }
+      } catch (err) {
+        console.error('Error fetching users:', err);
+        setError('Failed to load users');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  const filteredUsers = users.filter((user) => {
     const matchesSearch =
-      user.workspace.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase());
+      (user.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (user.email || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (user.workspace || '').toLowerCase().includes(searchQuery.toLowerCase());
     const matchesPlan = filterPlan === 'all' || user.plan === filterPlan;
     const matchesStatus = filterStatus === 'all' || user.status === filterStatus;
     return matchesSearch && matchesPlan && matchesStatus;
   });
+
+  // Format date
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -73,9 +117,9 @@ export default function UsersPage() {
             className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           >
             <option value="all">All Plans</option>
-            <option value="Free">Free</option>
-            <option value="Starter">Starter</option>
-            <option value="Pro">Pro</option>
+            <option value="free">Free</option>
+            <option value="pro">Pro</option>
+            <option value="enterprise">Enterprise</option>
           </select>
 
           {/* Status Filter */}
@@ -85,9 +129,9 @@ export default function UsersPage() {
             className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           >
             <option value="all">All Status</option>
-            <option value="Active">Active</option>
-            <option value="Trial">Trial</option>
-            <option value="Suspended">Suspended</option>
+            <option value="active">Active</option>
+            <option value="blocked">Blocked</option>
+            <option value="suspended">Suspended</option>
           </select>
         </div>
       </div>
@@ -107,10 +151,10 @@ export default function UsersPage() {
             <thead>
               <tr className="bg-gray-50 dark:bg-gray-900/50">
                 <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider px-6 py-3">
-                  Workspace
+                  User
                 </th>
                 <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider px-6 py-3">
-                  Email
+                  Workspace
                 </th>
                 <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider px-6 py-3">
                   Plan
@@ -119,7 +163,7 @@ export default function UsersPage() {
                   Status
                 </th>
                 <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider px-6 py-3">
-                  Messages
+                  Joined
                 </th>
                 <th className="text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider px-6 py-3">
                   Actions
@@ -133,43 +177,48 @@ export default function UsersPage() {
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center">
                         <span className="text-white font-semibold text-sm">
-                          {user.workspace.charAt(0)}
+                          {(user.name || user.email || '?').charAt(0).toUpperCase()}
                         </span>
                       </div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">{user.workspace}</p>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white">{user.name || 'No name'}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
+                      </div>
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{user.email}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{user.workspace || 'No workspace'}</p>
                   </td>
                   <td className="px-6 py-4">
                     <span
                       className={`text-xs font-medium px-2.5 py-1 rounded-full ${
-                        user.plan === 'Pro'
+                        user.plan === 'pro'
                           ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
-                          : user.plan === 'Starter'
-                          ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                          : user.plan === 'enterprise'
+                          ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
                           : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                       }`}
                     >
-                      {user.plan}
+                      {user.plan || 'free'}
                     </span>
                   </td>
                   <td className="px-6 py-4">
                     <span
                       className={`text-xs font-medium px-2.5 py-1 rounded-full ${
-                        user.status === 'Active'
+                        user.status === 'active'
                           ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-                          : user.status === 'Trial'
-                          ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
-                          : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                          : user.status === 'blocked'
+                          ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300'
+                          : user.status === 'suspended'
+                          ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                       }`}
                     >
-                      {user.status}
+                      {user.status || 'active'}
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{user.messagesThisMonth.toLocaleString()}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{formatDate(user.createdAt)}</p>
                   </td>
                   <td className="px-6 py-4">
                     <Link
