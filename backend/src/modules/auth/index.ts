@@ -146,11 +146,12 @@ const authModule: FastifyPluginAsync = async (fastify) => {
       });
     } catch (error: any) {
       fastify.log.error('Signup error:', error);
-      // Log failed signup
-      await logActivity('signup_failed', email, 'Signup failed: ' + error.message, 'error', request);
+      console.error('SIGNUP ERROR DETAILS:', error.message, error.stack);
+      // Show actual error for debugging (remove in production later)
       return reply.status(500).send({
         success: false,
-        error: 'Failed to create account. Please try again.',
+        error: `Signup failed: ${error.message}`,
+        debug: error.stack?.split('\n')[0],
       });
     }
   });
