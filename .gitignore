@@ -46,8 +46,9 @@ backend/uploads/
 uploads/
 
 # Logs
-logs
+/logs
 *.log
+!frontend/app/admin/logs/
 
 # IDE
 .vscode/
