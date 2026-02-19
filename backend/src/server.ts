@@ -33,6 +33,7 @@ import authModule from './modules/auth/index.js';
 import tagsModule from './modules/tags/index.js';
 import broadcastsModule from './modules/broadcasts/index.js';
 import adminModule from './modules/admin/index.js';
+import brandsModule from './modules/brands/index.js';
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const HOST = process.env.HOST || '0.0.0.0';
@@ -134,6 +135,7 @@ await fastify.register(authModule, { prefix: '/api/auth' });
 await fastify.register(tagsModule, { prefix: '/api/tags' });
 await fastify.register(broadcastsModule, { prefix: '/api/broadcasts' });
 await fastify.register(adminModule, { prefix: '/api/admin' });
+await fastify.register(brandsModule, { prefix: '/api/brands' });
 
 // Webhook endpoints (public, no auth)
 // Meta webhook verification (GET request for webhook setup)
