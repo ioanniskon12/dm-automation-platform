@@ -137,6 +137,17 @@ function FlowBuilderInner({ automationType = null, selectedTemplate = null, preP
   const [notification, setNotification] = useState(null)
   const [availableCategories, setAvailableCategories] = useState(['My Flows', 'Sales', 'Support', 'E-commerce', 'Engagement'])
 
+  // Connection menu state
+  const [connectionMenu, setConnectionMenu] = useState({
+    show: false,
+    x: 0,
+    y: 0,
+    sourceNode: null,
+    sourceHandle: null,
+    flowPosition: null
+  })
+  const connectingNodeId = useRef(null)
+
   // Undo/Redo history
   const [history, setHistory] = useState([])  // Past states
   const [future, setFuture] = useState([])    // Future states (for redo)
@@ -438,6 +449,113 @@ function FlowBuilderInner({ automationType = null, selectedTemplate = null, preP
     (params) => setEdges((eds) => addEdge(params, eds)),
     [setEdges]
   )
+
+  // Node type options for the connection menu
+  const nodeTypeOptions = [
+    { type: 'message', label: 'Message', icon: '💬', desc: 'Send a message' },
+    { type: 'questionnaire', label: 'Question', icon: '❓', desc: 'Ask questions' },
+    { type: 'condition', label: 'Condition', icon: '🔀', desc: 'Branch logic' },
+    { type: 'http', label: 'Webhook', icon: '🔗', desc: 'Call API' },
+    { type: 'delay', label: 'Delay', icon: '⏱️', desc: 'Wait time' }
+  ]
+
+  // Get default data for node type
+  const getDefaultNodeData = (type) => {
+    switch(type) {
+      case 'message':
+        return { text: '', buttons: [], media: null }
+      case 'questionnaire':
+        return { questions: [] }
+      case 'condition':
+        return { conditions: [], branches: {} }
+      case 'http':
+        return { url: '', method: 'POST', headers: {}, body: {} }
+      case 'delay':
+        return { duration: 1, unit: 'minutes' }
+      default:
+        return {}
+    }
+  }
+
+  // Handle connection end (when user releases without connecting)
+  const onConnectEnd = useCallback((event, connectionState) => {
+    if (!connectionState.fromNode) return
+
+    // Get mouse position
+    const reactFlowBounds = event.target.closest('.react-flow').getBoundingClientRect()
+    const position = {
+      x: event.clientX - reactFlowBounds.left,
+      y: event.clientY - reactFlowBounds.top
+    }
+
+    // Check if connection ended on empty space (not on a node)
+    const targetIsPane = event.target.classList.contains('react-flow__pane')
+    if (targetIsPane) {
+      setConnectionMenu({
+        show: true,
+        x: event.clientX,
+        y: event.clientY,
+        sourceNode: connectionState.fromNode.id,
+        sourceHandle: connectionState.fromHandle?.id,
+        flowPosition: position
+      })
+      connectingNodeId.current = connectionState.fromNode.id
+    }
+  }, [])
+
+  // Create and connect new node
+  const createAndConnectNode = useCallback((nodeType) => {
+    if (!connectionMenu.sourceNode) return
+
+    // Generate new node ID
+    const newNodeId = `${Date.now()}`
+
+    // Calculate position using flow position from menu
+    const sourceNode = nodes.find(n => n.id === connectionMenu.sourceNode)
+    const newNodePosition = connectionMenu.flowPosition || {
+      x: (sourceNode?.position?.x || 0) + 250,
+      y: (sourceNode?.position?.y || 0)
+    }
+
+    // Create new node based on type
+    const newNode = {
+      id: newNodeId,
+      type: nodeType,
+      position: newNodePosition,
+      data: getDefaultNodeData(nodeType)
+    }
+
+    // Add node and edge
+    setNodes((nds) => [...nds, newNode])
+    setEdges((eds) => [
+      ...eds,
+      {
+        id: `e${connectionMenu.sourceNode}-${newNodeId}`,
+        source: connectionMenu.sourceNode,
+        target: newNodeId,
+        sourceHandle: connectionMenu.sourceHandle
+      }
+    ])
+
+    // Select the new node to open settings
+    setSelectedNodeId(newNodeId)
+
+    // Close menu
+    setConnectionMenu({ show: false, x: 0, y: 0, sourceNode: null, sourceHandle: null, flowPosition: null })
+  }, [connectionMenu, nodes, setNodes, setEdges])
+
+  // Close menu on click outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      if (connectionMenu.show) {
+        setConnectionMenu({ show: false, x: 0, y: 0, sourceNode: null, sourceHandle: null, flowPosition: null })
+      }
+    }
+    if (connectionMenu.show) {
+      document.addEventListener('click', handleClickOutside)
+      return () => document.removeEventListener('click', handleClickOutside)
+    }
+  }, [connectionMenu.show])
 
   const onNodeClick = useCallback((event, node) => {
     setSelectedNodeId(node.id)
@@ -1173,6 +1291,7 @@ function FlowBuilderInner({ automationType = null, selectedTemplate = null, preP
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
+          onConnectEnd={onConnectEnd}
           onNodeClick={onNodeClick}
           onPaneClick={(event) => {
             onPaneClick()
@@ -1412,6 +1531,42 @@ function FlowBuilderInner({ automationType = null, selectedTemplate = null, preP
           <span className="font-semibold text-black dark:text-white text-sm flex-1">
             {notification.message}
           </span>
+        </div>
+      )}
+
+      {/* Connection Menu - Node Type Selection */}
+      {connectionMenu.show && (
+        <div
+          className="fixed z-[100] bg-white dark:bg-gray-800 border-2 border-black dark:border-white rounded-lg shadow-xl p-2 min-w-[220px]"
+          style={{
+            left: connectionMenu.x,
+            top: connectionMenu.y,
+            transform: 'translate(-50%, 10px)'
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="text-xs font-semibold text-gray-600 dark:text-gray-400 px-2 py-1 mb-1">
+            Add Node
+          </div>
+          <div className="space-y-1">
+            {nodeTypeOptions.map((option) => (
+              <button
+                key={option.type}
+                onClick={() => createAndConnectNode(option.type)}
+                className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded flex items-center gap-3 transition-colors group"
+              >
+                <span className="text-xl">{option.icon}</span>
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-black dark:text-white group-hover:text-yellow-600 dark:group-hover:text-yellow-400">
+                    {option.label}
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    {option.desc}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </div>
