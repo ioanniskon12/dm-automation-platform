@@ -71,7 +71,7 @@ function FlowBuilderInner({ automationType = null, selectedTemplate = null, preP
   console.log('🔧 FlowBuilder: workspaceId =', workspaceId)
   const searchParams = useSearchParams()
   const isMobile = useIsMobile()
-  const { fitView } = useReactFlow()
+  const { fitView, project, getViewport } = useReactFlow()
   const lastTapRef = useRef(0)
   const [showMobileSidebar, setShowMobileSidebar] = useState(false)
   const [showMobileActions, setShowMobileActions] = useState(false)
@@ -481,27 +481,26 @@ function FlowBuilderInner({ automationType = null, selectedTemplate = null, preP
   const onConnectEnd = useCallback((event, connectionState) => {
     if (!connectionState.fromNode) return
 
-    // Get mouse position
-    const reactFlowBounds = event.target.closest('.react-flow').getBoundingClientRect()
-    const position = {
-      x: event.clientX - reactFlowBounds.left,
-      y: event.clientY - reactFlowBounds.top
-    }
-
     // Check if connection ended on empty space (not on a node)
     const targetIsPane = event.target.classList.contains('react-flow__pane')
     if (targetIsPane) {
+      // Convert screen coordinates to flow coordinates
+      const flowPosition = project({
+        x: event.clientX,
+        y: event.clientY
+      })
+
       setConnectionMenu({
         show: true,
         x: event.clientX,
         y: event.clientY,
         sourceNode: connectionState.fromNode.id,
         sourceHandle: connectionState.fromHandle?.id,
-        flowPosition: position
+        flowPosition: flowPosition
       })
       connectingNodeId.current = connectionState.fromNode.id
     }
-  }, [])
+  }, [project])
 
   // Create and connect new node
   const createAndConnectNode = useCallback((nodeType) => {
