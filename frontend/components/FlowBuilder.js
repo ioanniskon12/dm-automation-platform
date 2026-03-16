@@ -481,25 +481,24 @@ function FlowBuilderInner({ automationType = null, selectedTemplate = null, preP
   const onConnectEnd = useCallback((event, connectionState) => {
     if (!connectionState.fromNode) return
 
-    // Check if connection ended on empty space (not on a node)
-    const targetIsPane = event.target.classList.contains('react-flow__pane')
-    if (targetIsPane) {
-      // Convert screen coordinates to flow coordinates
-      const flowPosition = project({
-        x: event.clientX,
-        y: event.clientY
-      })
+    // If connection completed (toNode exists), don't show menu
+    if (connectionState.toNode) return
 
-      setConnectionMenu({
-        show: true,
-        x: event.clientX,
-        y: event.clientY,
-        sourceNode: connectionState.fromNode.id,
-        sourceHandle: connectionState.fromHandle?.id,
-        flowPosition: flowPosition
-      })
-      connectingNodeId.current = connectionState.fromNode.id
-    }
+    // Convert screen coordinates to flow coordinates
+    const flowPosition = project({
+      x: event.clientX,
+      y: event.clientY
+    })
+
+    setConnectionMenu({
+      show: true,
+      x: event.clientX,
+      y: event.clientY,
+      sourceNode: connectionState.fromNode.id,
+      sourceHandle: connectionState.fromHandle?.id,
+      flowPosition: flowPosition
+    })
+    connectingNodeId.current = connectionState.fromNode.id
   }, [project])
 
   // Create and connect new node
